@@ -1,0 +1,3111 @@
+// ORVEXA platform data model.
+//
+// Design rules enforced here:
+// - Personal information is limited to what a care workflow actually needs.
+// - Verification state is never implied: hospitals and doctors carry an explicit
+//   `verificationStatus` plus `dataProvenance` so demo/synthetic records can never
+//   be presented as verified real providers.
+// - Roles live in their own table (UserRole) so a role can only be granted by a
+//   server-side process, never by a client payload.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum Role {
+  PATIENT
+  DOCTOR
+  HOSPITAL_ADMIN
+  PHARMACY_PARTNER
+  LAB_PARTNER
+  AMBULANCE_PARTNER
+  INSURANCE_PARTNER
+  PLATFORM_ADMIN
+}
+
+enum Gender {
+  FEMALE
+  MALE
+  OTHER
+  UNDISCLOSED
+}
+
+enum BloodGroup {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+  UNKNOWN
+}
+
+model User {
+  id                  String     @id @default(cuid())
+  /// Stored lower-cased and trimmed by the server; unique to stop duplicate accounts.
+  email               String     @unique
+  emailVerifiedAt     DateTime?
+  /// Optional contact number in E.164 form (+91XXXXXXXXXX).
+  phone               String?    @unique
+  phoneVerifiedAt     DateTime?
+  passwordHash        String
+  fullName            String
+  avatarUrl           String?
+  status              UserStatus @default(PENDING_VERIFICATION)
+  failedLoginAttempts Int        @default(0)
+  lockedUntil         DateTime?
+  lastLoginAt         DateTime?
+  passwordChangedAt   DateTime?
+  /// Soft-delete marker. Records are anonymised then removed by the retention job.
+  deactivatedAt       DateTime?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  roles                  UserRole[]
+  sessions               Session[]
+  challenges             AuthChallenge[]
+  patientProfile         PatientProfile?
+  doctorProfile          DoctorProfile?
+  consents               ConsentRecord[]
+  notificationPreference NotificationPreference?
+  partnerApplications    PartnerApplication[]
+  hospitalMemberships    HospitalMember[]
+  ownedHospitals         Hospital[]              @relation("HospitalOwner")
+  auditEvents            AuditEvent[]            @relation("AuditActor")
+  appointmentEvents      AppointmentEvent[]      @relation("AppointmentEventActor")
+  grantedRoles           UserRole[]              @relation("RoleGrantedBy")
+  verificationReviews    VerificationRequest[]   @relation("VerificationReviewer")
+  verificationRequests   VerificationRequest[]   @relation("VerificationRequester")
+  createdAppointments    Appointment[]           @relation("AppointmentCreatedBy")
+  patientAppointments    Appointment[]           @relation("AppointmentPatient")
+  cancelledAppointments  Appointment[]           @relation("AppointmentCancelledBy")
+
+  emergencyContacts       EmergencyContact[]       @relation("EmergencyContactOwner")
+  emergencyIncidents      EmergencyIncident[]      @relation("EmergencyIncidentPatient")
+  reportedEmergencies     EmergencyIncident[]      @relation("EmergencyIncidentCreator")
+  emergencyIncidentEvents EmergencyIncidentEvent[] @relation("EmergencyIncidentEventActor")
+  ambulancePartnerProfile AmbulancePartnerProfile?
+  ownedPartnerFacilities  PartnerFacility[]        @relation("PartnerFacilityOwner")
+
+  aiConversations  AiConversation[] @relation("AiConversationOwner")
+  aiUploads        AiUpload[]       @relation("AiUploadOwner")
+  aiAssessments    AiAssessment[]   @relation("AiAssessmentOwner")
+  aiSharesCreated  AiAssessmentShare[] @relation("AiShareCreator")
+  aiReviewsAsked   AiClinicalReview[] @relation("AiReviewRequester")
+  aiReviewsGiven   AiClinicalReview[] @relation("AiReviewReviewer")
+  aiProviderCalls  AiProviderCall[] @relation("AiProviderCallUser")
+
+  // Phase 6 — pharmacy and medicine ordering.
+  pharmacyPartnerProfile PharmacyPartnerProfile?
+  deliveryAddresses      PatientAddress[]
+  pharmacyCart           PharmacyCart?
+  pharmacyOrders         PharmacyOrder[]       @relation("PharmacyOrderCustomer")
+  prescriptions          Prescription[]        @relation("PrescriptionOwner")
+
+  // Phase 7 — insurance and claims.
+  insurerPartnerProfile  InsurerPartnerProfile?
+  insurancePolicies      InsurancePolicy[]      @relation("PolicyOwner")
+  insuranceClaims        InsuranceClaim[]       @relation("ClaimPatient")
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model UserRole {
+  id          String    @id @default(cuid())
+  userId      String
+  role        Role
+  grantedById String?
+  grantedAt   DateTime  @default(now())
+  revokedAt   DateTime?
+  reason      String?
+
+  user      User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grantedBy User? @relation("RoleGrantedBy", fields: [grantedById], references: [id], onDelete: SetNull)
+
+  @@unique([userId, role])
+  @@index([role])
+}
+
+model Session {
+  id            String    @id @default(cuid())
+  userId        String
+  /// SHA-256 of the opaque session token. The raw token only ever lives in the
+  /// visitor's httpOnly cookie, so a database leak cannot be replayed.
+  tokenHash     String    @unique
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime  @default(now())
+  lastSeenAt    DateTime  @default(now())
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  revokedReason String?
+  /// Set when the session is replaced by a fresh sign-in, for audit purposes.
+  replacedById  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+}
+
+enum AuthChallengePurpose {
+  EMAIL_VERIFICATION
+  LOGIN_OTP
+  PASSWORD_RESET
+  PHONE_VERIFICATION
+}
+
+model AuthChallenge {
+  id          String               @id @default(cuid())
+  /// Normalised email address or E.164 phone number the challenge was issued for.
+  identifier  String
+  purpose     AuthChallengePurpose
+  userId      String?
+  /// SHA-256 of the one-time code. Codes are never persisted in clear text.
+  codeHash    String
+  attempts    Int                  @default(0)
+  maxAttempts Int                  @default(5)
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime             @default(now())
+  ipAddress   String?
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([identifier, purpose])
+  @@index([expiresAt])
+}
+
+model RateLimitCounter {
+  id              String   @id @default(cuid())
+  /// e.g. "login:email:someone@example.com" or "register:ip:203.0.113.7"
+  key             String   @unique
+  count           Int      @default(0)
+  windowStartedAt DateTime @default(now())
+  expiresAt       DateTime
+
+  @@index([expiresAt])
+}
+
+enum ConsentType {
+  TERMS_OF_SERVICE
+  PRIVACY_POLICY
+  DATA_PROCESSING
+  MARKETING_COMMUNICATIONS
+  HEALTH_RECORD_SHARING
+  TELEMEDICINE_DISCLAIMER
+  AI_ASSISTANT_DISCLAIMER
+  /// Consent to store an AI conversation, its uploads and the assessments derived
+  /// from them. Without this the workspace stays session-only and nothing is kept.
+  AI_ASSESSMENT_STORAGE
+  /// Consent to hand a saved assessment to a named clinician. Separate from
+  /// storage because sharing is a second, deliberate decision.
+  AI_CLINICIAN_SHARE
+  /// Consent to hand an uploaded prescription to the pharmacy that will dispense
+  /// it. Without this the prescription is stored but never released to a partner.
+  PHARMACY_PRESCRIPTION_SHARING
+  /// Consent to hold insurance policy details and to submit them to an insurer or
+  /// its administrator for eligibility, pre-authorisation and claims.
+  INSURANCE_DATA_SHARING
+}
+
+model ConsentRecord {
+  id            String      @id @default(cuid())
+  userId        String
+  consentType   ConsentType
+  policyVersion String
+  granted       Boolean
+  grantedAt     DateTime    @default(now())
+  revokedAt     DateTime?
+  ipAddress     String?
+  userAgent     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, consentType])
+}
+
+model NotificationPreference {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  emailAppointments Boolean  @default(true)
+  emailResults      Boolean  @default(true)
+  emailMarketing    Boolean  @default(false)
+  smsAppointments   Boolean  @default(true)
+  smsReminders      Boolean  @default(true)
+  whatsappUpdates   Boolean  @default(false)
+  inAppUpdates      Boolean  @default(true)
+  quietHoursStart   String?
+  quietHoursEnd     String?
+  updatedAt         DateTime @updatedAt
+  createdAt         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// Profiles
+// ---------------------------------------------------------------------------
+
+model PatientProfile {
+  id                    String     @id @default(cuid())
+  userId                String     @unique
+  dateOfBirth           DateTime?
+  gender                Gender?
+  bloodGroup            BloodGroup @default(UNKNOWN)
+  addressLine1          String?
+  addressLine2          String?
+  city                  String?
+  state                 String?
+  postalCode            String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  preferredLanguage     String?
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  familyMembers FamilyMember[]
+
+  @@index([city])
+}
+
+enum FamilyRelationship {
+  SPOUSE
+  CHILD
+  PARENT
+  SIBLING
+  GUARDIAN
+  OTHER
+}
+
+/// Family members are owned by a patient and carry their own permissions so a
+/// child's record cannot be edited by every member of the household by default.
+model FamilyMember {
+  id                  String             @id @default(cuid())
+  patientProfileId    String
+  fullName            String
+  relationship        FamilyRelationship
+  dateOfBirth         DateTime?
+  gender              Gender?
+  bloodGroup          BloodGroup         @default(UNKNOWN)
+  canBookAppointments Boolean            @default(false)
+  canViewRecords      Boolean            @default(false)
+  canManageProfile    Boolean            @default(false)
+  createdById         String
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  patientProfile PatientProfile @relation(fields: [patientProfileId], references: [id], onDelete: Cascade)
+  appointments   Appointment[]
+  emergencies    EmergencyIncident[]
+  aiConversations AiConversation[] @relation("AiConversationFamilyMember")
+  aiAssessments   AiAssessment[]   @relation("AiAssessmentFamilyMember")
+  prescriptions   Prescription[]   @relation("PrescriptionFamilyMember")
+  insurancePolicies InsurancePolicy[] @relation("PolicyFamilyMember")
+  insuranceClaims   InsuranceClaim[]  @relation("ClaimFamilyMember")
+
+  @@index([patientProfileId])
+}
+
+// ---------------------------------------------------------------------------
+// Provider verification vocabulary (shared)
+// ---------------------------------------------------------------------------
+
+enum VerificationState {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+  SUSPENDED
+}
+
+/// Where a record came from. Demo/synthetic rows are never presented as verified.
+enum DataProvenance {
+  DEMO_SAMPLE
+  PROVIDER_SUBMITTED
+  PLATFORM_VERIFIED
+}
+
+enum VerificationSubjectType {
+  HOSPITAL
+  DOCTOR
+  PARTNER_APPLICATION
+}
+
+enum VerificationRequestKind {
+  INITIAL_VERIFICATION
+  PROFILE_CHANGE
+}
+
+enum VerificationRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+model VerificationRequest {
+  id             String                    @id @default(cuid())
+  subjectType    VerificationSubjectType
+  subjectId      String
+  kind           VerificationRequestKind
+  status         VerificationRequestStatus @default(PENDING)
+  /// Proposed field values for PROFILE_CHANGE requests, or submitted
+  /// credentials for INITIAL_VERIFICATION. Reviewed by a platform admin.
+  payload        Json
+  requiredFields String[]
+  requestedById  String
+  reviewedById   String?
+  reviewNotes    String?
+  decidedAt      DateTime?
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+
+  requestedBy User  @relation("VerificationRequester", fields: [requestedById], references: [id], onDelete: Cascade)
+  reviewedBy  User? @relation("VerificationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([status, subjectType])
+  @@index([subjectId, subjectType])
+}
+
+// ---------------------------------------------------------------------------
+// Care providers
+// ---------------------------------------------------------------------------
+
+enum FacilityType {
+  MULTISPECIALITY_HOSPITAL
+  SPECIALTY_HOSPITAL
+  CLINIC
+  DAYCARE_CENTER
+  NURSING_HOME
+  DIAGNOSTIC_CENTER
+}
+
+enum PriceBand {
+  UNPUBLISHED
+  BUDGET
+  MID_RANGE
+  PREMIUM
+}
+
+enum ServiceCategory {
+  EMERGENCY
+  GENERAL_MEDICINE
+  CARDIOLOGY
+  ORTHOPAEDICS
+  ONCOLOGY
+  MATERNITY
+  PAEDIATRICS
+  NEUROLOGY
+  DIAGNOSTICS
+  PHARMACY
+  TELEMEDICINE
+  DENTAL
+  OPHTHALMOLOGY
+  MENTAL_HEALTH
+  OTHER
+}
+
+enum FacilityCategory {
+  ICU
+  OPERATION_THEATRE
+  MRI
+  CT_SCAN
+  XRAY
+  LABORATORY
+  DIALYSIS
+  MATERNITY_WARD
+  NEONATAL_ICU
+  PHARMACY
+  BLOOD_BANK
+  AMBULANCE
+  OTHER
+}
+
+enum InsuranceNetworkStatus {
+  CLAIMED_BY_PROVIDER
+  VERIFIED_BY_PLATFORM
+}
+
+enum HospitalMemberStatus {
+  INVITED
+  ACTIVE
+  REVOKED
+}
+
+model Hospital {
+  id                   String            @id @default(cuid())
+  name                 String
+  slug                 String            @unique
+  facilityType         FacilityType
+  description          String?
+  registrationNumber   String?
+  addressLine1         String
+  addressLine2         String?
+  city                 String
+  state                String
+  postalCode           String
+  latitude             Float?
+  longitude            Float?
+  phone                String?
+  email                String?
+  website              String?
+  emergency24x7        Boolean           @default(false)
+  ambulanceAvailable   Boolean           @default(false)
+  wheelchairAccessible Boolean           @default(false)
+  priceBand            PriceBand         @default(UNPUBLISHED)
+  /// Verification is a human process. It is never set from a request payload.
+  verificationStatus   VerificationState @default(UNVERIFIED)
+  verificationNotes    String?
+  verifiedAt           DateTime?
+  verifiedById         String?
+  dataProvenance       DataProvenance    @default(PROVIDER_SUBMITTED)
+  ownerUserId          String?
+  publishedAt          DateTime?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  deletedAt            DateTime?
+
+  owner             User?                      @relation("HospitalOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+  members           HospitalMember[]
+  services          HospitalService[]
+  facilities        HospitalFacility[]
+  openingHours      HospitalOpeningHours[]
+  insuranceNetworks HospitalInsuranceNetwork[]
+  affiliations      DoctorAffiliation[]
+  schedules         DoctorSchedule[]
+  slots             AppointmentSlot[]
+  appointments      Appointment[]
+
+  emergencyRequests EmergencyDispatchRequest[]
+
+  insuranceClaims  InsuranceClaim[]           @relation("ClaimHospital")
+  preAuthorizations InsurancePreAuthorization[] @relation("PreAuthHospital")
+  insurerNetworkEntries InsuranceNetworkHospital[]
+
+  @@index([city, verificationStatus])
+  @@index([facilityType, verificationStatus])
+  @@index([emergency24x7])
+}
+
+model HospitalMember {
+  id         String               @id @default(cuid())
+  hospitalId String
+  userId     String
+  position   String?
+  status     HospitalMemberStatus @default(INVITED)
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+
+  hospital Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([hospitalId, userId])
+  @@index([userId, status])
+}
+
+model HospitalService {
+  id                 String            @id @default(cuid())
+  hospitalId         String
+  name               String
+  category           ServiceCategory   @default(OTHER)
+  description        String?
+  priceFromInr       Int?
+  priceToInr         Int?
+  /// A price is only shown as a price when the provider published one.
+  pricePublished     Boolean           @default(false)
+  available24x7      Boolean           @default(false)
+  verificationStatus VerificationState @default(UNVERIFIED)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  hospital Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  @@unique([hospitalId, name])
+  @@index([category])
+}
+
+model HospitalFacility {
+  id                 String            @id @default(cuid())
+  hospitalId         String
+  name               String
+  category           FacilityCategory  @default(OTHER)
+  notes              String?
+  isPublished        Boolean           @default(false)
+  verificationStatus VerificationState @default(UNVERIFIED)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  hospital Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  @@unique([hospitalId, name])
+  @@index([category])
+}
+
+model HospitalOpeningHours {
+  id         String  @id @default(cuid())
+  hospitalId String
+  /// 0 = Sunday … 6 = Saturday, matching JavaScript's Date#getDay.
+  dayOfWeek  Int
+  opensAt    String
+  closesAt   String
+  isClosed   Boolean @default(false)
+  is24Hours  Boolean @default(false)
+
+  hospital Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  @@unique([hospitalId, dayOfWeek])
+}
+
+/// Insurance acceptance is a claim until a platform admin verifies it.
+model HospitalInsuranceNetwork {
+  id          String                 @id @default(cuid())
+  hospitalId  String
+  insurerName String
+  planNames   String[]
+  status      InsuranceNetworkStatus @default(CLAIMED_BY_PROVIDER)
+  verifiedAt  DateTime?
+  createdAt   DateTime               @default(now())
+
+  hospital Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  @@unique([hospitalId, insurerName])
+}
+
+model DoctorProfile {
+  id                   String            @id @default(cuid())
+  userId               String            @unique
+  registrationNumber   String            @unique
+  registrationCouncil  String?
+  headline             String?
+  bio                  String?
+  qualifications       String[]
+  specialties          String[]
+  languages            String[]
+  yearsOfExperience    Int?
+  consultationFeeInr   Int?
+  teleconsultFeeInr    Int?
+  teleconsultEnabled   Boolean           @default(false)
+  acceptingNewPatients Boolean           @default(true)
+  verificationStatus   VerificationState @default(UNVERIFIED)
+  verificationNotes    String?
+  verifiedAt           DateTime?
+  verifiedById         String?
+  dataProvenance       DataProvenance    @default(PROVIDER_SUBMITTED)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  affiliations DoctorAffiliation[]
+  schedules    DoctorSchedule[]
+  slots        AppointmentSlot[]
+  appointments Appointment[]
+
+  @@index([verificationStatus, acceptingNewPatients])
+  @@index([registrationNumber])
+}
+
+model DoctorAffiliation {
+  id                 String   @id @default(cuid())
+  doctorProfileId    String
+  hospitalId         String
+  designation        String?
+  consultationFeeInr Int?
+  isPrimary          Boolean  @default(false)
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+
+  doctorProfile DoctorProfile @relation(fields: [doctorProfileId], references: [id], onDelete: Cascade)
+  hospital      Hospital      @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorProfileId, hospitalId])
+  @@index([hospitalId, isActive])
+}
+
+// ---------------------------------------------------------------------------
+// Scheduling and appointments
+// ---------------------------------------------------------------------------
+
+enum ConsultationMode {
+  IN_PERSON
+  TELEMEDICINE
+}
+
+model DoctorSchedule {
+  id              String           @id @default(cuid())
+  doctorProfileId String
+  hospitalId      String?
+  /// 0 = Sunday … 6 = Saturday.
+  dayOfWeek       Int
+  startTime       String
+  endTime         String
+  slotMinutes     Int              @default(15)
+  mode            ConsultationMode @default(IN_PERSON)
+  maxBookings     Int              @default(1)
+  effectiveFrom   DateTime?
+  effectiveTo     DateTime?
+  isActive        Boolean          @default(true)
+  createdById     String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  doctorProfile DoctorProfile @relation(fields: [doctorProfileId], references: [id], onDelete: Cascade)
+  hospital      Hospital?     @relation(fields: [hospitalId], references: [id], onDelete: SetNull)
+
+  @@index([doctorProfileId, dayOfWeek])
+  @@index([hospitalId])
+}
+
+enum SlotStatus {
+  OPEN
+  BOOKED
+  BLOCKED
+}
+
+/// Materialised bookable slots. Booking claims a slot with a conditional update
+/// inside a transaction, so two concurrent requests can never both succeed.
+model AppointmentSlot {
+  id              String           @id @default(cuid())
+  doctorProfileId String
+  hospitalId      String?
+  scheduleId      String?
+  startAt         DateTime
+  endAt           DateTime
+  mode            ConsultationMode
+  status          SlotStatus       @default(OPEN)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  doctorProfile DoctorProfile @relation(fields: [doctorProfileId], references: [id], onDelete: Cascade)
+  hospital      Hospital?     @relation(fields: [hospitalId], references: [id], onDelete: SetNull)
+  appointment   Appointment?
+
+  @@unique([doctorProfileId, startAt])
+  @@index([doctorProfileId, startAt, status])
+  @@index([status, startAt])
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum CancelledBy {
+  PATIENT
+  PROVIDER
+  PLATFORM
+  SYSTEM
+}
+
+enum AppointmentEventType {
+  CREATED
+  CONFIRMED
+  RESCHEDULED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+  NOTES_UPDATED
+  REMINDER_QUEUED
+}
+
+model Appointment {
+  id                 String            @id @default(cuid())
+  /// Human-readable booking reference shown to the patient, e.g. ORV-8F3K2Q.
+  reference          String            @unique
+  patientUserId      String
+  familyMemberId     String?
+  doctorProfileId    String
+  hospitalId         String?
+  slotId             String?           @unique
+  scheduledStart     DateTime
+  scheduledEnd       DateTime
+  mode               ConsultationMode
+  status             AppointmentStatus @default(PENDING)
+  reason             String?
+  patientNotes       String?
+  providerNotes      String?
+  feeInr             Int?
+  cancelledById      String?
+  cancelledByRole    CancelledBy?
+  cancellationReason String?
+  cancelledAt        DateTime?
+  rescheduledFromId  String?
+  confirmedAt        DateTime?
+  completedAt        DateTime?
+  createdById        String
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  patient         User                  @relation("AppointmentPatient", fields: [patientUserId], references: [id], onDelete: Cascade)
+  familyMember    FamilyMember?         @relation(fields: [familyMemberId], references: [id], onDelete: SetNull)
+  doctorProfile   DoctorProfile         @relation(fields: [doctorProfileId], references: [id], onDelete: Cascade)
+  hospital        Hospital?             @relation(fields: [hospitalId], references: [id], onDelete: SetNull)
+  slot            AppointmentSlot?      @relation(fields: [slotId], references: [id], onDelete: SetNull)
+  createdBy       User                  @relation("AppointmentCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  cancelledByUser User?                 @relation("AppointmentCancelledBy", fields: [cancelledById], references: [id], onDelete: SetNull)
+  events          AppointmentEvent[]
+  reminders       AppointmentReminder[]
+
+  @@index([patientUserId, scheduledStart])
+  @@index([doctorProfileId, scheduledStart])
+  @@index([status, scheduledStart])
+  @@index([hospitalId, scheduledStart])
+}
+
+model AppointmentEvent {
+  id            String               @id @default(cuid())
+  appointmentId String
+  type          AppointmentEventType
+  fromStatus    AppointmentStatus?
+  toStatus      AppointmentStatus?
+  actorUserId   String?
+  notes         String?
+  metadata      Json?
+  createdAt     DateTime             @default(now())
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  actor       User?       @relation("AppointmentEventActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([appointmentId, createdAt])
+}
+
+enum ReminderChannel {
+  EMAIL
+  SMS
+  WHATSAPP
+  IN_APP
+}
+
+enum ReminderStatus {
+  PENDING
+  SENT
+  FAILED
+  CANCELLED
+}
+
+/// Reminders are queued in the database. A reminder only becomes SENT once a
+/// delivery provider is configured and the dispatcher reports success.
+model AppointmentReminder {
+  id            String          @id @default(cuid())
+  appointmentId String
+  channel       ReminderChannel
+  scheduledFor  DateTime
+  status        ReminderStatus  @default(PENDING)
+  attemptCount  Int             @default(0)
+  sentAt        DateTime?
+  lastError     String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@unique([appointmentId, channel, scheduledFor])
+  @@index([status, scheduledFor])
+}
+
+// ---------------------------------------------------------------------------
+// Partner onboarding and audit
+// ---------------------------------------------------------------------------
+
+enum PartnerType {
+  PHARMACY
+  LABORATORY
+  AMBULANCE
+  INSURANCE
+  DIAGNOSTIC_CENTER
+}
+
+enum PartnerApplicationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+model PartnerApplication {
+  id                 String                   @id @default(cuid())
+  applicantUserId    String
+  partnerType        PartnerType
+  organizationName   String
+  registrationNumber String?
+  contactName        String
+  contactEmail       String
+  contactPhone       String
+  city               String
+  state              String
+  postalCode         String?
+  website            String?
+  description        String?
+  /// References to uploaded evidence. Only the file name + key are stored.
+  documentKeys       String[]
+  status             PartnerApplicationStatus @default(DRAFT)
+  reviewNotes        String?
+  reviewedById       String?
+  reviewedAt         DateTime?
+  submittedAt        DateTime?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+
+  applicant User @relation(fields: [applicantUserId], references: [id], onDelete: Cascade)
+
+  @@unique([applicantUserId, partnerType, organizationName])
+  @@index([status, partnerType])
+  @@index([city])
+}
+
+enum AuditOutcome {
+  SUCCESS
+  DENIED
+  FAILURE
+}
+
+model AuditEvent {
+  id          String       @id @default(cuid())
+  actorUserId String?
+  actorLabel  String?
+  action      String
+  entityType  String
+  entityId    String?
+  outcome     AuditOutcome @default(SUCCESS)
+  ipAddress   String?
+  userAgent   String?
+  metadata    Json?
+  createdAt   DateTime     @default(now())
+
+  actor User? @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([actorUserId, createdAt])
+  @@index([action, createdAt])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Phase 4 — maps, nearby care, ambulance partners and emergency incidents
+// ---------------------------------------------------------------------------
+
+/// Discovery listing for a pharmacy, laboratory or diagnostic centre. These
+/// follow the same rules as hospital listings: nothing is VERIFIED until a human
+/// reviews it, and `dataProvenance` records where the row came from.
+model PartnerFacility {
+  id                      String            @id @default(cuid())
+  name                    String
+  slug                    String            @unique
+  partnerType             PartnerType
+  addressLine1            String
+  addressLine2            String?
+  city                    String
+  state                   String
+  postalCode              String
+  latitude                Float?
+  longitude               Float?
+  phone                   String?
+  email                   String?
+  website                 String?
+  emergency24x7           Boolean           @default(false)
+  /// Pharmacy-only. Null means the partner has not stated a policy.
+  homeDeliveryAvailable   Boolean?
+  /// Laboratory-only. Null means the partner has not stated a policy.
+  homeCollectionAvailable Boolean?
+  verificationStatus      VerificationState @default(UNVERIFIED)
+  verificationNotes       String?
+  verifiedAt              DateTime?
+  verifiedById            String?
+  dataProvenance          DataProvenance    @default(PROVIDER_SUBMITTED)
+  ownerUserId             String?
+  publishedAt             DateTime?
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+  deletedAt               DateTime?
+
+  owner            User?                      @relation("PartnerFacilityOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+  dispatchRequests EmergencyDispatchRequest[]
+  pharmacyProfile  PharmacyPartnerProfile?
+
+  @@index([city, partnerType, verificationStatus])
+  @@index([latitude, longitude])
+}
+
+enum AmbulanceUnitStatus {
+  UNKNOWN
+  AVAILABLE
+  ON_DUTY
+  OFFLINE
+  OUT_OF_SERVICE
+}
+
+/// A registered ambulance operator. `acceptingRequests` is operator-controlled
+/// and only becomes meaningful once verification completes.
+model AmbulancePartnerProfile {
+  id                 String            @id @default(cuid())
+  userId             String            @unique
+  organizationName   String
+  registrationNumber String?           @unique
+  contactName        String
+  contactPhone       String
+  contactEmail       String?
+  coverageCities     String[]
+  vehicleSummary     String?
+  verificationStatus VerificationState @default(UNVERIFIED)
+  verificationNotes  String?
+  verifiedAt         DateTime?
+  verifiedById       String?
+  dataProvenance     DataProvenance    @default(PROVIDER_SUBMITTED)
+  /// Operators must opt in explicitly; this never defaults to true.
+  acceptingRequests  Boolean           @default(false)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  user             User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  units            AmbulanceUnit[]
+  dispatchRequests EmergencyDispatchRequest[]
+
+  @@index([verificationStatus, acceptingRequests])
+  @@index([coverageCities])
+}
+
+/// Individual vehicles. Location and status stay null/UNKNOWN until a partner
+/// integration reports them, so the UI can honestly say "availability unknown"
+/// instead of inventing a dispatchable ambulance.
+model AmbulanceUnit {
+  id                 String              @id @default(cuid())
+  ambulancePartnerId String
+  callSign           String
+  vehicleType        String?
+  status             AmbulanceUnitStatus @default(UNKNOWN)
+  latitude           Float?
+  longitude          Float?
+  lastPingAt         DateTime?
+  /// Name of the integration that supplied the status, or null when unknown.
+  availabilitySource String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  ambulancePartner AmbulancePartnerProfile @relation(fields: [ambulancePartnerId], references: [id], onDelete: Cascade)
+
+  @@unique([ambulancePartnerId, callSign])
+  @@index([status, lastPingAt])
+}
+
+/// Contacts a patient nominates for emergency notification. Sending a location
+/// link additionally requires `canReceiveLocation`, which stays off until the
+/// patient turns it on for that specific contact.
+model EmergencyContact {
+  id                 String   @id @default(cuid())
+  ownerUserId        String
+  fullName           String
+  relationship       String?
+  phone              String
+  email              String?
+  canReceiveLocation Boolean  @default(false)
+  isPrimary          Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  owner  User                     @relation("EmergencyContactOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  shares EmergencyLocationShare[]
+
+  @@index([ownerUserId])
+}
+
+enum EmergencyIncidentType {
+  ROAD_ACCIDENT
+  CARDIAC
+  STROKE
+  BREATHING_DIFFICULTY
+  TRAUMA_FALL
+  BURNS
+  PREGNANCY
+  POISONING
+  SEVERE_ALLERGIC_REACTION
+  MENTAL_HEALTH_CRISIS
+  OTHER
+}
+
+/// Incident lifecycle.
+///
+/// The SOS action on its own can only reach SEEKING_RESPONDERS. Every later
+/// stage (ACKNOWLEDGED, RESPONDER_ACCEPTED, EN_ROUTE, ON_SCENE, TRANSPORTING)
+/// is written from a verified provider acknowledgement. While an incident sits
+/// at SEEKING_RESPONDERS or UNANSWERED the UI must say that no provider has
+/// accepted it and must never imply an ambulance is on the way.
+enum EmergencyIncidentStatus {
+  SEEKING_RESPONDERS
+  ACKNOWLEDGED
+  RESPONDER_ACCEPTED
+  EN_ROUTE
+  ON_SCENE
+  TRANSPORTING
+  RESOLVED
+  CANCELLED
+  EXPIRED
+  UNANSWERED
+}
+
+model EmergencyIncident {
+  id                String                  @id @default(cuid())
+  /// Human-readable reference shown to the patient, e.g. ORV-EM-7K2M4Q.
+  reference         String                  @unique
+  patientUserId     String?
+  familyMemberId    String?
+  createdById       String
+  incidentType      EmergencyIncidentType
+  injuryDescription String?
+  status            EmergencyIncidentStatus @default(SEEKING_RESPONDERS)
+  /// Seeded demo rows are flagged so they can never be mistaken for real calls.
+  isDemo            Boolean                 @default(false)
+  /// Client-supplied key so a double tap, a retry after a timeout or a replayed
+  /// submission collides with `@@unique([createdById, idempotencyKey])` and
+  /// resolves to the existing incident instead of raising a second one.
+  idempotencyKey    String?
+
+  latitude       Float?
+  longitude      Float?
+  accuracyMetres Float?
+  addressText    String?
+  locality       String?
+  city           String?
+
+  /// Set only when the patient grants geolocation permission for this incident.
+  locationConsentAt   DateTime?
+  /// Whether nominated contacts may be sent a location link for this incident.
+  contactShareConsent Boolean   @default(false)
+
+  acknowledgedAt     DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?
+  resolvedAt         DateTime?
+  expiresAt          DateTime
+  lastRetryAt        DateTime?
+  retryCount         Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  patient        User?                     @relation("EmergencyIncidentPatient", fields: [patientUserId], references: [id], onDelete: SetNull)
+  familyMember   FamilyMember?             @relation(fields: [familyMemberId], references: [id], onDelete: SetNull)
+  createdBy      User                      @relation("EmergencyIncidentCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  events         EmergencyIncidentEvent[]
+  requests       EmergencyDispatchRequest[]
+  locationShares EmergencyLocationShare[]
+  /// Assessments that recommended emergency care and were then escalated into
+  /// this incident. The link is kept so a red-flag decision stays auditable.
+  aiAssessments  AiAssessment[]           @relation("AiAssessmentEscalation")
+
+  @@unique([createdById, idempotencyKey])
+  @@index([status, createdAt])
+  @@index([patientUserId, createdAt])
+  @@index([createdById, createdAt])
+  @@index([expiresAt])
+}
+
+enum EmergencyIncidentEventType {
+  CREATED
+  LOCATION_CAPTURED
+  DISPATCH_REQUESTED
+  RESPONDER_ACKNOWLEDGED
+  RESPONDER_ACCEPTED
+  RESPONDER_DECLINED
+  DISPATCH_FAILED
+  RETRY_SCHEDULED
+  CONTACT_NOTIFIED
+  LOCATION_SHARED
+  STATUS_CHANGED
+  CANCELLED
+  RESOLVED
+  EXPIRED
+  NOTE
+}
+
+/// Append-only incident history. Rows are never edited after insert.
+model EmergencyIncidentEvent {
+  id          String                       @id @default(cuid())
+  incidentId  String
+  eventType   EmergencyIncidentEventType
+  fromStatus  EmergencyIncidentStatus?
+  toStatus    EmergencyIncidentStatus?
+  actorUserId String?
+  actorLabel  String?
+  notes       String?
+  metadata    Json?
+  createdAt   DateTime                     @default(now())
+
+  incident EmergencyIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  actor    User?             @relation("EmergencyIncidentEventActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([incidentId, createdAt])
+  @@index([actorUserId, createdAt])
+}
+
+enum EmergencyResponderKind {
+  HOSPITAL_EMERGENCY
+  AMBULANCE_PARTNER
+  PARTNER_FACILITY
+}
+
+enum EmergencyRequestStatus {
+  PENDING
+  DELIVERED
+  ACKNOWLEDGED
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  FAILED
+}
+
+enum EmergencyRequestChannel {
+  EMAIL
+  SMS
+  WEBHOOK
+  MANUAL_CALL
+}
+
+/// One outbound request to one responder for one incident.
+///
+/// `dedupeKey` makes fan-out idempotent: a retry, a double-tapped SOS button or
+/// a replayed request all collide with the same unique constraint instead of
+/// producing a second dispatch. Status only advances past PENDING/DELIVERED when
+/// a provider-side integration confirms it, which is what separates "we sent a
+/// request" from "somebody accepted".
+model EmergencyDispatchRequest {
+  id                 String                   @id @default(cuid())
+  incidentId         String
+  responderKind      EmergencyResponderKind
+  /// Stable target identifier, e.g. "hospital:<id>". Combined with the incident
+  /// it forms the idempotency key for fan-out.
+  dedupeKey          String
+  hospitalId         String?
+  ambulancePartnerId String?
+  partnerFacilityId  String?
+  responderLabel     String
+  status             EmergencyRequestStatus  @default(PENDING)
+  channel            EmergencyRequestChannel
+  attemptCount       Int                      @default(0)
+  lastAttemptAt      DateTime?
+  acknowledgedAt     DateTime?
+  respondedAt        DateTime?
+  declineReason      String?
+  failureReason      String?
+  distanceMetres     Int?
+  etaMinutes         Int?
+  metadata           Json?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+
+  incident         EmergencyIncident        @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  hospital         Hospital?                @relation(fields: [hospitalId], references: [id], onDelete: SetNull)
+  ambulancePartner AmbulancePartnerProfile? @relation(fields: [ambulancePartnerId], references: [id], onDelete: SetNull)
+  partnerFacility  PartnerFacility?         @relation(fields: [partnerFacilityId], references: [id], onDelete: SetNull)
+
+  @@unique([incidentId, dedupeKey])
+  @@index([incidentId, status])
+  @@index([status, lastAttemptAt])
+}
+
+enum LocationShareStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+/// Time-limited bearer-token location link. Only the HMAC digest is stored, so a
+/// database leak cannot be replayed to track anybody.
+model EmergencyLocationShare {
+  id           String              @id @default(cuid())
+  incidentId   String
+  contactId    String?
+  contactLabel String
+  tokenHash    String              @unique
+  status       LocationShareStatus @default(ACTIVE)
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  viewedAt     DateTime?
+  viewCount    Int                 @default(0)
+  createdAt    DateTime            @default(now())
+
+  incident EmergencyIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  contact  EmergencyContact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@index([incidentId, status])
+  @@index([expiresAt])
+}
+
+// ---------------------------------------------------------------------------
+// Phase 5 — AI health intelligence and medical media analysis
+//
+// Design rules enforced here:
+// - Nothing is stored without an explicit consent row; the conversation carries
+//   the policy version that was on screen when the user agreed.
+// - An assessment is a *preliminary* record. `urgency`, `redFlagCodes` and
+//   `limitationsNotice` are persisted alongside it so the reasoning that drove a
+//   red-flag escalation stays reviewable after the fact.
+// - Uploads live in a private bucket and carry a retention date, a malware-scan
+//   verdict and an extraction verdict. A file that was never scanned is never
+//   treated as clean.
+// - Provider call telemetry records identifiers, models and outcomes only. No
+//   prompt text and no model output is written there, so an ordinary log or
+//   database dump never contains a patient's symptoms.
+// ---------------------------------------------------------------------------
+
+enum AiConversationStatus {
+  OPEN
+  ARCHIVED
+  /// Soft-deleted by the owner or by the retention job; the purge job removes
+  /// the row and its uploads once `retentionUntil` passes.
+  DELETED
+}
+
+enum AiMessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum AiMessageKind {
+  TEXT
+  /// A voice note the user recorded; `content` holds the transcript.
+  VOICE_TRANSCRIPT
+  /// The user attached media in this turn.
+  ATTACHMENT
+  /// The assistant asking for context it is missing.
+  CLARIFYING_QUESTION
+  /// The assistant's preliminary assessment of a turn.
+  ASSESSMENT
+  /// A safety notice shown regardless of what the model returned.
+  SAFETY_NOTICE
+  /// The assistant could not run because no provider is configured.
+  PROVIDER_UNAVAILABLE
+}
+
+enum AiUploadKind {
+  IMAGE
+  VIDEO
+  DOCUMENT
+  AUDIO
+}
+
+enum AiUploadStatus {
+  PENDING
+  SCANNING
+  READY
+  REJECTED
+  EXPIRED
+  DELETED
+}
+
+/// `SKIPPED` means no scanner is configured for this deployment. It is *not* a
+/// clean verdict, and the UI must not present it as one.
+enum AiMalwareScanStatus {
+  PENDING
+  CLEAN
+  INFECTED
+  SKIPPED
+  FAILED
+}
+
+enum AiExtractionStatus {
+  PENDING
+  EXTRACTED
+  /// The configured model cannot read this media type. Reported as unsupported
+  /// rather than guessed at.
+  UNSUPPORTED
+  FAILED
+  SKIPPED
+}
+
+/// Urgency bands are deliberately coarse. A model never gets to invent a finer
+/// gradation than the escalation policy can act on.
+enum AiUrgencyBand {
+  SELF_CARE
+  ROUTINE
+  SOON
+  URGENT
+  EMERGENCY
+}
+
+enum AiAssessmentStatus {
+  DRAFT
+  SAVED
+  /// Red flags were present and the user was routed to emergency care.
+  ESCALATED
+  AWAITING_REVIEW
+  REVIEWED
+  WITHDRAWN
+}
+
+enum AiClinicalReviewStatus {
+  REQUESTED
+  IN_REVIEW
+  CLINICIAN_RESPONDED
+  CLOSED
+  DECLINED
+}
+
+enum AiShareStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+enum AiCapability {
+  TEXT
+  VISION_IMAGE
+  VIDEO
+  AUDIO_TRANSCRIPTION
+  DOCUMENT
+}
+
+enum AiProviderOutcome {
+  SUCCESS
+  NOT_CONFIGURED
+  UNSUPPORTED_CAPABILITY
+  TIMEOUT
+  RATE_LIMITED
+  PROVIDER_ERROR
+  VALIDATION_ERROR
+  SAFETY_BLOCKED
+}
+
+/// One AI workspace thread. The conversation is the unit of consent, retention
+/// and deletion: removing it removes its messages, uploads and assessments.
+model AiConversation {
+  id             String               @id @default(cuid())
+  ownerUserId    String
+  familyMemberId String?
+  title          String?
+  status         AiConversationStatus @default(OPEN)
+  /// BCP-47 tag the user chose for explanations. Stored so a follow-up keeps the
+  /// language of the original assessment.
+  language       String               @default("en")
+
+  /// Consent snapshot. Both are null until the user agrees, and a null
+  /// `consentAcknowledgedAt` means the thread must not be persisted at all.
+  consentAcknowledgedAt DateTime?
+  consentPolicyVersion  String?
+
+  /// Seeded or scripted rows are flagged so they are never read as a live result.
+  isDemo       Boolean   @default(false)
+  lastMessageAt DateTime?
+  /// When the retention job is allowed to purge this thread.
+  retentionUntil DateTime?
+  deletedAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  owner        User           @relation("AiConversationOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  familyMember FamilyMember?  @relation("AiConversationFamilyMember", fields: [familyMemberId], references: [id], onDelete: SetNull)
+  messages     AiMessage[]
+  uploads      AiUpload[]
+  assessments  AiAssessment[]
+  providerCalls AiProviderCall[]
+
+  @@index([ownerUserId, updatedAt])
+  @@index([status, retentionUntil])
+}
+
+/// One turn in a thread. Assistant turns record which provider and model
+/// produced them, so a saved assessment can always be traced to its source.
+model AiMessage {
+  id             String        @id @default(cuid())
+  conversationId String
+  role           AiMessageRole
+  kind           AiMessageKind @default(TEXT)
+  content        String
+  language       String?
+  provider       String?
+  model          String?
+  /// Capabilities actually used for this turn, e.g. [TEXT, VISION_IMAGE].
+  capabilities   AiCapability[]
+  /// Stable codes for every red flag spotted in this turn.
+  redFlagCodes   String[]
+  urgency        AiUrgencyBand?
+  /// True when the turn refused a prescription/dosage request.
+  medicationRefused Boolean    @default(false)
+  latencyMs      Int?
+  isDemo         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  uploads      AiUpload[]
+
+  @@index([conversationId, createdAt])
+}
+
+/// A user-supplied photo, video, audio note or document.
+///
+/// The bytes live in a private bucket under `storageKey`; only short-lived
+/// signed URLs are ever handed to a browser. `malwareScan` and `extraction`
+/// are separate verdicts because a file can be safe to keep and still be
+/// unreadable by the configured model.
+model AiUpload {
+  id             String         @id @default(cuid())
+  conversationId String
+  messageId      String?
+  ownerUserId    String
+  kind           AiUploadKind
+  fileName       String
+  /// Declared type plus a magic-byte check. A mismatch is rejected at upload.
+  mimeType       String
+  sizeBytes      Int
+  storageBucket  String
+  storageKey     String         @unique
+  checksumSha256 String?
+  status         AiUploadStatus @default(PENDING)
+
+  malwareScan       AiMalwareScanStatus @default(PENDING)
+  malwareScanDetail String?
+
+  extraction     AiExtractionStatus @default(PENDING)
+  /// Text the OCR/vision step produced. Held only while the thread is retained.
+  extractedText  String?
+  extractionNotes String?
+  /// How the model described the media, kept verbatim for the audit trail.
+  mediaSummary   String?
+
+  rejectionReason String?
+  retentionUntil  DateTime?
+  deletedAt       DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  conversation AiConversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  message      AiMessage?            @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  owner        User                  @relation("AiUploadOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  assessments  AiAssessmentUpload[]
+
+  @@index([conversationId, createdAt])
+  @@index([ownerUserId, createdAt])
+  @@index([status, retentionUntil])
+}
+
+/// The preliminary assessment produced for a thread.
+///
+/// Everything a safety reviewer would need in order to judge the output is
+/// stored next to the output: the urgency band, the red-flag codes that
+/// justified it, the uncertainty notes the model was required to produce, the
+/// version of the safety policy that was live, and whether a clinician review
+/// was requested.
+model AiAssessment {
+  id             String             @id @default(cuid())
+  conversationId String
+  ownerUserId    String
+  familyMemberId String?
+  status         AiAssessmentStatus @default(DRAFT)
+  language       String             @default("en")
+
+  // Clinically appropriate context the user supplied.
+  ageRange           String?
+  sexAtBirth         String?
+  symptomDuration    String?
+  symptomOnset       String?
+  historyNotes       String?
+  currentMedications String?
+  allergies          String?
+
+  // Structured output. Arrays are stored as JSON so the shape can evolve
+  // without a migration, and are validated by Zod before they are written.
+  summary             String
+  possibleCauses      Json?
+  warningSigns        Json?
+  recommendedSteps    Json?
+  clarifyingQuestions Json?
+  selfCareGuidance    String?
+  uncertaintyNotes    String?
+  /// Always present. The limitations are part of the record, not of the view.
+  limitationsNotice   String
+  urgency             AiUrgencyBand
+  urgencyRationale    String?
+  redFlagCodes        String[]
+  /// True when the user asked for a medicine, a dose or a treatment plan and the
+  /// assistant declined to give one.
+  medicationRefused   Boolean            @default(false)
+
+  // Provenance.
+  provider            String?
+  model               String?
+  isDemo              Boolean            @default(false)
+  promptVersion       String?
+  safetyPolicyVersion String?
+
+  // Escalation and clinical review pathway.
+  escalatedAt         DateTime?
+  escalationReason    String?
+  emergencyIncidentId String?
+  clinicalReviewRequired Boolean        @default(false)
+
+  // Consent and retention.
+  consentToStoreAt    DateTime?
+  consentPolicyVersion String?
+  savedAt             DateTime?
+  retentionUntil      DateTime?
+  deletedAt           DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  conversation      AiConversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  owner             User                  @relation("AiAssessmentOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  familyMember      FamilyMember?         @relation("AiAssessmentFamilyMember", fields: [familyMemberId], references: [id], onDelete: SetNull)
+  emergencyIncident EmergencyIncident?    @relation("AiAssessmentEscalation", fields: [emergencyIncidentId], references: [id], onDelete: SetNull)
+  uploads           AiAssessmentUpload[]
+  reviews           AiClinicalReview[]
+  shares            AiAssessmentShare[]
+
+  @@index([ownerUserId, createdAt])
+  @@index([status, urgency])
+  @@index([retentionUntil])
+}
+
+/// Which uploads fed a given assessment. Explicit join table so an assessment
+/// can cite the exact media it reasoned over.
+model AiAssessmentUpload {
+  assessmentId String
+  uploadId     String
+  createdAt    DateTime @default(now())
+
+  assessment AiAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  upload     AiUpload     @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+
+  @@id([assessmentId, uploadId])
+  @@index([uploadId])
+}
+
+/// Clinical review pathway. A reviewer is a real, identified account — an
+/// anonymous "reviews" row would be indistinguishable from an automated claim.
+model AiClinicalReview {
+  id             String                 @id @default(cuid())
+  assessmentId   String
+  status         AiClinicalReviewStatus @default(REQUESTED)
+  requestedById  String
+  reviewerUserId String?
+  reviewerLabel  String?
+  specialty      String?
+  /// Questions the platform put to the reviewer.
+  requestNotes   String?
+  /// The reviewer's own words. Never generated by a model.
+  reviewNotes    String?
+  decision       String?
+  requestedAt    DateTime               @default(now())
+  startedAt      DateTime?
+  reviewedAt     DateTime?
+  closedAt       DateTime?
+
+  assessment  AiAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  requestedBy User         @relation("AiReviewRequester", fields: [requestedById], references: [id], onDelete: Restrict)
+  reviewer    User?        @relation("AiReviewReviewer", fields: [reviewerUserId], references: [id], onDelete: SetNull)
+
+  @@index([assessmentId, status])
+  @@index([status, requestedAt])
+}
+
+/// Time-limited, revocable link that hands one saved assessment to one named
+/// clinician. Only the HMAC digest of the bearer token is stored, and the row
+/// carries the consent that authorised the share.
+model AiAssessmentShare {
+  id                 String        @id @default(cuid())
+  assessmentId       String
+  createdById        String
+  recipientLabel     String
+  recipientEmail     String?
+  tokenHash          String        @unique
+  status             AiShareStatus @default(ACTIVE)
+  expiresAt          DateTime
+  revokedAt          DateTime?
+  viewedAt           DateTime?
+  viewCount          Int           @default(0)
+  /// When the owner consented to sharing this assessment. Null never happens on
+  /// a persisted row — the share action refuses without it.
+  consentRecordedAt  DateTime
+  consentPolicyVersion String?
+  createdAt          DateTime      @default(now())
+
+  assessment AiAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  createdBy  User         @relation("AiShareCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId, status])
+  @@index([expiresAt])
+}
+
+/// Telemetry for every call made to the AI provider.
+///
+/// Deliberately content-free: it answers "which capability was used, against
+/// which model, and how did it end" without ever holding a symptom description,
+/// a transcript or a photograph. This is what an on-call engineer reads instead
+/// of the request body.
+model AiProviderCall {
+  id             String            @id @default(cuid())
+  userId         String?
+  conversationId String?
+  capability     AiCapability
+  provider       String
+  model          String?
+  outcome        AiProviderOutcome
+  errorKind      String?
+  latencyMs      Int?
+  /// Rough size of the request in characters, for cost and abuse monitoring.
+  inputChars     Int?
+  isDemo         Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+
+  user         User?          @relation("AiProviderCallUser", fields: [userId], references: [id], onDelete: SetNull)
+  conversation AiConversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+
+  @@index([provider, createdAt])
+  @@index([outcome, createdAt])
+  @@index([capability, createdAt])
+}
+
+// ===========================================================================
+// Phase 6 — MediCare pharmacy, medicine ordering and fulfilment
+//
+// Rules this section is built around:
+// - A price is only a price when a partner published one. `pricePublished` and
+//   `MedicineStockStatus.UNKNOWN` exist so an unpublished figure can never be
+//   rendered as a real one.
+// - Every rupee the customer is charged is computed on the server and frozen
+//   into the order row at creation. The browser never sends a price.
+// - A prescription-required line cannot move past prescription review without a
+//   human approval recorded on `Prescription`. No AI outcome authorises
+//   dispensing.
+// - Inventory moves through a ledger, so a stock level is the sum of recorded
+//   movements rather than a number somebody typed.
+// ===========================================================================
+
+enum MedicineDosageForm {
+  TABLET
+  CAPSULE
+  SYRUP
+  SUSPENSION
+  SOLUTION
+  INJECTION
+  INFUSION
+  CREAM
+  OINTMENT
+  GEL
+  LOTION
+  DROPS
+  INHALER
+  SPRAY
+  POWDER
+  GRANULES
+  PATCH
+  SUPPOSITORY
+  DEVICE
+  OTHER
+}
+
+/// Indian drug-schedule classification. It drives whether a prescription is
+/// required by law and whether the platform may list the product at all.
+enum MedicineScheduleClass {
+  OTC
+  GENERAL_SCHEDULE_H
+  SCHEDULE_H
+  SCHEDULE_H1
+  SCHEDULE_X
+  NARCOTIC
+  AYURVEDIC_PROPRIETARY
+  RESTRICTED_OTHER
+}
+
+/// `UNKNOWN` is a real answer: the partner has not published a stock level.
+/// It must never be rendered as "in stock".
+enum MedicineStockStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+  DISCONTINUED
+  UNKNOWN
+}
+
+/// A pharmacy's regulated operating profile. Credentials here are what a
+/// platform administrator reviews before the pharmacy may dispense anything.
+model PharmacyPartnerProfile {
+  id                            String                  @id @default(cuid())
+  ownerUserId                   String                  @unique
+  /// The public discovery listing, when one exists.
+  facilityId                    String?                 @unique
+  legalName                     String
+  tradeName                     String?
+  /// State drug licence number. Required before prescription medicines may be dispensed.
+  drugLicenceNumber             String?
+  drugLicenceType               String?
+  drugLicenceAuthority          String?
+  drugLicenceExpiresAt          DateTime?
+  gstin                         String?
+  pharmacistName                String?
+  pharmacistRegistrationNumber  String?
+  pharmacistRegistrationCouncil String?
+  /// Set by a reviewer, never by the partner's own submission.
+  canDispensePrescriptionMedicines Boolean              @default(false)
+  canDispenseControlledMedicines   Boolean              @default(false)
+  homeDeliveryAvailable         Boolean                 @default(false)
+  deliveryRadiusKm              Int?
+  /// Statement the partner accepted about dispensing law. Kept with the profile.
+  complianceAcknowledgedAt      DateTime?
+  compliancePolicyVersion       String?
+  status                        PartnerApplicationStatus @default(DRAFT)
+  verificationStatus            VerificationState       @default(UNVERIFIED)
+  verificationNotes             String?
+  verifiedAt                    DateTime?
+  verifiedById                  String?
+  dataProvenance                DataProvenance          @default(PROVIDER_SUBMITTED)
+  isDemo                        Boolean                 @default(false)
+  createdAt                     DateTime                @default(now())
+  updatedAt                     DateTime                @updatedAt
+
+  owner    User            @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  facility PartnerFacility? @relation(fields: [facilityId], references: [id], onDelete: SetNull)
+
+  offers         PharmacyOffer[]
+  orders         PharmacyOrder[]
+  inventoryEntries PharmacyInventoryEntry[]
+
+  @@index([verificationStatus, status])
+}
+
+/// A catalogue product. Product facts (strength, form, pack size, manufacturer)
+/// belong to the platform's verified catalogue; price and stock belong to a
+/// partner's offer, because two pharmacies sell the same tablet differently.
+model MedicineProduct {
+  id                  String                @id @default(cuid())
+  slug                String                @unique
+  brandName           String
+  /// Non-proprietary name. Search matches both this and the brand.
+  genericName         String
+  strengthLabel       String
+  dosageForm          MedicineDosageForm
+  packSizeLabel       String
+  unitsPerPack        Int?
+  manufacturer        String?
+  manufacturerCountry String?
+  /// Barcode / GTIN / UPC when the manufacturer publishes one.
+  drugCode            String?
+  scheduleClass       MedicineScheduleClass @default(GENERAL_SCHEDULE_H)
+  /// Derived from `scheduleClass` at write time and stored so a query can filter
+  /// without re-deriving the law.
+  prescriptionRequired Boolean              @default(true)
+  isControlled         Boolean              @default(false)
+  /// False when the platform may not list this category at all. Such a product is
+  /// never returned by a storefront query.
+  listable             Boolean              @default(true)
+  nonListableReason    String?
+  categorySlug         String
+  description          String?
+  /// Neutral, non-promotional explanation of what the medicine is used for.
+  usesSummary          String?
+  commonSideEffects    String?
+  storageNotes         String?
+  warnings             String?
+  imageUrl             String?
+  verificationStatus   VerificationState     @default(UNVERIFIED)
+  verifiedAt           DateTime?
+  dataProvenance       DataProvenance        @default(PROVIDER_SUBMITTED)
+  isDemo               Boolean               @default(false)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  deletedAt            DateTime?
+
+  equivalents   MedicineEquivalent[] @relation("EquivalentSource")
+  equivalentOf  MedicineEquivalent[] @relation("EquivalentRelated")
+  offers        PharmacyOffer[]
+  orderItems    PharmacyOrderItem[]
+  prescriptionItems PrescriptionItem[]
+
+  @@index([categorySlug, listable])
+  @@index([genericName])
+  @@index([scheduleClass])
+}
+
+enum MedicineEquivalentRelationship {
+  /// Same active ingredient and strength, different brand. A substitution the
+  /// law allows only on a prescriber's instruction, which is why the platform
+  /// shows it and never performs it.
+  GENERIC_EQUIVALENT
+  /// Same molecule, different strength or pack. Not interchangeable as-is.
+  SAME_MOLECULE
+  /// Different molecule used for the same indication. Informational only.
+  THERAPEUTIC_ALTERNATIVE
+}
+
+/// An informational link between two products.
+///
+/// This row is what the storefront reads to answer "is there a generic of this?".
+/// It is deliberately not a substitution instruction: no code path swaps a cart
+/// line because of a relationship recorded here.
+model MedicineEquivalent {
+  id              String                          @id @default(cuid())
+  sourceProductId String
+  relatedProductId String
+  relationship    MedicineEquivalentRelationship
+  note            String?
+  /// Only a verified relationship is shown as clinically equivalent.
+  verificationStatus VerificationState            @default(UNVERIFIED)
+  reviewedAt      DateTime?
+  dataProvenance  DataProvenance                  @default(PROVIDER_SUBMITTED)
+  createdAt       DateTime                        @default(now())
+
+  sourceProduct  MedicineProduct @relation("EquivalentSource", fields: [sourceProductId], references: [id], onDelete: Cascade)
+  relatedProduct MedicineProduct @relation("EquivalentRelated", fields: [relatedProductId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceProductId, relatedProductId, relationship])
+  @@index([sourceProductId, verificationStatus])
+}
+
+/// One pharmacy's listing of one product: the only place a price or a stock
+/// level may come from.
+model PharmacyOffer {
+  id                String              @id @default(cuid())
+  productId         String
+  pharmacyProfileId String
+  /// Retail price in paise. Paise rather than rupees because Indian medicine
+  /// prices carry two decimal places and floating point money is not acceptable.
+  priceInPaise      Int
+  mrpInPaise        Int?
+  /// False until the partner publishes a price. An unpublished offer is listed
+  /// as "price on request" rather than shown at zero.
+  pricePublished    Boolean             @default(false)
+  /// GST rate in basis points (500 = 5%, 1200 = 12%).
+  taxRateBps        Int?
+  stockStatus       MedicineStockStatus @default(UNKNOWN)
+  /// Null means the partner has not published a countable level.
+  stockQuantity     Int?
+  lowStockThreshold Int                 @default(10)
+  restockEtaDays    Int?
+  deliveryEtaMinutes Int?
+  maxPerOrder       Int?
+  isActive          Boolean             @default(true)
+  verificationStatus VerificationState   @default(UNVERIFIED)
+  verifiedAt        DateTime?
+  dataProvenance    DataProvenance       @default(PROVIDER_SUBMITTED)
+  isDemo            Boolean             @default(false)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  product  MedicineProduct      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  pharmacy PharmacyPartnerProfile @relation(fields: [pharmacyProfileId], references: [id], onDelete: Cascade)
+  entries  PharmacyInventoryEntry[]
+  cartItems PharmacyCartItem[]
+  orderItems PharmacyOrderItem[]
+
+  @@unique([productId, pharmacyProfileId])
+  @@index([pharmacyProfileId, isActive])
+  @@index([stockStatus])
+}
+
+/// Every stock movement, so a level can be audited rather than trusted.
+enum PharmacyInventoryReason {
+  RESTOCK
+  SALE
+  ORDER_CANCELLED
+  CORRECTION
+  EXPIRY
+  DAMAGE
+  RETURN
+  RECONCILIATION
+}
+
+model PharmacyInventoryEntry {
+  id                String                  @id @default(cuid())
+  pharmacyProfileId String
+  offerId           String
+  /// Signed change. A sale is negative; a restock is positive.
+  delta             Int
+  /// The level the ledger stood at immediately after this movement.
+  balanceAfter      Int
+  reason            PharmacyInventoryReason
+  note              String?
+  orderId           String?
+  actorUserId       String?
+  actorLabel        String?
+  createdAt         DateTime                @default(now())
+
+  pharmacy PharmacyPartnerProfile @relation(fields: [pharmacyProfileId], references: [id], onDelete: Cascade)
+  offer    PharmacyOffer          @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@index([offerId, createdAt])
+  @@index([pharmacyProfileId, createdAt])
+}
+
+enum PharmacyCartStatus {
+  ACTIVE
+  CONVERTED
+  ABANDONED
+}
+
+/// One live basket per customer. Converted rather than deleted at checkout so an
+/// abandoned basket can be told apart from one that produced an order.
+model PharmacyCart {
+  id          String             @id @default(cuid())
+  ownerUserId String             @unique
+  status      PharmacyCartStatus @default(ACTIVE)
+  convertedOrderId String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  owner User               @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  items PharmacyCartItem[]
+}
+
+model PharmacyCartItem {
+  id       String   @id @default(cuid())
+  cartId   String
+  offerId  String
+  quantity Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cart  PharmacyCart  @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  offer PharmacyOffer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, offerId])
+}
+
+/// A saved delivery address. Orders snapshot the address they were placed to, so
+/// editing this row never rewrites the history of a delivered parcel.
+model PatientAddress {
+  id            String   @id @default(cuid())
+  ownerUserId   String
+  label         String
+  recipientName String
+  phone         String
+  addressLine1  String
+  addressLine2  String?
+  landmark      String?
+  city          String
+  state         String
+  postalCode    String
+  latitude      Float?
+  longitude     Float?
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+
+  owner User @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+
+  @@index([ownerUserId, deletedAt])
+}
+
+/// The states named by the brief. There is no "payment failed" state: a failed
+/// attempt is recorded on `PharmacyPayment` and the order stays `PENDING_PAYMENT`
+/// until either payment succeeds or `paymentDueAt` passes.
+enum PharmacyOrderStatus {
+  PENDING_PAYMENT
+  PAYMENT_CONFIRMED
+  PRESCRIPTION_REVIEW
+  ACCEPTED
+  PACKED
+  DISPATCHED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PharmacyOrderEventType {
+  CREATED
+  PAYMENT_INITIATED
+  PAYMENT_FAILED
+  PAYMENT_CONFIRMED
+  PRESCRIPTION_REQUIRED
+  PRESCRIPTION_APPROVED
+  PRESCRIPTION_REJECTED
+  ORDER_ACCEPTED
+  ORDER_REJECTED
+  PACKED
+  DISPATCHED
+  DELIVERED
+  CANCELLED
+  REFUND_INITIATED
+  REFUND_COMPLETED
+  NOTE
+}
+
+/// A customer's order with exactly one pharmacy.
+model PharmacyOrder {
+  id                String               @id @default(cuid())
+  /// Customer-facing reference, e.g. ORX-PH-7K2M4Q.
+  reference         String               @unique
+  customerUserId    String
+  pharmacyProfileId String
+  status            PharmacyOrderStatus  @default(PENDING_PAYMENT)
+
+  // Delivery address snapshot.
+  deliveryRecipientName String
+  deliveryPhone         String
+  deliveryLine1         String
+  deliveryLine2         String?
+  deliveryLandmark      String?
+  deliveryCity          String
+  deliveryState         String
+  deliveryPostalCode    String
+  deliveryLatitude      Float?
+  deliveryLongitude     Float?
+
+  // Money, in paise, computed on the server and frozen here.
+  itemsSubtotalPaise Int
+  discountPaise      Int  @default(0)
+  deliveryFeePaise   Int  @default(0)
+  taxPaise           Int  @default(0)
+  totalPaise         Int
+  discountCode       String?
+  /// Estimated delivery window shown at checkout. An estimate, never a promise.
+  deliveryEstimateMinutes Int?
+
+  requiresPrescription Boolean @default(false)
+  prescriptionId       String?
+  /// Set when a human rejects the order, with the reason they gave.
+  cancellationReason   String?
+  cancelledByLabel     String?
+  cancelledAt          DateTime?
+
+  /// An unpaid order is released, and its stock returned, after this instant.
+  paymentDueAt  DateTime?
+  placedAt      DateTime  @default(now())
+  acceptedAt    DateTime?
+  packedAt      DateTime?
+  dispatchedAt  DateTime?
+  deliveredAt   DateTime?
+  /// Set only from a partner's acknowledgement, never auto-filled.
+  deliveryAckReference String?
+  deliveryPartnerName  String?
+  deliveryTrackingUrl  String?
+
+  isDemo        Boolean   @default(false)
+  retentionUntil DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  customer User                  @relation("PharmacyOrderCustomer", fields: [customerUserId], references: [id], onDelete: Restrict)
+  pharmacy PharmacyPartnerProfile @relation(fields: [pharmacyProfileId], references: [id], onDelete: Restrict)
+  prescription Prescription?      @relation(fields: [prescriptionId], references: [id], onDelete: SetNull)
+
+  items    PharmacyOrderItem[]
+  events   PharmacyOrderEvent[]
+  payments PharmacyPayment[]
+  refunds  PharmacyRefund[]
+
+  @@index([customerUserId, createdAt])
+  @@index([pharmacyProfileId, status])
+  @@index([status, paymentDueAt])
+}
+
+/// A line on an order. Everything printed on the invoice is copied here, so the
+/// invoice still reads correctly after the catalogue changes.
+model PharmacyOrderItem {
+  id                 String                @id @default(cuid())
+  orderId            String
+  offerId            String?
+  productId          String
+  productName        String
+  genericName        String
+  strengthLabel      String
+  dosageForm         MedicineDosageForm
+  packSizeLabel      String
+  manufacturer       String?
+  scheduleClass      MedicineScheduleClass
+  prescriptionRequired Boolean
+  isControlled       Boolean
+  pharmacyName       String
+  unitPricePaise     Int
+  quantity           Int
+  taxRateBps         Int?
+  lineSubtotalPaise  Int
+  lineTaxPaise       Int
+  lineTotalPaise     Int
+  createdAt          DateTime              @default(now())
+
+  order   PharmacyOrder  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  offer   PharmacyOffer? @relation(fields: [offerId], references: [id], onDelete: SetNull)
+  product MedicineProduct @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+}
+
+model PharmacyOrderEvent {
+  id           String                 @id @default(cuid())
+  orderId      String
+  type         PharmacyOrderEventType
+  actorUserId  String?
+  actorRole    Role?
+  actorLabel   String?
+  note         String?
+  metadata     Json?
+  createdAt    DateTime               @default(now())
+
+  order PharmacyOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+}
+
+/// Which payment provider handled an attempt. `SANDBOX` is a real, working
+/// stand-in that settles nothing; every row records which one it was.
+enum PaymentProviderKind {
+  SANDBOX
+  RAZORPAY
+}
+
+enum PaymentStatus {
+  CREATED
+  PENDING
+  REQUIRES_ACTION
+  AUTHORISED
+  CAPTURED
+  FAILED
+  CANCELLED
+  EXPIRED
+}
+
+model PharmacyPayment {
+  id                String              @id @default(cuid())
+  orderId           String
+  provider          PaymentProviderKind
+  providerOrderId   String?
+  providerPaymentId String?
+  /// Signature the provider sent, kept for reconciliation. Never a secret we use twice.
+  providerSignature String?
+  amountPaise       Int
+  currency          String              @default("INR")
+  status            PaymentStatus       @default(CREATED)
+  method            String?
+  failureCode       String?
+  failureReason     String?
+  /// Client-supplied key that makes retrying the same checkout safe.
+  idempotencyKey    String?             @unique
+  /// True for the provider that cannot move real money.
+  isSandbox         Boolean             @default(true)
+  /// Provider response summary with anything sensitive removed.
+  rawSummary        Json?
+  capturedAt        DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  order    PharmacyOrder     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  refunds  PharmacyRefund[]
+
+  @@index([orderId, createdAt])
+  @@index([providerOrderId])
+  @@index([providerPaymentId])
+}
+
+enum RefundStatus {
+  REQUESTED
+  PROCESSING
+  PROCESSED
+  FAILED
+  CANCELLED
+}
+
+model PharmacyRefund {
+  id               String              @id @default(cuid())
+  orderId          String
+  paymentId        String?
+  provider         PaymentProviderKind
+  providerRefundId String?
+  amountPaise      Int
+  reason           String
+  status           RefundStatus        @default(REQUESTED)
+  requestedById    String?
+  requestedByLabel String?
+  approvedById     String?
+  approvedByLabel  String?
+  failureReason    String?
+  idempotencyKey   String?             @unique
+  isSandbox        Boolean             @default(true)
+  processedAt      DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  order   PharmacyOrder    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  payment PharmacyPayment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@index([orderId, createdAt])
+}
+
+/// Signed provider callbacks. The unique key is what makes replaying a webhook
+/// harmless: the second delivery finds the row and does nothing.
+enum PaymentWebhookStatus {
+  RECEIVED
+  PROCESSED
+  IGNORED
+  FAILED
+}
+
+model PaymentWebhookEvent {
+  id                String               @id @default(cuid())
+  provider          PaymentProviderKind
+  eventId           String
+  eventType         String
+  signatureVerified Boolean              @default(false)
+  status            PaymentWebhookStatus @default(RECEIVED)
+  payload           Json?
+  error             String?
+  receivedAt        DateTime             @default(now())
+  processedAt       DateTime?
+
+  @@unique([provider, eventId])
+  @@index([status, receivedAt])
+}
+
+// ---------------------------------------------------------------------------
+// Prescriptions
+// ---------------------------------------------------------------------------
+
+enum PrescriptionSource {
+  /// Photographed or scanned by the patient.
+  UPLOADED
+  /// Issued by a prescriber through ORVEXA.
+  PLATFORM_CLINICIAN
+}
+
+enum PrescriptionStatus {
+  UPLOADED
+  UNDER_REVIEW
+  CLARIFICATION_REQUESTED
+  APPROVED
+  PARTIALLY_APPROVED
+  REJECTED
+  EXPIRED
+  WITHDRAWN
+}
+
+enum PrescriptionDocumentKind {
+  SCAN
+  PHOTO
+  PDF
+}
+
+enum PrescriptionDocumentStatus {
+  PENDING
+  READY
+  REJECTED
+  DELETED
+}
+
+/// A prescription the patient owns.
+///
+/// The row is the unit of consent and retention: withdrawing it removes the
+/// documents and stops any further release to a pharmacy.
+model Prescription {
+  id          String             @id @default(cuid())
+  reference   String             @unique
+  ownerUserId String
+  familyMemberId String?
+  source      PrescriptionSource @default(UPLOADED)
+  status      PrescriptionStatus @default(UPLOADED)
+
+  // What the document says about itself. Free text: a pharmacist reads it and
+  // decides, the platform does not parse it into authority.
+  prescriberName               String?
+  prescriberRegistrationNumber String?
+  prescriberClinic             String?
+  issuedOn                     DateTime?
+  validUntil                   DateTime?
+  patientNameOnDocument        String?
+  patientNotes                 String?
+
+  /// A pharmacist's review is a recorded human decision.
+  reviewNotes   String?
+  reviewedById  String?
+  reviewedByLabel String?
+  reviewedAt    DateTime?
+
+  consentAcknowledgedAt DateTime?
+  consentPolicyVersion  String?
+  isDemo        Boolean   @default(false)
+  retentionUntil DateTime?
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  owner        User             @relation("PrescriptionOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  familyMember FamilyMember?    @relation("PrescriptionFamilyMember", fields: [familyMemberId], references: [id], onDelete: SetNull)
+  documents    PrescriptionDocument[]
+  items        PrescriptionItem[]
+  reviews      PrescriptionReviewEvent[]
+  orders       PharmacyOrder[]
+
+  @@index([ownerUserId, status])
+  @@index([status, createdAt])
+}
+
+/// One stored file belonging to a prescription. Bytes live in the private
+/// bucket; this row holds only the key and the scan verdict.
+model PrescriptionDocument {
+  id             String                    @id @default(cuid())
+  prescriptionId String
+  uploadedById   String
+  kind           PrescriptionDocumentKind
+  fileName       String
+  mimeType       String
+  sizeBytes      Int
+  storageBucket  String
+  storageKey     String                    @unique
+  checksumSha256 String?
+  status         PrescriptionDocumentStatus @default(PENDING)
+  malwareScan       AiMalwareScanStatus    @default(PENDING)
+  malwareScanDetail String?
+  rejectionReason String?
+  retentionUntil  DateTime?
+  deletedAt       DateTime?
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+
+  prescription Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+
+  @@index([prescriptionId, createdAt])
+  @@index([status, retentionUntil])
+}
+
+/// A medicine line as written on the prescription, matched to a catalogue
+/// product where one exists. Matching is a reviewer's action, not a guess.
+model PrescriptionItem {
+  id             String   @id @default(cuid())
+  prescriptionId String
+  productId      String?
+  prescribedName String
+  strengthLabel  String?
+  dosageForm     String?
+  frequency      String?
+  durationDays   Int?
+  quantity       Int?
+  instructions   String?
+  createdAt      DateTime @default(now())
+
+  prescription Prescription         @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  product      MedicineProduct?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([prescriptionId])
+}
+
+model PrescriptionReviewEvent {
+  id             String             @id @default(cuid())
+  prescriptionId String
+  status         PrescriptionStatus
+  actorUserId    String?
+  actorRole      Role?
+  actorLabel     String?
+  note           String?
+  createdAt      DateTime           @default(now())
+
+  prescription Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+
+  @@index([prescriptionId, createdAt])
+}
+
+// ===========================================================================
+// Phase 7 — health insurance and claims
+//
+// Rules this section is built around:
+// - An insurer's decision is only ever recorded as the insurer's. ORVEXA staff
+//   and partners can move a claim's administrative status, and can record a
+//   decision they received, but a decision row always names who communicated it.
+// - Coverage terms (waiting periods, exclusions, co-pay, deductibles) are shown
+//   only when `verificationStatus`/`verificationSource` say a verified source
+//   supplied them. A self-declared policy is labelled as self-declared.
+// - Where an insurer has no integration, `Insurer.integrationMode` records that
+//   and the workflow is an explicitly manual one with a reference number — never
+//   a fabricated eligibility or approval.
+// ===========================================================================
+
+/// How ORVEXA can reach an insurer. `MANUAL_OFFLINE` is the honest default: it
+/// means a human files the request and records the reference the insurer issued.
+enum InsurerIntegrationMode {
+  /// A real, configured two-way API integration for this insurer.
+  API
+  /// The insurer's own partner portal is used by a reviewer, by hand.
+  PARTNER_PORTAL
+  /// Requests are filed by email/phone and recorded here afterwards.
+  MANUAL_OFFLINE
+  /// No route exists yet. Requests are recorded as "not submitted".
+  NONE
+}
+
+model Insurer {
+  id                     String                 @id @default(cuid())
+  slug                   String                 @unique
+  name                   String
+  legalName              String?
+  irdaiRegistrationNumber String?
+  /// Public register where the registration above can be checked.
+  regulatorRegisterUrl   String?
+  supportPhone           String?
+  supportEmail           String?
+  website                String?
+  /// Where a network list is published, when the insurer publishes one.
+  networkListUrl         String?
+  integrationMode        InsurerIntegrationMode @default(MANUAL_OFFLINE)
+  /// Base URL of the configured API, when one exists. Never a credential.
+  integrationBaseUrl     String?
+  integrationNotes       String?
+  /// Whether a credential is present for this insurer in this deployment.
+  /// The credential itself is never stored in the database.
+  integrationConfigured  Boolean                @default(false)
+  verificationStatus     VerificationState      @default(UNVERIFIED)
+  verificationNotes      String?
+  verifiedAt             DateTime?
+  dataProvenance         DataProvenance         @default(PROVIDER_SUBMITTED)
+  isActive               Boolean                @default(true)
+  isDemo                 Boolean                @default(false)
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+
+  products        InsuranceProduct[]
+  networkEntries  InsuranceNetworkHospital[]
+  policies        InsurancePolicy[]
+  claims          InsuranceClaim[]
+  preAuthorizations InsurancePreAuthorization[]
+  eligibilityChecks InsuranceEligibilityCheck[]
+  partnerProfiles InsurerPartnerProfile[]
+
+  @@index([isActive, verificationStatus])
+}
+
+enum InsuranceCoverType {
+  INDIVIDUAL
+  FAMILY_FLOATER
+  GROUP_EMPLOYER
+  SENIOR_CITIZEN
+  MATERNITY
+  CRITICAL_ILLNESS
+  TOP_UP
+  SUPER_TOP_UP
+  PERSONAL_ACCIDENT
+  OTHER
+}
+
+/// Where a product's published terms came from. Only the first three may be
+/// shown as supported by a verified source.
+enum InsuranceProductSource {
+  INSURER_PUBLISHED
+  INSURER_API
+  PARTNER_CONFIRMED
+  PLATFORM_UNVERIFIED
+}
+
+/// An approved insurance product. Compare pages read from here and nowhere else.
+model InsuranceProduct {
+  id                String                 @id @default(cuid())
+  insurerId         String
+  slug              String                 @unique
+  productName       String
+  coverType         InsuranceCoverType     @default(INDIVIDUAL)
+  sumInsuredMinInr  Int?
+  sumInsuredMaxInr  Int?
+  premiumFromInr    Int?
+  /// Terms below are all optional. A null is rendered as "not published",
+  /// never as "not applicable".
+  roomRentLimitNote        String?
+  coPaymentNote            String?
+  deductibleInr            Int?
+  waitingPeriodNote        String?
+  preExistingWaitingMonths Int?
+  maternityWaitingMonths   Int?
+  exclusions               String[]
+  inclusions               String[]
+  networkHospitalCount     Int?
+  sourceOfTruth     InsuranceProductSource @default(PLATFORM_UNVERIFIED)
+  /// The brochure or schedule the terms above were read from.
+  sourceDocumentKey String?
+  sourceReference   String?
+  effectiveFrom     DateTime?
+  effectiveTo       DateTime?
+  verificationStatus VerificationState     @default(UNVERIFIED)
+  verifiedAt        DateTime?
+  verifiedById      String?
+  dataProvenance    DataProvenance         @default(PROVIDER_SUBMITTED)
+  isActive          Boolean                @default(true)
+  isDemo            Boolean                @default(false)
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  insurer  Insurer                   @relation(fields: [insurerId], references: [id], onDelete: Cascade)
+  policies InsurancePolicy[]
+
+  @@index([insurerId, isActive])
+  @@index([coverType])
+}
+
+enum NetworkEntrySource {
+  INSURER_LIST
+  INSURER_API
+  PARTNER_CONFIRMED
+  HOSPITAL_DECLARED
+  PLATFORM_UNVERIFIED
+}
+
+/// A hospital the insurer says is in its network.
+///
+/// This is a different claim from `HospitalInsuranceNetwork`, which is a hospital
+/// asserting it accepts an insurer. A search that says "cashless here" must be
+/// reading one of these rows with a source that is not `PLATFORM_UNVERIFIED`.
+model InsuranceNetworkHospital {
+  id             String             @id @default(cuid())
+  insurerId      String
+  /// Linked ORVEXA listing, when the network entry has been matched to one.
+  hospitalId     String?
+  hospitalName   String
+  addressLine1   String?
+  city           String
+  state          String
+  postalCode     String?
+  latitude       Float?
+  longitude      Float?
+  /// Product slugs this entry applies to. Empty means every product of the insurer.
+  productSlugs   String[]
+  cashlessAvailable Boolean?
+  source         NetworkEntrySource @default(PLATFORM_UNVERIFIED)
+  sourceReference String?
+  effectiveFrom  DateTime?
+  effectiveTo    DateTime?
+  lastSyncedAt   DateTime?
+  verificationStatus VerificationState @default(UNVERIFIED)
+  verifiedAt     DateTime?
+  verifiedById   String?
+  dataProvenance DataProvenance     @default(PROVIDER_SUBMITTED)
+  isDemo         Boolean            @default(false)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  insurer  Insurer  @relation(fields: [insurerId], references: [id], onDelete: Cascade)
+  hospital Hospital? @relation(fields: [hospitalId], references: [id], onDelete: SetNull)
+
+  @@unique([insurerId, hospitalName, city])
+  @@index([city, verificationStatus])
+  @@index([hospitalId])
+}
+
+enum PolicyStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  SUSPENDED
+  LAPSED
+  UNKNOWN
+}
+
+/// Where a policy's terms came from. `SELF_DECLARED` is shown as unverified.
+enum PolicyVerificationSource {
+  SELF_DECLARED
+  DOCUMENT_REVIEWED
+  INSURER_CONFIRMED
+  PARTNER_CONFIRMED
+}
+
+/// A policy a patient holds. Only one of these authorises a claim.
+model InsurancePolicy {
+  id             String         @id @default(cuid())
+  ownerUserId    String
+  familyMemberId String?
+  insurerId      String?
+  /// The insurer's name exactly as printed, kept even when no `Insurer` row is
+  /// linked, so an unrecognised insurer is still recorded honestly.
+  insurerName    String
+  productId      String?
+  productName    String?
+  policyNumber   String
+  memberId       String?
+  policyHolderName String
+  /// Names of everyone the policy covers, as the document lists them.
+  coveredMemberNames String[]
+  coverType      InsuranceCoverType @default(INDIVIDUAL)
+  sumInsuredInr  Int?
+  premiumInr     Int?
+  premiumFrequency String?
+  startDate      DateTime?
+  renewalDate    DateTime?
+
+  roomRentLimitNote String?
+  coPaymentNote     String?
+  deductibleInr     Int?
+  waitingPeriodNote String?
+  exclusions        String[]
+
+  status PolicyStatus @default(UNKNOWN)
+  verificationSource PolicyVerificationSource @default(SELF_DECLARED)
+  verificationNotes  String?
+  verifiedAt         DateTime?
+  verifiedById       String?
+
+  consentAcknowledgedAt DateTime?
+  consentPolicyVersion  String?
+  dataProvenance DataProvenance @default(PROVIDER_SUBMITTED)
+  isDemo         Boolean        @default(false)
+  retentionUntil DateTime?
+  deletedAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  owner   User               @relation("PolicyOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  familyMember FamilyMember?  @relation("PolicyFamilyMember", fields: [familyMemberId], references: [id], onDelete: SetNull)
+  insurer Insurer?            @relation(fields: [insurerId], references: [id], onDelete: SetNull)
+  product InsuranceProduct?   @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  documents       InsurancePolicyDocument[]
+  claims          InsuranceClaim[]
+  preAuthorizations InsurancePreAuthorization[]
+  eligibilityChecks InsuranceEligibilityCheck[]
+
+  @@index([ownerUserId, status])
+  @@index([renewalDate])
+}
+
+enum InsuranceDocumentStatus {
+  PENDING
+  READY
+  REJECTED
+  DELETED
+}
+
+enum InsurancePolicyDocumentKind {
+  POLICY_SCHEDULE
+  CERTIFICATE
+  PREMIUM_RECEIPT
+  ENDORSEMENT
+  ID_PROOF
+  OTHER
+}
+
+model InsurancePolicyDocument {
+  id              String               @id @default(cuid())
+  policyId        String
+  uploadedById    String
+  kind            InsurancePolicyDocumentKind @default(POLICY_SCHEDULE)
+  fileName        String
+  mimeType        String
+  sizeBytes       Int
+  storageBucket   String
+  storageKey      String               @unique
+  checksumSha256  String?
+  status          InsuranceDocumentStatus @default(PENDING)
+  malwareScan       AiMalwareScanStatus @default(PENDING)
+  malwareScanDetail String?
+  rejectionReason String?
+  retentionUntil  DateTime?
+  deletedAt       DateTime?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  policy InsurancePolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@index([policyId, createdAt])
+}
+
+enum ClaimType {
+  CASHLESS_PRE_AUTHORIZATION
+  CASHLESS
+  REIMBURSEMENT
+}
+
+/// Administrative + decision states. The decision states are only ever reached
+/// from a recorded insurer decision.
+enum ClaimStatus {
+  DRAFT
+  SUBMITTED
+  ACKNOWLEDGED
+  AWAITING_INFORMATION
+  UNDER_REVIEW
+  PRE_AUTH_PENDING
+  PRE_AUTH_APPROVED
+  PRE_AUTH_PARTIALLY_APPROVED
+  PRE_AUTH_REJECTED
+  APPROVED
+  PARTIALLY_APPROVED
+  REJECTED
+  SETTLED
+  CLOSED
+  WITHDRAWN
+}
+
+/// The insurer's position on a claim. ORVEXA never sets this on the insurer's
+/// behalf; a reviewer records what the insurer communicated.
+enum ClaimDecision {
+  PENDING
+  APPROVED
+  PARTIALLY_APPROVED
+  REJECTED
+  QUERY_RAISED
+  WITHDRAWN
+}
+
+model InsuranceClaim {
+  id          String      @id @default(cuid())
+  /// Patient-facing reference, e.g. ORX-CL-8F3P2W.
+  reference   String      @unique
+  /// The number the insurer issued for this claim, once they issue one.
+  insurerClaimNumber String?
+  claimType   ClaimType
+  status      ClaimStatus @default(DRAFT)
+
+  patientUserId   String
+  familyMemberId  String?
+  initiatedById   String
+  policyId        String
+  insurerId       String?
+  hospitalId      String?
+  /// Hospital name as the patient entered it when no listing is linked.
+  hospitalName    String?
+
+  treatmentSummary  String?
+  admissionDate     DateTime?
+  dischargeDate     DateTime?
+  diagnosisSummary  String?
+  treatingDoctorName String?
+
+  /// Estimates are labelled as estimates in every view. `approvedAmountInr` is
+  /// only ever written from a recorded insurer decision.
+  estimatedCostInr  Int?
+  claimedAmountInr  Int?
+  approvedAmountInr Int?
+
+  decision         ClaimDecision @default(PENDING)
+  decisionNotes    String?
+  decidedAt        DateTime?
+  /// Who communicated the decision, e.g. "Insurer: Apollo Munich, TPA desk".
+  /// Free text on purpose: it must be attributable without implying ORVEXA decided.
+  decidedByLabel   String?
+  /// Plain-English summary of the insurer's stated reason, when they gave one.
+  decisionReasonLabel String?
+
+  assignedReviewerUserId String?
+
+  /// Duplicate suppression over policy + admission date + type + amount.
+  dedupeKey String?
+  duplicateOfClaimId String?
+
+  consentAcknowledgedAt DateTime
+  consentPolicyVersion  String?
+  submittedAt  DateTime?
+  acknowledgedAt DateTime?
+  settledAt    DateTime?
+  closedAt     DateTime?
+
+  dataProvenance DataProvenance @default(PROVIDER_SUBMITTED)
+  isDemo        Boolean        @default(false)
+  retentionUntil DateTime?
+  deletedAt     DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  patient  User          @relation("ClaimPatient", fields: [patientUserId], references: [id], onDelete: Restrict)
+  familyMember FamilyMember? @relation("ClaimFamilyMember", fields: [familyMemberId], references: [id], onDelete: SetNull)
+  policy   InsurancePolicy @relation(fields: [policyId], references: [id], onDelete: Restrict)
+  insurer  Insurer?      @relation(fields: [insurerId], references: [id], onDelete: SetNull)
+  hospital Hospital?     @relation("ClaimHospital", fields: [hospitalId], references: [id], onDelete: SetNull)
+  duplicateOf InsuranceClaim? @relation("ClaimDuplicate", fields: [duplicateOfClaimId], references: [id], onDelete: SetNull)
+  duplicates  InsuranceClaim[] @relation("ClaimDuplicate")
+
+  documents       InsuranceClaimDocument[]
+  events          InsuranceClaimEvent[]
+  queries         InsuranceClaimQuery[]
+  preAuthorizations InsurancePreAuthorization[]
+  settlements     InsuranceSettlement[]
+
+  @@unique([policyId, dedupeKey])
+  @@index([patientUserId, status])
+  @@index([status, createdAt])
+  @@index([assignedReviewerUserId, status])
+}
+
+enum ClaimDocumentKind {
+  POLICY_COPY
+  INSURED_ID_PROOF
+  HOSPITAL_ESTIMATE
+  PRE_AUTH_FORM
+  DISCHARGE_SUMMARY
+  INVESTIGATION_REPORT
+  PRESCRIPTION
+  HOSPITAL_INVOICE
+  PAYMENT_PROOF
+  INSURER_CORRESPONDENCE
+  OTHER
+}
+
+model InsuranceClaimDocument {
+  id             String                @id @default(cuid())
+  claimId        String
+  uploadedById   String
+  kind           ClaimDocumentKind     @default(OTHER)
+  fileName       String
+  mimeType       String
+  sizeBytes      Int
+  storageBucket  String
+  storageKey     String                @unique
+  checksumSha256 String?
+  status         InsuranceDocumentStatus @default(PENDING)
+  malwareScan       AiMalwareScanStatus @default(PENDING)
+  malwareScanDetail String?
+  rejectionReason String?
+  /// Whether this document satisfies an outstanding insurer query.
+  queryId        String?
+  retentionUntil DateTime?
+  deletedAt      DateTime?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  claim InsuranceClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  query InsuranceClaimQuery? @relation("ClaimQueryAttachments", fields: [queryId], references: [id], onDelete: SetNull)
+
+  @@index([claimId, createdAt])
+  @@index([status, retentionUntil])
+}
+
+enum ClaimQueryStatus {
+  OPEN
+  RESPONDED
+  CLOSED
+  OVERDUE
+}
+
+/// A request from the insurer for more information. Answering it is the patient's
+/// or hospital's action; the insurer closes it.
+model InsuranceClaimQuery {
+  id            String           @id @default(cuid())
+  claimId       String
+  /// Who asked: an insurer, a TPA, or the hospital's insurance desk.
+  raisedByLabel String
+  raisedByUserId String?
+  question      String
+  dueBy         DateTime?
+  status        ClaimQueryStatus @default(OPEN)
+  responseText  String?
+  respondedByLabel String?
+  respondedAt   DateTime?
+  closedAt      DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  claim         InsuranceClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  attachments   InsuranceClaimDocument[] @relation("ClaimQueryAttachments")
+
+  @@index([claimId, status])
+  @@index([status, dueBy])
+}
+
+enum PreAuthStatus {
+  DRAFT
+  SUBMITTED
+  ACKNOWLEDGED
+  QUERY_RAISED
+  APPROVED
+  PARTIALLY_APPROVED
+  REJECTED
+  EXPIRED
+  WITHDRAWN
+}
+
+/// A cashless pre-authorisation request. This is the workflow the brief calls
+/// out specifically: requesting it is not approval, and the view must say so.
+model InsurancePreAuthorization {
+  id          String        @id @default(cuid())
+  reference   String        @unique
+  claimId     String?
+  policyId    String
+  patientUserId String
+  requestedById String
+  insurerId   String?
+  hospitalId  String?
+  hospitalName String
+  status      PreAuthStatus @default(DRAFT)
+
+  plannedAdmissionDate DateTime?
+  plannedProcedure     String?
+  treatingDoctorName   String?
+  treatingDoctorRegistration String?
+  requestedAmountInr   Int?
+  /// Only written from a recorded insurer decision.
+  approvedAmountInr    Int?
+  insurerReferenceNumber String?
+  decisionNotes        String?
+  decidedAt            DateTime?
+  decidedByLabel       String?
+  /// How long the authorisation is stated to be valid. Null means not stated.
+  validUntil           DateTime?
+
+  consentAcknowledgedAt DateTime?
+  consentPolicyVersion  String?
+  submittedAt  DateTime?
+  acknowledgedAt DateTime?
+  isDemo       Boolean     @default(false)
+  retentionUntil DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  claim    InsuranceClaim?  @relation(fields: [claimId], references: [id], onDelete: SetNull)
+  policy   InsurancePolicy  @relation(fields: [policyId], references: [id], onDelete: Restrict)
+  insurer  Insurer?         @relation(fields: [insurerId], references: [id], onDelete: SetNull)
+  hospital Hospital?        @relation("PreAuthHospital", fields: [hospitalId], references: [id], onDelete: SetNull)
+
+  events InsuranceClaimEvent[]
+
+  @@index([policyId, status])
+  @@index([status, createdAt])
+}
+
+enum EligibilityCheckStatus {
+  REQUESTED
+  ACKNOWLEDGED
+  RESPONDED
+  NOT_SUPPORTED
+  FAILED
+}
+
+/// A request to confirm whether a policy is live and what it covers. Where no
+/// integration exists this row stays `NOT_SUPPORTED` and the UI says so rather
+/// than guessing an answer.
+model InsuranceEligibilityCheck {
+  id            String                @id @default(cuid())
+  reference     String                @unique
+  policyId      String
+  patientUserId String
+  requestedById String
+  insurerId     String?
+  hospitalId    String?
+  status        EligibilityCheckStatus @default(REQUESTED)
+  /// What was asked, in structured form.
+  requestPayload Json?
+  /// The insurer's answer, reduced to the fields they returned.
+  responseSummary Json?
+  insurerReferenceNumber String?
+  failureReason String?
+  requestedAt   DateTime              @default(now())
+  respondedAt   DateTime?
+  isDemo        Boolean               @default(false)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  policy   InsurancePolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  insurer  Insurer?        @relation(fields: [insurerId], references: [id], onDelete: SetNull)
+
+  @@index([policyId, status])
+  @@index([status, createdAt])
+}
+
+enum SettlementStatus {
+  PENDING
+  IN_PROGRESS
+  SETTLED
+  PARTIALLY_SETTLED
+  FAILED
+}
+
+/// The money side of a claim, tracked separately from the clinical decision.
+model InsuranceSettlement {
+  id              String           @id @default(cuid())
+  claimId         String
+  reference       String?
+  approvedAmountInr Int?
+  paidAmountInr   Int?
+  /// Bank reference the insurer quoted when they paid.
+  utrNumber       String?
+  status          SettlementStatus @default(PENDING)
+  notes           String?
+  recordedById    String?
+  recordedByLabel String?
+  settledAt       DateTime?
+  isDemo          Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  claim InsuranceClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([claimId, status])
+}
+
+enum ClaimEventType {
+  CREATED
+  SUBMITTED
+  ACKNOWLEDGED
+  ASSIGNED
+  INFORMATION_REQUESTED
+  QUERY_RAISED
+  QUERY_RESPONDED
+  DECISION_RECORDED
+  STATUS_CHANGED
+  SETTLEMENT_RECORDED
+  WITHDRAWN
+  DOCUMENT_ADDED
+  DOCUMENT_REMOVED
+  NOTE
+}
+
+/// The immutable trail behind every claim and pre-authorisation. Written by the
+/// patient side, the hospital desk and the insurer's reviewer alike, each naming
+/// the role that acted.
+model InsuranceClaimEvent {
+  id          String         @id @default(cuid())
+  claimId     String?
+  preAuthId   String?
+  eligibilityId String?
+  type        ClaimEventType
+  actorUserId String?
+  actorRole   Role?
+  actorLabel  String?
+  fromStatus  String?
+  toStatus    String?
+  note        String?
+  metadata    Json?
+  createdAt   DateTime       @default(now())
+
+  claim   InsuranceClaim?          @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  preAuth InsurancePreAuthorization? @relation(fields: [preAuthId], references: [id], onDelete: Cascade)
+
+  @@index([claimId, createdAt])
+  @@index([preAuthId, createdAt])
+}
+
+/// An insurer's own staff account on ORVEXA. What the reviewer may do is set by
+/// a platform administrator, not by the partner's own submission.
+model InsurerPartnerProfile {
+  id                        String                   @id @default(cuid())
+  ownerUserId               String                   @unique
+  insurerId                 String
+  organisationName          String
+  irdaiRegistrationNumber   String?
+  tpaCode                   String?
+  reviewerName              String?
+  reviewerEmail             String?
+  reviewerPhone             String?
+  /// Set by a reviewer. Without it the account can read its queue but record no decisions.
+  canRecordDecisions        Boolean                  @default(false)
+  canManageNetwork          Boolean                  @default(false)
+  canManageProducts         Boolean                  @default(false)
+  status                    PartnerApplicationStatus @default(DRAFT)
+  verificationStatus        VerificationState        @default(UNVERIFIED)
+  verificationNotes         String?
+  verifiedAt                DateTime?
+  verifiedById              String?
+  dataProvenance            DataProvenance           @default(PROVIDER_SUBMITTED)
+  isDemo                    Boolean                  @default(false)
+  createdAt                 DateTime                 @default(now())
+  updatedAt                 DateTime                 @updatedAt
+
+  owner   User    @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  insurer Insurer @relation(fields: [insurerId], references: [id], onDelete: Cascade)
+
+  @@index([insurerId, status])
+}

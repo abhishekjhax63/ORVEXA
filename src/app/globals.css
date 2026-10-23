@@ -1,26 +1,439 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   ORVEXA design tokens
+   Premium HealthTech identity: white, deep navy, aqua, cyan, teal.
+   Every colour below is exposed to Tailwind as a utility (e.g. bg-navy-900,
+   text-aqua-500, border-teal-200) via the @theme block.
+--------------------------------------------------------------------------- */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
+  /* Semantic surface tokens (light) */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0b1b33;
+
+  --card: #ffffff;
+  --card-foreground: #0b1b33;
+  --card-elevated: #f8fbfe;
+
+  --muted: #f2f6fb;
+  --muted-foreground: #56698a;
+
+  --border: #e2e8f2;
+  --input: #dbe4f0;
+  --ring: #0b86a2;
+
+  --primary: #0b86a2;
+  --primary-foreground: #ffffff;
+  --primary-soft: #e6f6fa;
+
+  --secondary: #eef4fa;
+  --secondary-foreground: #142747;
+
+  --accent: #0d9488;
+  --accent-foreground: #ffffff;
+  --accent-soft: #e7faf6;
+
+  --emergency: #dc2626;
+  --emergency-foreground: #ffffff;
+  --emergency-soft: #fef2f2;
+
+  --success: #0f766e;
+  --success-soft: #ecfdf5;
+  --warning: #b45309;
+  --warning-soft: #fffbeb;
+
+  /* Brand gradient stops, deliberately restrained */
+  --brand-from: #0b86a2;
+  --brand-via: #0891b2;
+  --brand-to: #0d9488;
+
+  --header: rgba(255, 255, 255, 0.82);
+  --overlay: rgba(6, 18, 37, 0.55);
+}
+
+.dark {
+  --background: #061225;
+  --foreground: #e9eff8;
+
+  --card: #0b1b33;
+  --card-foreground: #e9eff8;
+  --card-elevated: #0e2240;
+
+  --muted: #10233f;
+  --muted-foreground: #97a9c4;
+
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.16);
+  --ring: #2dd4bf;
+
+  --primary: #22c7de;
+  --primary-foreground: #04202b;
+  --primary-soft: rgba(34, 199, 222, 0.14);
+
+  --secondary: #12294a;
+  --secondary-foreground: #dbe7f6;
+
+  --accent: #2dd4bf;
+  --accent-foreground: #04231f;
+  --accent-soft: rgba(45, 212, 191, 0.14);
+
+  --emergency: #f87171;
+  --emergency-foreground: #2a0808;
+  --emergency-soft: rgba(248, 113, 113, 0.14);
+
+  --success: #34d399;
+  --success-soft: rgba(52, 211, 153, 0.14);
+  --warning: #fbbf24;
+  --warning-soft: rgba(251, 191, 36, 0.14);
+
+  --brand-from: #22c7de;
+  --brand-via: #06b6d4;
+  --brand-to: #2dd4bf;
+
+  --header: rgba(6, 18, 37, 0.82);
+  --overlay: rgba(2, 8, 18, 0.7);
 }
 
 @theme inline {
+  /* Typography */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Radius scale */
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+
+  /* Semantic colours */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-card-elevated: var(--card-elevated);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-emergency: var(--emergency);
+  --color-emergency-foreground: var(--emergency-foreground);
+  --color-emergency-soft: var(--emergency-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-header: var(--header);
+  --color-overlay: var(--overlay);
+
+  /* Brand navy — authority, trust, clinical depth */
+  --color-navy-50: #f2f6fc;
+  --color-navy-100: #e3ebf8;
+  --color-navy-200: #c6d7ef;
+  --color-navy-300: #9cb8de;
+  --color-navy-400: #6689c5;
+  --color-navy-500: #3f63a7;
+  --color-navy-600: #2b4884;
+  --color-navy-700: #1f3564;
+  --color-navy-800: #142747;
+  --color-navy-900: #0b1b33;
+  --color-navy-950: #061225;
+
+  /* Aqua — the signature ORVEXA tone */
+  --color-aqua-50: #ecfeff;
+  --color-aqua-100: #d1f7fb;
+  --color-aqua-200: #a6edf5;
+  --color-aqua-300: #6cdfee;
+  --color-aqua-400: #2fc9e0;
+  --color-aqua-500: #12a9c4;
+  --color-aqua-600: #0b86a2;
+  --color-aqua-700: #0e6b83;
+  --color-aqua-800: #125669;
+  --color-aqua-900: #144859;
+
+  /* Cyan */
+  --color-cyan-soft: #e0f7fd;
+  --color-cyan-mid: #22d3ee;
+  --color-cyan-deep: #0891b2;
+
+  /* Teal — care, recovery, growth */
+  --color-teal-soft: #e6fbf6;
+  --color-teal-mid: #2dd4bf;
+  --color-teal-deep: #0d9488;
+
+  /* Motion */
+  --animate-fade-up: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-in: fade-in 0.6s ease-out both;
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-pulse-ring: pulse-ring 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-marquee: marquee 38s linear infinite;
+  --animate-scan: scan 3.6s ease-in-out infinite;
+
+  /* Elevation */
+  --shadow-soft: 0 1px 2px rgba(11, 27, 51, 0.04), 0 8px 24px -12px rgba(11, 27, 51, 0.12);
+  --shadow-panel: 0 1px 3px rgba(11, 27, 51, 0.05), 0 18px 40px -20px rgba(11, 27, 51, 0.18);
+  --shadow-lift: 0 24px 60px -28px rgba(11, 27, 51, 0.3);
+  --shadow-glow: 0 18px 48px -18px rgba(18, 169, 196, 0.45);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  html[data-scroll-behavior="smooth"] {
+    scroll-behavior: smooth;
+  }
+
+  /* Keep in-page anchors clear of the sticky header. */
+  [id] {
+    scroll-margin-top: 6.5rem;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--primary) 24%, transparent);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: color-mix(in oklab, var(--foreground) 18%, transparent);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ------------------------------------------------------------------ *
+ * Utilities
+ * ------------------------------------------------------------------ */
+
+@utility text-gradient-brand {
+  background-image: linear-gradient(
+    100deg,
+    var(--brand-from) 0%,
+    var(--brand-via) 48%,
+    var(--brand-to) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+@utility surface-glass {
+  background-color: color-mix(in oklab, var(--card) 72%, transparent);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+}
+
+@utility surface-panel {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+}
+
+@utility grid-backdrop {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--foreground) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 6%, transparent) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+@utility aurora {
+  background-image:
+    radial-gradient(46rem 30rem at 8% 0%, color-mix(in oklab, #22d3ee 22%, transparent), transparent 62%),
+    radial-gradient(40rem 26rem at 92% 12%, color-mix(in oklab, #2dd4bf 20%, transparent), transparent 60%),
+    radial-gradient(52rem 34rem at 50% 108%, color-mix(in oklab, #0b86a2 18%, transparent), transparent 66%);
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Keyframes
+ * ------------------------------------------------------------------ */
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -12px, 0);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.7;
+  }
+  70% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes scan {
+  0%,
+  100% {
+    transform: translateY(-8%);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translateY(108%);
+    opacity: 0.9;
+  }
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+@layer components {
+  .animate-accordion-down {
+    animation: accordion-down 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .animate-accordion-up {
+    animation: accordion-up 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .skeleton-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklab, var(--foreground) 8%, transparent),
+      transparent
+    );
+    animation: var(--animate-shimmer);
+  }
+}
+
+/* Accessibility: honour reduced-motion for every decorative animation. */
+@media (prefers-reduced-motion: reduce) {
+  html[data-scroll-behavior="smooth"] {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
