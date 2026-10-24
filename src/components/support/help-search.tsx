@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { SearchX, Search, X } from "lucide-react";
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { faqs, helpTopics } from "@/data/support";
+import { useIsHydrated } from "@/hooks/use-hydrated";
 import { cn } from "@/lib/utils";
 
 const categoryLabels = new Map(helpTopics.map((topic) => [topic.id, topic.title]));
@@ -27,10 +28,8 @@ const allOption = { id: "all", label: "All answers" };
 function HelpSearch() {
   const [category, setCategory] = useState(allOption.id);
   const [query, setQuery] = useState("");
-  const [hydrated, setHydrated] = useState(false);
-
   // Skeletons cover the window before the filter controls become interactive.
-  useEffect(() => setHydrated(true), []);
+  const hydrated = useIsHydrated();
 
   const results = useMemo(() => {
     const needle = query.trim().toLowerCase();

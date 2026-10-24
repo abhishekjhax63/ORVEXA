@@ -210,9 +210,9 @@ export async function getCartView(userId: string): Promise<CartView> {
     const orderable = problems.length === 0;
     const unitPricePaise = offer.pricePublished ? offer.priceInPaise : null;
 
-    let lineSubtotalPaise = 0;
-    let lineTaxPaise = 0;
-    let lineTotalPaise = 0;
+    const lineSubtotalPaise = 0;
+    const lineTaxPaise = 0;
+    const lineTotalPaise = 0;
 
     if (orderable && unitPricePaise !== null) {
       const lineInput: OrderLineInput = {
@@ -284,7 +284,7 @@ export async function getCartView(userId: string): Promise<CartView> {
 
   const deliveryFeeInPaise = estimateDeliveryFeeInPaise({
     subtotalInPaise: orderLines.reduce((sum, line) => sum + line.unitPricePaise * line.quantity, 0),
-    deliveryEtaMinutes,
+    deliveryEtaMinutes: deliveryEstimateMinutes,
   });
 
   const totals = computeOrderTotals({

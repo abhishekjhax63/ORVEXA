@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Check, Info, Scale, SlidersHorizontal, Star, X } from "lucide-react";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ import { SkeletonList } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { insurancePlans } from "@/data/insurance";
 import { hospitals } from "@/data/providers";
+import { useIsHydrated } from "@/hooks/use-hydrated";
 import { cn, formatINR } from "@/lib/utils";
 import type { InsurancePlan } from "@/types";
 
@@ -104,9 +105,7 @@ function PlanComparison() {
   const [hospitalId, setHospitalId] = useState("");
   const [cashlessOnly, setCashlessOnly] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => setHydrated(true), []);
+  const hydrated = useIsHydrated();
 
   const chosenHospital = hospitals.find((hospital) => hospital.id === hospitalId) ?? null;
 

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cookies } from "next/headers";
+import type { HospitalMemberStatus, HospitalStaffRole, PlatformStaffRole } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
 import {
@@ -8,7 +9,7 @@ import {
   createSessionToken,
   maskIdentifier,
 } from "@/lib/auth/tokens";
-import { type AppRole, type Permission, permissionsForRoles } from "@/lib/auth/roles";
+import { type AppRole, type Permission, hospitalStaffPermissionsForRoles, permissionsForRoles, platformStaffPermissionsForRoles } from "@/lib/auth/roles";
 import { type RequestContext } from "@/lib/security/request";
 
 /**
@@ -25,6 +26,30 @@ const DEFAULT_SESSION_HOURS = 12;
 const REMEMBER_SESSION_DAYS = 30;
 const TOUCH_INTERVAL_MINUTES = 5;
 
+/**
+ * A hospital this user is a member of, resolved on every request from
+ * `HospitalMember`. This is the only place a hospital tenant is established:
+ * the browser never names a hospital, and a hospital id in a URL is only ever
+ * used to *look up* a membership, never to grant one.
+ */
+export type HospitalMembership = {
+  hospitalId: string;
+  hospitalName: string;
+  staffRole: HospitalStaffRole | null;
+  status: HospitalMemberStatus;
+};
+
+/**
+ * A platform operations role this account holds, resolved on every request from
+ * `PlatformStaffMember`. This — not the platform `Role` — is what makes somebody
+ * a hospital verification reviewer, a support agent or a security analyst. An
+ * account that works one queue holds no administrative role at all.
+ */
+export type PlatformStaffMembership = {
+  id: string;
+  role: PlatformStaffRole;
+};
+
 export type AuthenticatedUser = {
   id: string;
   email: string;
@@ -35,6 +60,10 @@ export type AuthenticatedUser = {
   phone: string | null;
   roles: AppRole[];
   permissions: Permission[];
+  /** Active memberships only. Invited and revoked rows are not returned. */
+  hospitalMemberships: HospitalMembership[];
+  /** Active platform operations roles only. Revoked rows are not returned. */
+  platformStaffMemberships: PlatformStaffMembership[];
   sessionId: string;
   sessionExpiresAt: Date;
 };
@@ -130,6 +159,21 @@ export async function resolveSessionToken(token: string): Promise<AuthenticatedU
           emailVerifiedAt: true,
           phone: true,
           roles: { select: { role: true, revokedAt: true } },
+          hospitalMemberships: {
+            where: { status: "ACTIVE" },
+            select: {
+              hospitalId: true,
+              staffRole: true,
+              status: true,
+              hospital: { select: { name: true } },
+            },
+          },
+          // Phase 11. Platform operations roles, resolved per request so a
+          // revoked grant takes effect immediately rather than at cookie expiry.
+          platformStaffRoles: {
+            where: { status: "ACTIVE" },
+            select: { id: true, role: true },
+          },
         },
       },
     },
@@ -143,6 +187,34 @@ export async function resolveSessionToken(token: string): Promise<AuthenticatedU
   const roles = session.user.roles
     .filter((entry) => entry.revokedAt === null)
     .map((entry) => entry.role as AppRole);
+
+  const hospitalMemberships: HospitalMembership[] = session.user.hospitalMemberships.map((membership) => ({
+    hospitalId: membership.hospitalId,
+    hospitalName: membership.hospital.name,
+    staffRole: membership.staffRole,
+    status: membership.status,
+  }));
+
+  const platformStaffMemberships: PlatformStaffMembership[] = session.user.platformStaffRoles.map((entry) => ({
+    id: entry.id,
+    role: entry.role,
+  }));
+
+  // Platform-role permissions ∪ the permissions the in-hospital staff roles
+  // grant ∪ the permissions the platform operations roles grant. A nurse holds
+  // no hospital permission from the platform `Role` at all, and a verification
+  // reviewer holds no administrative role at all.
+  const permissions = permissionsForRoles(roles);
+  for (const permission of hospitalStaffPermissionsForRoles(
+    hospitalMemberships.map((membership) => membership.staffRole).filter((role): role is HospitalStaffRole => role !== null),
+  )) {
+    permissions.add(permission);
+  }
+  for (const permission of platformStaffPermissionsForRoles(
+    platformStaffMemberships.map((membership) => membership.role),
+  )) {
+    permissions.add(permission);
+  }
 
   const now = new Date();
   if (now.getTime() - session.lastSeenAt.getTime() > TOUCH_INTERVAL_MINUTES * 60 * 1000) {
@@ -158,7 +230,9 @@ export async function resolveSessionToken(token: string): Promise<AuthenticatedU
     emailVerified: session.user.emailVerifiedAt !== null,
     phone: session.user.phone,
     roles,
-    permissions: Array.from(permissionsForRoles(roles)),
+    permissions: Array.from(permissions),
+    hospitalMemberships,
+    platformStaffMemberships,
     sessionId: session.id,
     sessionExpiresAt: session.expiresAt,
   };

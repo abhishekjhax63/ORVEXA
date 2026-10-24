@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { Monitor, Moon, Sun } from "lucide-react";
 
+import { useIsHydrated } from "@/hooks/use-hydrated";
 import { cn } from "@/lib/utils";
 
 const options = [
@@ -18,9 +18,7 @@ const options = [
  */
 function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
+  const mounted = useIsHydrated();
 
   return (
     <div

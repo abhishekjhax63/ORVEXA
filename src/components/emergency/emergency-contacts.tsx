@@ -105,16 +105,21 @@ function EmergencyContactsPanel({
 
   const atCapacity = !editing && contacts.length >= maxContacts;
 
-  // A successful save closes the editor and refreshes the list from the server
-  // revalidation the action triggered.
-  useEffect(() => {
+  // A successful save closes the editor; the list itself refreshes from the
+  // server revalidation the action triggered.
+  const [handledState, setHandledState] = useState(state);
+  if (handledState !== state) {
+    setHandledState(state);
     if (state.status === "success") {
-      if (state.message) toast.success(state.message);
       setEditing(null);
       setFormOpen(false);
-    } else if (state.status === "error" && state.message) {
-      toast.error(state.message);
     }
+  }
+
+  // Surface the action's own message once per result.
+  useEffect(() => {
+    if (state.status === "success" && state.message) toast.success(state.message);
+    else if (state.status === "error" && state.message) toast.error(state.message);
   }, [state]);
 
   function startAdd() {

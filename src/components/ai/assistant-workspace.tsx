@@ -19,7 +19,6 @@ import {
   Trash2,
   TriangleAlert,
   Video,
-  X,
 } from "lucide-react";
 
 import { AssessmentReport, UnavailablePanel } from "@/components/ai/assessment-report";

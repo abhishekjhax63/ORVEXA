@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
@@ -33,6 +33,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input, Label, Select } from "@/components/ui/input";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { medicineCategories, medicines } from "@/data/pharmacy";
+import { useIsHydrated } from "@/hooks/use-hydrated";
 import { cn, formatINR } from "@/lib/utils";
 import type { Medicine, StockStatus } from "@/types";
 
@@ -66,13 +67,12 @@ function MedicineBrowser() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>("all");
   const [sort, setSort] = useState<SortKey>("relevance");
-  const [hydrated, setHydrated] = useState(false);
   const [cart, setCart] = useState<Record<string, number>>({});
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const reduceMotion = useReducedMotion();
 
   // Skeleton list covers the window before the filter controls become interactive.
-  useEffect(() => setHydrated(true), []);
+  const hydrated = useIsHydrated();
 
   const results = useMemo(() => {
     const needle = query.trim().toLowerCase();

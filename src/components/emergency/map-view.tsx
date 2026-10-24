@@ -117,8 +117,12 @@ export default function MapView({
   const onSelectRef = useRef(onSelectMarker);
   const centerRef = useRef(center);
 
-  onSelectRef.current = onSelectMarker;
-  centerRef.current = center;
+  // Keep the latest props reachable from the map's own callbacks without
+  // recreating the map when they change.
+  useEffect(() => {
+    onSelectRef.current = onSelectMarker;
+    centerRef.current = center;
+  }, [onSelectMarker, center]);
 
   // Create the map once. `style` comes from config so a deployment can point at
   // a light or dark Mapbox style without a code change.

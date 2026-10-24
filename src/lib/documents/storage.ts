@@ -65,7 +65,12 @@ const EXTENSION_BY_MIME: Record<AcceptedDocumentMimeType, string> = {
 };
 
 /** Namespaces keep one patient's prescription scans out of another's claim file. */
-export type DocumentNamespace = "prescriptions" | "insurance-policies" | "insurance-claims";
+export type DocumentNamespace =
+  | "prescriptions"
+  | "insurance-policies"
+  | "insurance-claims"
+  | "lab-reports"
+  | "consultation-attachments";
 
 export type DocumentKeyInput = {
   namespace: DocumentNamespace;

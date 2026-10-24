@@ -24,7 +24,7 @@ import {
 import { applySafetyPolicy, buildRedFlagEscalation, redFlagsForRequest, type SafetyOutcome } from "@/lib/ai/safety";
 import { requireAiProvider } from "@/lib/ai/service";
 import { uploadsToAttachments, type TurnUploads } from "@/lib/ai/uploads";
-import type { AssessmentMediaView, AssessmentView, TurnResponse, UnavailableStateView } from "@/lib/ai/view";
+import type { AssessmentMediaView, TurnResponse, UnavailableStateView } from "@/lib/ai/view";
 import type { AiTurnRequestInput } from "@/lib/ai/validation";
 import { prisma } from "@/lib/db/prisma";
 import { recordAuditEvent } from "@/lib/security/audit";

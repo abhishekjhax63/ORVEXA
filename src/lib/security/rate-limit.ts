@@ -90,6 +90,78 @@ export const RATE_LIMITS = {
   insurerDeskWrite: { limit: 300, windowSeconds: 60 * 60 },
   insurerProductWrite: { limit: 120, windowSeconds: 60 * 60 },
   insurerNetworkWrite: { limit: 200, windowSeconds: 60 * 60 },
+  /**
+   * Diagnostics limits.
+   *
+   * A booking writes several rows and reserves a collection slot, so duplicate
+   * submissions are throttled. Report download is its own tight limit because
+   * every download mints a signed link and writes an access-log row — a loop
+   * there is both a cost and an audit-noise problem.
+   */
+  diagnosticsSearch: { limit: 300, windowSeconds: 60 * 60 },
+  diagnosticBookingWrite: { limit: 20, windowSeconds: 60 * 60 },
+  diagnosticBookingManage: { limit: 300, windowSeconds: 60 * 60 },
+  diagnosticReportWrite: { limit: 120, windowSeconds: 60 * 60 },
+  diagnosticReportDownload: { limit: 60, windowSeconds: 60 * 60 },
+  diagnosticReportShare: { limit: 20, windowSeconds: 60 * 60 },
+  /**
+   * Resolving a share link and fetching a file through it are open to anyone
+   * holding the token, so both are limited by IP: a token is not a licence to
+   * hammer the endpoint, and every resolution writes an access-log row.
+   */
+  diagnosticShareView: { limit: 240, windowSeconds: 60 * 60 },
+  labOfferWrite: { limit: 240, windowSeconds: 60 * 60 },
+  /**
+   * Telemedicine limits.
+   *
+   * Issuing a join link mints a provider token and is the endpoint a leaked
+   * link would be replayed against, so it is the tightest of the set. Chat is
+   * generous because a message is typed in place of speech. The provider
+   * webhook limit is high so a genuine retry burst is never dropped.
+   */
+  telemedicineBooking: { limit: 20, windowSeconds: 60 * 60 },
+  /**
+   * Discovery and availability reads. Generous, because a patient comparing
+   * clinicians and dates makes many of them, and none of them writes a row.
+   */
+  telemedicineAvailability: { limit: 240, windowSeconds: 60 * 60 },
+  telemedicineSessionWrite: { limit: 120, windowSeconds: 60 * 60 },
+  telemedicineJoin: { limit: 60, windowSeconds: 60 * 60 },
+  telemedicineChat: { limit: 300, windowSeconds: 60 * 60 },
+  consultationNoteWrite: { limit: 120, windowSeconds: 60 * 60 },
+  consultationPrescriptionWrite: { limit: 60, windowSeconds: 60 * 60 },
+  videoWebhook: { limit: 2000, windowSeconds: 60 * 60 },
+  /**
+   * Platform console limits.
+   *
+   * These guard privileged operations, so the identity is the operator's
+   * account, never a role supplied by the browser. They are deliberately far
+   * looser than the patient-facing limits: a reviewer works through a queue in
+   * one sitting and a wrongly-tripped limit here is a stalled verification,
+   * which is its own safety problem. What they must stop is a scripted operator
+   * loop — bulk-deciding every application, or draining the export queue — not
+   * a busy human.
+   *
+   * The two tight ones are the ones with a cost or an evidential value:
+   * `adminExportRequest` mints a file that leaves the platform, and
+   * `adminRetentionRun` irreversibly prunes rows.
+   */
+  adminRead: { limit: 900, windowSeconds: 15 * 60 },
+  adminWrite: { limit: 300, windowSeconds: 60 * 60 },
+  adminDecisionWrite: { limit: 240, windowSeconds: 60 * 60 },
+  adminConfigWrite: { limit: 60, windowSeconds: 60 * 60 },
+  adminSupportWrite: { limit: 300, windowSeconds: 60 * 60 },
+  adminStaffGrant: { limit: 30, windowSeconds: 60 * 60 },
+  adminExportRequest: { limit: 10, windowSeconds: 60 * 60 },
+  adminExportDownload: { limit: 60, windowSeconds: 60 * 60 },
+  adminRetentionRun: { limit: 12, windowSeconds: 60 * 60 },
+  adminDeletionWrite: { limit: 60, windowSeconds: 60 * 60 },
+  /**
+   * Health and readiness probes are polled by the platform itself, so the
+   * limit only exists to stop the endpoint being used as a cheap liveness
+   * oracle by an attacker.
+   */
+  healthCheck: { limit: 600, windowSeconds: 15 * 60 },
 } as const satisfies Record<string, RateLimitRule>;
 
 export type RateLimitName = keyof typeof RATE_LIMITS;

@@ -168,6 +168,85 @@ export function getInsurerIntegrationConfig() {
   } as const;
 }
 
+/**
+ * Video provider selection for telemedicine.
+ *
+ * Two modes, and the mode is never guessed:
+ *
+ *  - `sandbox` — the built-in provider. It creates no external room, moves no
+ *    media and stamps every session `isSandbox`. It exists so the booking,
+ *    waiting-room and follow-up workflow can be exercised before a video account
+ *    exists. It never reports a call connected.
+ *  - `daily` — Daily.co. Selected only when `DAILY_API_KEY` is present, because
+ *    a half-configured provider is worse than none: the session would be created
+ *    and then fail at join, in front of a patient who is already waiting.
+ *
+ * `webhookSecret` is separate from `apiKey`. Daily signs its callbacks with a
+ * secret configured in its dashboard, and that signature is the only thing that
+ * proves a "participant joined" call really came from Daily. Without it the
+ * webhook route stores the event but refuses to let it move a session.
+ */
+export type VideoProviderConfig =
+  | { mode: "sandbox"; isLive: false }
+  | { mode: "daily"; apiKey: string; baseUrl: string; webhookSecret?: string; isLive: true };
+
+export function getVideoProviderConfig(): VideoProviderConfig {
+  const apiKey = optionalEnv("DAILY_API_KEY");
+  const requested = optionalEnv("VIDEO_PROVIDER")?.toLowerCase();
+
+  // An explicit request for the sandbox provider wins, so a deployment can hold
+  // a live Daily key and still rehearse.
+  if (apiKey && requested !== "sandbox") {
+    return {
+      mode: "daily",
+      apiKey,
+      baseUrl: optionalEnv("DAILY_API_BASE_URL") ?? "https://api.daily.co/v1",
+      webhookSecret: optionalEnv("DAILY_WEBHOOK_SECRET"),
+      isLive: true,
+    };
+  }
+
+  return { mode: "sandbox", isLive: false };
+}
+
+/**
+ * Outbound laboratory-system integration.
+ *
+ * A booking is only ever *pushed* to a partner's LIS when their API is
+ * configured. Without it, the platform stores the booking and the laboratory
+ * works it from its own console — it never claims an order was accepted by a
+ * system it cannot reach.
+ */
+export function getLabIntegrationConfig() {
+  const baseUrl = optionalEnv("LAB_INTEGRATION_BASE_URL");
+  const apiKey = optionalEnv("LAB_INTEGRATION_API_KEY");
+  if (!baseUrl || !apiKey) return undefined;
+  return {
+    baseUrl,
+    apiKey,
+    webhookSecret: optionalEnv("LAB_INTEGRATION_WEBHOOK_SECRET"),
+  } as const;
+}
+
+/**
+ * Outbound report-exchange integration — handing an authenticated report to
+ * another system (a hospital's record system, a referring clinician's inbox).
+ *
+ * Like the emergency dispatch webhook, the strongest claim this can produce is
+ * transport acceptance. Without credentials, the report is exchanged by the
+ * patient through a signed link instead, and nothing claims it was delivered.
+ */
+export function getReportExchangeConfig() {
+  const baseUrl = optionalEnv("REPORT_EXCHANGE_BASE_URL");
+  const apiKey = optionalEnv("REPORT_EXCHANGE_API_KEY");
+  if (!baseUrl || !apiKey) return undefined;
+  return {
+    baseUrl,
+    apiKey,
+    webhookSecret: optionalEnv("REPORT_EXCHANGE_WEBHOOK_SECRET"),
+  } as const;
+}
+
 export function isProduction() {
   return process.env.NODE_ENV === "production";
 }

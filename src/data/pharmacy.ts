@@ -1,7 +1,6 @@
 import {
   Activity,
   Baby,
-  Bone,
   Droplets,
   Eye,
   HeartPulse,

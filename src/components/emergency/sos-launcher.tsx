@@ -75,9 +75,11 @@ function SosLauncher({ signedIn, className }: { signedIn: boolean; className?: s
   }, [stage]);
 
   // A declined permission must never leave a stale consent tick behind.
-  useEffect(() => {
+  const [lastGeo, setLastGeo] = useState({ status: geo.status, fix });
+  if (lastGeo.status !== geo.status || lastGeo.fix !== fix) {
+    setLastGeo({ status: geo.status, fix });
     if (geo.status === "denied" && fix === null) setLocationConsent(false);
-  }, [geo.status, fix]);
+  }
 
   function openConfirmation() {
     setIdempotencyKey(newIdempotencyKey());

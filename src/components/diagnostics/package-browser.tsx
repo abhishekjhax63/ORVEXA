@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowDownUp, Check, Home, PackageSearch, Search, X } from "lucide-react";
 
@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input, Label, Select } from "@/components/ui/input";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { diagnosticCategories, diagnosticPackages } from "@/data/diagnostics";
+import { useIsHydrated } from "@/hooks/use-hydrated";
 import { cn, formatINR } from "@/lib/utils";
 import type { DiagnosticCategory, DiagnosticPackage } from "@/types";
 
@@ -119,10 +120,9 @@ function PackageBrowser() {
   const [category, setCategory] = useState<CategoryId>("all");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortKey>("recommended");
-  const [hydrated, setHydrated] = useState(false);
 
   // Skeletons cover the window before the filter controls become interactive.
-  useEffect(() => setHydrated(true), []);
+  const hydrated = useIsHydrated();
 
   const results = useMemo(() => {
     const needle = query.trim().toLowerCase();

@@ -74,6 +74,7 @@ function SiteHeader() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [lastPathname, setLastPathname] = useState(pathname);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -83,7 +84,10 @@ function SiteHeader() {
   }, []);
 
   // Close the mobile drawer whenever the route changes.
-  useEffect(() => setMenuOpen(false), [pathname]);
+  if (lastPathname !== pathname) {
+    setLastPathname(pathname);
+    setMenuOpen(false);
+  }
 
   // Escape closes the drawer and body scroll is locked while it is open.
   useEffect(() => {

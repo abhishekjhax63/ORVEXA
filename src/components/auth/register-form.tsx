@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useId, useState } from "react";
+import { useActionState, useId, useState } from "react";
 import Link from "next/link";
 import {
   Building2,
@@ -19,6 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Field, Input, Label, Select } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { cities } from "@/data/providers";
+import { useIsHydrated } from "@/hooks/use-hydrated";
 import { idleFormState } from "@/lib/actions/form-state";
 import { register } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
@@ -47,6 +48,14 @@ function strengthScore(value: string) {
 const strengthLabels = ["Add a password", "Weak", "Fair", "Good", "Strong"] as const;
 const strengthBars = ["bg-muted", "bg-emergency", "bg-warning", "bg-primary", "bg-success"] as const;
 
+/** Today's date as `YYYY-MM-DD`, the ceiling for the date-of-birth input. */
+function todayIsoDate() {
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${today.getFullYear()}-${month}-${day}`;
+}
+
 /**
  * Registration form.
  *
@@ -63,18 +72,13 @@ function RegisterForm() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [consent, setConsent] = useState(false);
-  const [maxDob, setMaxDob] = useState("");
   const [state, formAction, pending] = useActionState(register, idleFormState);
+  const hydrated = useIsHydrated();
 
-  // The native date picker needs today's date as its ceiling. This is read in
-  // an effect so no clock value is read during render.
-  useEffect(() => {
-    const today = new Date();
-    const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(
-      today.getDate(),
-    ).padStart(2, "0")}`;
-    setMaxDob(iso);
-  }, []);
+  // The native date picker needs today's date as its ceiling. It is only read
+  // once hydration has finished, so no clock value is read during the server
+  // render or the hydration render.
+  const maxDob = hydrated ? todayIsoDate() : "";
 
   const score = strengthScore(password);
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;

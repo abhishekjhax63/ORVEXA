@@ -5,7 +5,7 @@ import { ArrowRight, ShieldQuestion } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth/guards";
-import { ROLE_DESCRIPTIONS, ROLE_LABELS, primaryRole } from "@/lib/auth/roles";
+import { ROLE_DESCRIPTIONS, ROLE_LABELS, landingPathForUser, primaryRole } from "@/lib/auth/roles";
 import { PERMISSIONS, type Permission } from "@/lib/auth/roles";
 
 export const metadata: Metadata = {
@@ -61,16 +61,16 @@ export default async function AccessDeniedPage({ searchParams }: { searchParams:
 
   const required = first(params.required);
   const described = describePermission(required);
+  // The console is the one area a person's *platform role* does not entitle them
+  // to: it is worked by operations staff, so reaching it without a staff row is
+  // a different situation from missing one permission, and is explained as such.
+  const notConsoleStaff = first(params.reason) === "not_console_staff";
   const role = primaryRole(user.roles);
-  const landing = role === "PLATFORM_ADMIN"
-    ? "/admin"
-    : role === "PHARMACY_PARTNER"
-      ? "/pharmacy/portal"
-      : role === "INSURANCE_PARTNER"
-        ? "/insurer"
-        : role === "DOCTOR" || role === "HOSPITAL_ADMIN"
-          ? "/provider"
-          : "/dashboard";
+  const landing = landingPathForUser(
+    user.roles,
+    user.hospitalMemberships.flatMap((membership) => (membership.staffRole ? [membership.staffRole] : [])),
+    user.platformStaffMemberships.map((membership) => membership.role),
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -78,13 +78,24 @@ export default async function AccessDeniedPage({ searchParams }: { searchParams:
         <ShieldQuestion className="size-7" />
       </span>
       <div className="space-y-3">
-        <h1 className="text-2xl font-semibold sm:text-3xl">You don’t have access to that area</h1>
+        <h1 className="text-2xl font-semibold sm:text-3xl">
+          {notConsoleStaff ? "The operations console is for platform staff" : "You don’t have access to that area"}
+        </h1>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          {described
-            ? `Your ORVEXA account isn’t permitted to ${described} yet.`
-            : "Your ORVEXA account isn’t permitted to open that area yet."}{" "}
-          Permissions are attached to roles by an ORVEXA administrator, and this attempt has been recorded in the audit
-          log.
+          {notConsoleStaff ? (
+            <>
+              Verifying providers, working support queues and reviewing the audit trail are done by ORVEXA operations
+              staff. Your account isn’t on that staff list, so the console has nothing it can show you. This attempt has
+              been recorded in the audit log.
+            </>
+          ) : described ? (
+            `Your ORVEXA account isn’t permitted to ${described} yet.`
+          ) : (
+            "Your ORVEXA account isn’t permitted to open that area yet."
+          )}{" "}
+          {notConsoleStaff
+            ? null
+            : "Permissions are attached to roles by an ORVEXA administrator, and this attempt has been recorded in the audit log."}
         </p>
       </div>
 

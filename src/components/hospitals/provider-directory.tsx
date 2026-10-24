@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Search, SearchX, SlidersHorizontal, X } from "lucide-react";
 
 import { RequestDialog } from "@/components/forms/request-dialog";
@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input, Label, Select } from "@/components/ui/input";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { cities, doctors, hospitals, specialties } from "@/data/providers";
+import { useIsHydrated } from "@/hooks/use-hydrated";
 import { cn } from "@/lib/utils";
 
 type View = "hospitals" | "doctors";
@@ -50,9 +51,7 @@ function ProviderDirectory({
   const [emergencyOnly, setEmergencyOnly] = useState(false);
   const [cashlessOnly, setCashlessOnly] = useState(false);
   const [teleconsultOnly, setTeleconsultOnly] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => setHydrated(true), []);
+  const hydrated = useIsHydrated();
 
   const hospitalResults = useMemo(() => {
     const needle = query.trim().toLowerCase();

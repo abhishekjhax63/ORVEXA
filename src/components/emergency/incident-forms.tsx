@@ -105,14 +105,17 @@ function RetryDispatchForm({ incidentId, className }: { incidentId: string; clas
   const [key, setKey] = useState(newIdempotencyKey);
   const [state, formAction, pending] = useActionState(retryIncidentDispatch, EMPTY_EMERGENCY_STATE);
 
+  // A new key for the next attempt; the previous one already resolved.
+  const [handledState, setHandledState] = useState(state);
+  if (handledState !== state) {
+    setHandledState(state);
+    if (state.status === "success") setKey(newIdempotencyKey());
+  }
+
+  // Surface the action's own message once per result.
   useEffect(() => {
-    if (state.status === "success") {
-      if (state.message) toast.success(state.message);
-      // A new key for the next attempt; the previous one already resolved.
-      setKey(newIdempotencyKey());
-    } else if (state.status === "error" && state.message) {
-      toast.error(state.message);
-    }
+    if (state.status === "success" && state.message) toast.success(state.message);
+    else if (state.status === "error" && state.message) toast.error(state.message);
   }, [state]);
 
   return (

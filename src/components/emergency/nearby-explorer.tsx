@@ -27,6 +27,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select } from "@/components/ui/input";
 import { geoAccuracyBand, useGeolocation } from "@/components/emergency/geolocation";
 import type { MapMarker } from "@/components/emergency/map-view";
+import { useIsHydrated } from "@/hooks/use-hydrated";
 import {
   externalDirectionsUrl,
   isMapConfigured,
@@ -101,7 +102,7 @@ const RADIUS_OPTIONS = [
   { value: 50_000, label: "Within 50 km" },
 ];
 
-/** Mapbox GL v3 needs WebGL2. Checked on the client, never during render. */
+/** Mapbox GL v3 needs WebGL2. Only meaningful in the browser, after hydration. */
 function detectWebgl2() {
   try {
     return Boolean(document.createElement("canvas").getContext("webgl2"));
@@ -113,8 +114,6 @@ function detectWebgl2() {
 function prefersReducedMotion() {
   return typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
 }
-
-type ApiFailure = { message: string; kind?: string; retryAfterSeconds?: number };
 
 async function fetchJson<T>(url: string, signal: AbortSignal) {
   try {
@@ -149,6 +148,7 @@ function availabilityTone(availability: AvailabilitySummary) {
 
 export function NearbyExplorer({ className }: { className?: string }) {
   const geolocation = useGeolocation();
+  const hydrated = useIsHydrated();
 
   const [origin, setOrigin] = useState<Origin | null>(null);
   const [query, setQuery] = useState("");
@@ -160,28 +160,34 @@ export function NearbyExplorer({ className }: { className?: string }) {
   const [routeMode, setRouteMode] = useState<TravelMode>("driving");
   const [route, setRoute] = useState<LoadState<RouteResult>>({ status: "idle" });
   const [threeD, setThreeD] = useState(false);
-  const [webgl2, setWebgl2] = useState(false);
 
   const listRef = useRef<HTMLUListElement | null>(null);
 
-  useEffect(() => {
-    setWebgl2(detectWebgl2());
-  }, []);
+  // The WebGL2 probe is a client-only capability check, so it runs once
+  // hydration has finished.
+  const webgl2 = useMemo(() => (hydrated ? detectWebgl2() : false), [hydrated]);
 
   // A fix is only adopted as the origin when the user pressed the button — the
   // hook never prompts on its own, so a `fix` appearing here is always consented.
-  useEffect(() => {
-    if (!geolocation.fix) return;
+  const [lastFix, setLastFix] = useState(geolocation.fix);
+  if (lastFix !== geolocation.fix) {
+    setLastFix(geolocation.fix);
     const fix = geolocation.fix;
-    setOrigin({
-      kind: "device",
-      coordinates: { latitude: fix.latitude, longitude: fix.longitude },
-      label: "Your current location",
-      accuracyMetres: fix.accuracyMetres,
-    });
+    if (fix) {
+      setOrigin({
+        kind: "device",
+        coordinates: { latitude: fix.latitude, longitude: fix.longitude },
+        label: "Your current location",
+        accuracyMetres: fix.accuracyMetres,
+      });
+    }
+  }
 
-    // Naming the fix is a nicety: if the provider is unconfigured or slow, the
-    // origin simply keeps its generic label.
+  // Naming the fix is a nicety: if the provider is unconfigured or slow, the
+  // origin simply keeps its generic label.
+  useEffect(() => {
+    const fix = geolocation.fix;
+    if (!fix) return;
     const controller = new AbortController();
     void (async () => {
       const params = new URLSearchParams({
@@ -202,12 +208,23 @@ export function NearbyExplorer({ className }: { className?: string }) {
     return () => controller.abort();
   }, [geolocation.fix]);
 
-  // The nearby query re-runs whenever the origin or the filters change.
+  // The nearby query re-runs whenever the origin or the filters change. The
+  // pending state is adopted during render, so the effect itself only performs
+  // the fetch.
+  const originKey = origin
+    ? origin.coordinates
+      ? `${origin.coordinates.latitude},${origin.coordinates.longitude}`
+      : origin.label
+    : "";
+  const nearbyRequestKey = `${originKey}|${radiusMetres}|${kinds.join(",")}`;
+  const [lastNearbyRequestKey, setLastNearbyRequestKey] = useState(nearbyRequestKey);
+  if (lastNearbyRequestKey !== nearbyRequestKey) {
+    setLastNearbyRequestKey(nearbyRequestKey);
+    setNearby(origin ? { status: "loading" } : { status: "idle" });
+  }
+
   useEffect(() => {
-    if (!origin) {
-      setNearby({ status: "idle" });
-      return;
-    }
+    if (!origin) return;
 
     const controller = new AbortController();
     const params = new URLSearchParams({
@@ -222,7 +239,6 @@ export function NearbyExplorer({ className }: { className?: string }) {
       params.set("city", origin.label);
     }
 
-    setNearby({ status: "loading" });
     void (async () => {
       try {
         const result = await fetchJson<{ facilities: NearbyFacility[]; mode: "point" | "city"; excluded: NearbyResult["excluded"] }>(
@@ -244,10 +260,12 @@ export function NearbyExplorer({ className }: { className?: string }) {
   }, [origin, radiusMetres, kinds]);
 
   // A new origin invalidates the selected facility and its route.
-  useEffect(() => {
+  const [lastOrigin, setLastOrigin] = useState(origin);
+  if (lastOrigin !== origin) {
+    setLastOrigin(origin);
     setSelectedId(null);
     setRoute({ status: "idle" });
-  }, [origin]);
+  }
 
   const facilities = nearby.status === "ready" ? nearby.data.facilities : [];
   const selected = useMemo(() => facilities.find((facility) => facility.id === selectedId) ?? null, [facilities, selectedId]);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useId, useState } from "react";
+import { useActionState, useId, useState } from "react";
 import Link from "next/link";
 import { Check, CircleAlert, Copy, KeyRound, LoaderCircle, Share2, ShieldAlert } from "lucide-react";
 
@@ -110,9 +110,13 @@ function IncidentShareForm({
   const [key, setKey] = useState(newIdempotencyKey);
   const [state, formAction, pending] = useActionState(shareIncidentLocation, EMPTY_EMERGENCY_STATE);
 
-  useEffect(() => {
+  // A fresh key once a share resolves, so the next attempt is not mistaken for a
+  // repeat of the one that just succeeded.
+  const [handledState, setHandledState] = useState(state);
+  if (handledState !== state) {
+    setHandledState(state);
     if (state.status === "success") setKey(newIdempotencyKey());
-  }, [state]);
+  }
 
   const issuedLinks = state.shareLinks ?? [];
 

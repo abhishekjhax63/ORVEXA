@@ -523,7 +523,7 @@ function TimelinePanel({ incident }: { incident: IncidentSummary }) {
           History
         </h2>
         <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-          Append-only. Every entry below was written by the platform, by you, or by a responder's own acknowledgement —
+          Append-only. Every entry below was written by the platform, by you, or by a responder&apos;s own acknowledgement —
           nothing here is inferred.
         </p>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { PackageSearch, Search, X } from "lucide-react";
 
 import { ServiceCard } from "@/components/services/service-card";
@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { careServices, serviceCategories } from "@/data/services";
+import { useIsHydrated } from "@/hooks/use-hydrated";
 import { cn } from "@/lib/utils";
 
 type CategoryId = (typeof serviceCategories)[number]["id"];
@@ -20,10 +21,8 @@ type CategoryId = (typeof serviceCategories)[number]["id"];
 function ServicesDirectory() {
   const [category, setCategory] = useState<CategoryId>("all");
   const [query, setQuery] = useState("");
-  const [hydrated, setHydrated] = useState(false);
-
   // Skeletons cover the window before the filter controls become interactive.
-  useEffect(() => setHydrated(true), []);
+  const hydrated = useIsHydrated();
 
   const results = useMemo(() => {
     const needle = query.trim().toLowerCase();
