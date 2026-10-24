@@ -139,14 +139,39 @@ export default function MapView({
       zoom,
       // Start flat: the 2D view is what must always work.
       pitch: 0,
-      attributionControl: true,
+      attributionControl: false,
       logoPosition: "bottom-left",
     });
     mapRef.current = map;
 
+    // Attribution: Geoapify & OSM attribution as required
+    map.addControl(
+      new mapboxgl.AttributionControl({
+        customAttribution:
+          mapConfig.provider === "geoapify"
+            ? 'Powered by <a href="https://www.geoapify.com/" target="_blank" rel="noopener noreferrer">Geoapify</a> | <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a>'
+            : undefined,
+      }),
+      "bottom-right",
+    );
+
     map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), "top-right");
 
+    map.on("error", (e) => {
+      // Don't crash UI on tile load error
+      if (e?.error) {
+        console.warn("[map] Map tile warning:", e.error?.message || e.error);
+      }
+    });
+
+    // Keep map resized cleanly on responsive layout changes
+    const resizeObserver = new ResizeObserver(() => {
+      map.resize();
+    });
+    resizeObserver.observe(container);
+
     return () => {
+      resizeObserver.disconnect();
       for (const marker of markersRef.current.values()) marker.remove();
       markersRef.current.clear();
       map.remove();

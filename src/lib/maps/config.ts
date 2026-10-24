@@ -32,11 +32,16 @@ export type MapConfig = {
 function readProvider(): MapsProvider | null {
   const configured = process.env.NEXT_PUBLIC_MAPS_PROVIDER?.trim().toLowerCase();
   if (configured === "mapbox" || configured === "google" || configured === "geoapify") return configured;
+  if (process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY || process.env.GEOAPIFY_API_KEY) return "geoapify";
   return null;
 }
 
 function readToken() {
-  const token = process.env.NEXT_PUBLIC_MAPS_ACCESS_TOKEN?.trim();
+  const token = (
+    process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY ||
+    process.env.NEXT_PUBLIC_MAPS_ACCESS_TOKEN ||
+    process.env.GEOAPIFY_API_KEY
+  )?.trim();
   return token && token !== "" ? token : null;
 }
 
@@ -62,10 +67,16 @@ function readDefaultZoom() {
 export const mapConfig: MapConfig = (() => {
   const provider = readProvider();
   const accessToken = readToken();
+  const defaultStyle =
+    process.env.NEXT_PUBLIC_MAPS_STYLE_URL?.trim() ||
+    (provider === "geoapify" && accessToken
+      ? `https://maps.geoapify.com/v1/styles/osm-bright/style.json?apiKey=${accessToken}`
+      : null);
+
   return {
     provider,
     accessToken,
-    style: process.env.NEXT_PUBLIC_MAPS_STYLE_URL?.trim() || null,
+    style: defaultStyle,
     defaultCenter: readDefaultCenter(),
     defaultZoom: readDefaultZoom(),
     supports3d: provider === "mapbox",
@@ -81,7 +92,7 @@ export function isMapConfigured(config: MapConfig = mapConfig) {
 export function mapProviderLabel(config: MapConfig = mapConfig) {
   if (!config.provider) return "Mapping provider not configured";
   if (config.provider === "mapbox") return "Mapbox";
-  if (config.provider === "geoapify") return "Geoapify © OpenStreetMap contributors";
+  if (config.provider === "geoapify") return "Geoapify";
   return "Google Maps";
 }
 
@@ -102,6 +113,9 @@ export function geoapifyTileUrl(config: MapConfig = mapConfig): string | null {
  */
 export function mapAttribution(config: MapConfig = mapConfig) {
   if (!config.provider) return null;
+  if (config.provider === "geoapify") {
+    return "Powered by Geoapify | © OpenStreetMap contributors";
+  }
   return config.provider === "mapbox"
     ? "© Mapbox © OpenStreetMap"
     : "© Google Maps";

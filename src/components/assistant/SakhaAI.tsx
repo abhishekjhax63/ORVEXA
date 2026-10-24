@@ -41,8 +41,6 @@ const SUGGESTED_PROMPTS = [
 
 // ─── Image card ───────────────────────────────────────────────────────────────
 // Image card – uses a plain <img> for provider-returned image URLs.
-// next/image requires known domains which aren't yet configured for this provider.
-// eslint-disable-next-line @next/next/no-img-element
 function ImageCard({ src, alt }: { src: string; alt: string }) {
   const [state, setState] = useState<"loading" | "ok" | "error">("loading");
   return (
@@ -170,36 +168,53 @@ export default function SakhaAI() {
     }
   }
 
-  // ─── Glowing launcher ─────────────────────────────────────────────────────
+// ─── Glowing launcher with gentle floating and shimmer effect ───────────────
   const launcher = (
     <motion.button
       key="launcher"
       initial={{ scale: 0, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
+      animate={{
+        scale: 1,
+        opacity: 1,
+        y: [0, -6, 0],
+      }}
+      transition={{
+        y: {
+          duration: 3,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+        scale: { type: "spring", stiffness: 300, damping: 20 },
+      }}
       exit={{ scale: 0, opacity: 0 }}
       whileHover={{ scale: 1.08 }}
-      whileTap={{ scale: 0.96 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      whileTap={{ scale: 0.95 }}
       onClick={() => { setOpen(true); setMinimised(false); }}
       aria-label={`Open ${CHATBOT_NAME}`}
       className={cn(
-        // Position: bottom-right, above SOS (which sits at bottom-4 right-4, so we go higher)
-        "fixed bottom-20 right-4 z-50 md:bottom-6 md:right-6",
-        "flex h-14 w-14 items-center justify-center rounded-full",
-        "bg-primary text-primary-foreground shadow-lg",
-        // Glowing border effect via box-shadow
-        "ring-2 ring-primary/30",
+        // Position: bottom-right, comfortable elevation above mobile navbars
+        "fixed bottom-6 right-6 z-40 sm:bottom-8 sm:right-8",
+        "flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full",
+        "bg-gradient-to-tr from-teal-600 via-cyan-600 to-teal-500 text-white",
+        // Glowing border effect
+        "ring-2 ring-cyan-300/60 shadow-[0_0_24px_rgba(6,182,212,0.45)]",
         "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/50",
-        // Floating pulse – uses CSS animation so reduced-motion (via MotionConfig) is not affected
-        "animate-bounce motion-reduce:animate-none",
+        "overflow-hidden cursor-pointer",
       )}
     >
-      <Bot className="h-6 w-6" aria-hidden />
-      {/* Glow halo */}
+      <Bot className="h-7 w-7 text-white drop-shadow" aria-hidden />
+
+      {/* Shimmer sweep animation */}
       <span
         aria-hidden
-        className="absolute inset-0 rounded-full bg-primary/20 animate-ping motion-reduce:hidden"
-        style={{ animationDuration: "2.5s" }}
+        className="pointer-events-none absolute -inset-full h-[200%] w-[200%] rotate-45 bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform animate-[shimmer_3.5s_infinite] motion-reduce:hidden"
+      />
+
+      {/* Subtle pulsing aura */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-cyan-400/50 animate-ping opacity-30 motion-reduce:hidden"
+        style={{ animationDuration: "3s" }}
       />
     </motion.button>
   );

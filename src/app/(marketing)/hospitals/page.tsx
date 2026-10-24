@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { ArrowRight, BadgeIndianRupee, PhoneCall, ShieldCheck, Siren, Star } from "lucide-react";
 
 import { RequestDialog } from "@/components/forms/request-dialog";
+import { AiRecommendationFlow } from "@/components/hospitals/ai-recommendation-flow";
 import { buildDoctorFields } from "@/components/hospitals/booking-fields";
 import { ProviderDirectory } from "@/components/hospitals/provider-directory";
 import { DemoNotice } from "@/components/layout/demo-notice";
@@ -127,6 +128,8 @@ export default function HospitalsPage(props: PageProps<"/hospitals">) {
       />
 
       <Section id="directory" spacing="default" aria-labelledby="directory-heading">
+        <AiRecommendationFlow />
+
         <Reveal>
           <SectionHeading
             eyebrow="Directory"

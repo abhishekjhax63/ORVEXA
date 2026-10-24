@@ -42,8 +42,13 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
-    // Healthcare imagery is served through the platform image service.
+    // Authentic healthcare imagery and verified providers
     remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/**",
+      },
       {
         protocol: "https",
         hostname: "coresg-normal.trae.ai",

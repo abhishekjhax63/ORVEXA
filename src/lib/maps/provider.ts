@@ -132,6 +132,22 @@ export async function geocodeAddress(query: string, options: GeocodeOptions = {}
   const proximity = options.proximity && isValidCoordinates(options.proximity) ? options.proximity : null;
   const country = options.country === null ? undefined : (options.country ?? "in");
 
+  if (config.provider === "geoapify") {
+    const url = buildUrl("https://api.geoapify.com/v1/geocode/search", {
+      text: trimmed,
+      limit,
+      filter: country ? `countrycode:${country.toLowerCase()}` : undefined,
+      bias: proximity ? `proximity:${proximity.longitude},${proximity.latitude}` : undefined,
+      apiKey: config.secretToken,
+    });
+    const result = await requestJson<GeoapifyGeocodeResponse>(url, "geoapify");
+    if (!result.ok) return result;
+    const places = (result.data.features ?? [])
+      .map((feature) => geoapifyPlaceFeature(feature))
+      .filter((place): place is GeocodedPlace => place !== null);
+    return places.length > 0 ? { ok: true, data: places } : failure<GeocodedPlace[]>("no_results");
+  }
+
   if (config.provider === "mapbox") {
     const url = buildUrl("https://api.mapbox.com/search/geocode/v6/forward", {
       q: trimmed,
@@ -168,6 +184,18 @@ export async function reverseGeocode(coordinates: Coordinates): Promise<MapResul
   const config = getMapsServerConfig();
   if (!config) return failure<GeocodedPlace>("not_configured");
   if (!isValidCoordinates(coordinates)) return failure<GeocodedPlace>("provider_error");
+
+  if (config.provider === "geoapify") {
+    const url = buildUrl("https://api.geoapify.com/v1/geocode/reverse", {
+      lat: coordinates.latitude,
+      lon: coordinates.longitude,
+      apiKey: config.secretToken,
+    });
+    const result = await requestJson<GeoapifyGeocodeResponse>(url, "geoapify");
+    if (!result.ok) return result;
+    const place = result.data.features?.[0] ? geoapifyPlaceFeature(result.data.features[0]) : null;
+    return place ? { ok: true, data: place } : failure<GeocodedPlace>("no_results");
+  }
 
   if (config.provider === "mapbox") {
     const url = buildUrl("https://api.mapbox.com/search/geocode/v6/reverse", {
@@ -240,6 +268,46 @@ export async function fetchRoute(
   const config = getMapsServerConfig();
   if (!config) return failure<RouteResult>("not_configured");
   if (!isValidCoordinates(origin) || !isValidCoordinates(destination)) return failure<RouteResult>("provider_error");
+
+  if (config.provider === "geoapify") {
+    const geoapifyModes: Record<TravelMode, string> = {
+      driving: "drive",
+      walking: "walk",
+      cycling: "bicycle",
+      transit: "transit",
+    };
+    const url = buildUrl("https://api.geoapify.com/v1/routing", {
+      waypoints: `${origin.latitude},${origin.longitude}|${destination.latitude},${destination.longitude}`,
+      mode: geoapifyModes[mode],
+      apiKey: config.secretToken,
+    });
+    const result = await requestJson<GeoapifyRoutingResponse>(url, "geoapify");
+    if (!result.ok) return result;
+    const feature = result.data.features?.[0];
+    if (!feature || !feature.properties) return failure<RouteResult>("no_results");
+    const rawCoords = feature.geometry?.coordinates ?? [];
+    const flatCoords: [number, number][] = Array.isArray(rawCoords[0]?.[0])
+      ? (rawCoords.flat() as [number, number][])
+      : (rawCoords as [number, number][]);
+    const legs = feature.properties.legs ?? [];
+    return {
+      ok: true,
+      data: {
+        provider: "geoapify",
+        mode,
+        distanceMetres: feature.properties.distance ?? 0,
+        durationSeconds: feature.properties.time ?? 0,
+        geometry: flatCoords,
+        steps: legs.flatMap((leg) =>
+          (leg.steps ?? []).map((step) => ({
+            instruction: step.instruction?.text ?? "Continue",
+            distanceMetres: step.distance ?? 0,
+            durationSeconds: step.time ?? 0,
+          })),
+        ),
+      },
+    };
+  }
 
   if (config.provider === "mapbox") {
     const profile = MAPBOX_PROFILES[mode];
@@ -451,3 +519,170 @@ export function decodePolyline(encoded: string, precision = 5): [number, number]
 
   return points;
 }
+
+// ---------------------------------------------------------------------------
+// Geoapify Types & Facilities Discovery
+// ---------------------------------------------------------------------------
+
+export type GeoapifyFacility = {
+  id: string;
+  name: string;
+  address: string;
+  distanceMetres: number;
+  coordinates: Coordinates;
+  phone: string | null;
+  website: string | null;
+  emergency: boolean;
+  categories: string[];
+  isMapListing: true;
+  verificationStatus: "Verification not confirmed";
+  source: string;
+};
+
+export type GeoapifyGeocodeResponse = {
+  features?: {
+    properties?: {
+      place_id?: string;
+      formatted?: string;
+      name?: string;
+      city?: string;
+      state?: string;
+      country?: string;
+      lat?: number;
+      lon?: number;
+      result_type?: string;
+    };
+    geometry?: {
+      coordinates?: [number, number];
+    };
+  }[];
+};
+
+export type GeoapifyRoutingResponse = {
+  features?: {
+    geometry?: {
+      coordinates?: number[][] | number[][][];
+    };
+    properties?: {
+      distance?: number;
+      time?: number;
+      legs?: {
+        distance?: number;
+        time?: number;
+        steps?: {
+          instruction?: { text?: string };
+          distance?: number;
+          time?: number;
+        }[];
+      }[];
+    };
+  }[];
+};
+
+export type GeoapifyPlacesResponse = {
+  features?: {
+    properties?: {
+      place_id?: string;
+      name?: string;
+      formatted?: string;
+      address_line1?: string;
+      address_line2?: string;
+      city?: string;
+      lat?: number;
+      lon?: number;
+      distance?: number;
+      categories?: string[];
+      contact?: { phone?: string; website?: string };
+      datasource?: { raw?: { phone?: string; website?: string; emergency?: string } };
+    };
+    geometry?: {
+      coordinates?: [number, number];
+    };
+  }[];
+};
+
+function geoapifyPlaceFeature(feature: NonNullable<GeoapifyGeocodeResponse["features"]>[number]): GeocodedPlace | null {
+  const p = feature.properties;
+  const lat = p?.lat ?? feature.geometry?.coordinates?.[1];
+  const lon = p?.lon ?? feature.geometry?.coordinates?.[0];
+  if (typeof lat !== "number" || typeof lon !== "number") return null;
+
+  const name = p?.name ?? p?.formatted ?? "Unnamed place";
+  return {
+    id: p?.place_id ?? `geoapify-${lon}-${lat}`,
+    label: p?.formatted ?? name,
+    primary: name,
+    secondary: [p?.city, p?.state, p?.country].filter(Boolean).join(", ") || null,
+    coordinates: { latitude: lat, longitude: lon },
+    precision: p?.result_type ?? null,
+    provider: "geoapify",
+  };
+}
+
+/**
+ * Searches for nearby hospitals and clinics using Geoapify Places API.
+ * Results are explicitly marked as "Verification not confirmed" with source attribution
+ * so raw map listings are never confused with official accreditation.
+ */
+export async function searchNearbyHealthcareGeoapify(
+  coordinates: Coordinates,
+  options: { radiusMetres?: number; limit?: number; category?: string } = {},
+): Promise<MapResult<GeoapifyFacility[]>> {
+  const config = getMapsServerConfig();
+  if (!config) return failure<GeoapifyFacility[]>("not_configured");
+  if (!isValidCoordinates(coordinates)) return failure<GeoapifyFacility[]>("provider_error");
+
+  const radius = Math.min(Math.max(options.radiusMetres ?? 15_000, 1_000), 50_000);
+  const limit = Math.min(Math.max(options.limit ?? 20, 1), 50);
+  const categories = options.category ?? "healthcare.hospital,healthcare.clinic";
+
+  const url = buildUrl("https://api.geoapify.com/v2/places", {
+    categories,
+    filter: `circle:${coordinates.longitude},${coordinates.latitude},${radius}`,
+    bias: `proximity:${coordinates.longitude},${coordinates.latitude}`,
+    limit,
+    apiKey: config.secretToken,
+  });
+
+  const result = await requestJson<GeoapifyPlacesResponse>(url, "geoapify");
+  if (!result.ok) return result;
+
+  const facilities: GeoapifyFacility[] = (result.data.features ?? []).map((feature) => {
+    const p = feature.properties ?? {};
+    const lat = p.lat ?? feature.geometry?.coordinates?.[1] ?? coordinates.latitude;
+    const lon = p.lon ?? feature.geometry?.coordinates?.[0] ?? coordinates.longitude;
+    const name = p.name ?? p.address_line1 ?? "Healthcare Facility";
+    const address = p.formatted ?? [p.address_line1, p.address_line2].filter(Boolean).join(", ") || "Address unavailable";
+
+    // Distance calculation
+    const deltaLat = ((lat - coordinates.latitude) * Math.PI) / 180;
+    const deltaLng = ((lon - coordinates.longitude) * Math.PI) / 180;
+    const a =
+      Math.sin(deltaLat / 2) ** 2 +
+      Math.cos((coordinates.latitude * Math.PI) / 180) *
+        Math.cos((lat * Math.PI) / 180) *
+        Math.sin(deltaLng / 2) ** 2;
+    const haversineDist = Math.round(2 * 6_371_008.8 * Math.asin(Math.min(1, Math.sqrt(a))));
+
+    const distanceMetres = p.distance ?? haversineDist;
+
+    return {
+      id: p.place_id ?? `geoapify-${lon}-${lat}`,
+      name,
+      address,
+      distanceMetres,
+      coordinates: { latitude: lat, longitude: lon },
+      phone: p.contact?.phone ?? p.datasource?.raw?.phone ?? null,
+      website: p.contact?.website ?? p.datasource?.raw?.website ?? null,
+      emergency: (p.categories ?? []).includes("healthcare.hospital") || p.datasource?.raw?.emergency === "yes",
+      categories: p.categories ?? ["healthcare"],
+      isMapListing: true,
+      verificationStatus: "Verification not confirmed",
+      source: "Geoapify / OpenStreetMap Healthcare Directory",
+    };
+  });
+
+  facilities.sort((a, b) => a.distanceMetres - b.distanceMetres);
+  return { ok: true, data: facilities };
+}
+

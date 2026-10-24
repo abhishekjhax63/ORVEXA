@@ -1,17 +1,17 @@
 import type { NextRequest } from "next/server";
 
-import { jsonError, jsonOk, requireRoutePermission, zodFieldErrors } from "@/lib/auth/route-session";
+import { getRouteUser, jsonError, jsonOk, zodFieldErrors } from "@/lib/auth/route-session";
 import { geocodeAddress, reverseGeocode, type MapErrorKind } from "@/lib/maps/provider";
 import { consumeRateLimit, RATE_LIMITS } from "@/lib/security/rate-limit";
+import { clientIpFromHeaders } from "@/lib/security/request";
 import { geocodeQuerySchema } from "@/lib/validation/emergency";
 
 /**
- * Place lookup.
+ * Place lookup & reverse geocoding.
  *
  * Proxied rather than called from the browser so the provider token stays on the
- * server and so the paid lookup is behind a signed-in account and a rate limit.
- * A provider failure is returned as a typed reason — the map UI has to tell a
- * timeout apart from "no such place".
+ * server. Accessible during pre-login location detection via client IP rate-limiting,
+ * and authenticated user rate-limiting when logged in.
  */
 const STATUS_BY_ERROR: Record<MapErrorKind, number> = {
   not_configured: 503,
@@ -24,8 +24,8 @@ const STATUS_BY_ERROR: Record<MapErrorKind, number> = {
 };
 
 export async function GET(request: NextRequest) {
-  const session = await requireRoutePermission("emergency.raise");
-  if (!session.ok) return session.response;
+  const user = await getRouteUser();
+  const identity = user ? `user:${user.id}` : `ip:${clientIpFromHeaders(request.headers) ?? "unknown"}`;
 
   const url = new URL(request.url);
   const raw = Object.fromEntries([...url.searchParams.entries()].filter(([, value]) => value.trim() !== ""));
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
   }
   const query = parsed.data;
 
-  const limit = await consumeRateLimit("geoLookup", `user:${session.user.id}`, RATE_LIMITS.geoLookup);
+  const limit = await consumeRateLimit("geoLookup", identity, RATE_LIMITS.geoLookup);
   if (!limit.allowed) {
     return jsonError(429, "Too many location searches. Wait a moment and try again.", {
       retryAfterSeconds: limit.retryAfterSeconds,

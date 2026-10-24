@@ -62,11 +62,24 @@ export function getSmsProviderConfig() {
  * inventing a result.
  */
 export function getMapsServerConfig() {
-  const provider = optionalEnv("MAPS_PROVIDER")?.toLowerCase();
-  if (provider !== "mapbox" && provider !== "google") return undefined;
-  const secretToken = optionalEnv("MAPS_SERVER_TOKEN");
+  const geoapifyKey = optionalEnv("GEOAPIFY_API_KEY");
+  const configuredProvider = optionalEnv("MAPS_PROVIDER")?.toLowerCase();
+  const provider = (configuredProvider ?? (geoapifyKey ? "geoapify" : undefined))?.toLowerCase();
+  if (provider !== "mapbox" && provider !== "google" && provider !== "geoapify") return undefined;
+  const secretToken = optionalEnv("MAPS_SERVER_TOKEN") ?? geoapifyKey;
   if (!secretToken) return undefined;
-  return { provider, secretToken } as const;
+  return { provider: provider as "mapbox" | "google" | "geoapify", secretToken } as const;
+}
+
+/**
+ * Server-only OpenAI credentials for medical analysis and report understanding.
+ * Stored in OPENAI_API_KEY, never exposed client-side.
+ */
+export function getOpenAiConfig() {
+  const apiKey = optionalEnv("OPENAI_API_KEY") ?? optionalEnv("AI_PROVIDER_API_KEY");
+  if (!apiKey) return undefined;
+  const model = optionalEnv("OPENAI_MODEL") ?? optionalEnv("AI_PROVIDER_MODEL") ?? "gpt-4o";
+  return { apiKey, model } as const;
 }
 
 /**

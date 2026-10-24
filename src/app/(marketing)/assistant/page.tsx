@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 
 import { AssistantWorkspace } from "@/components/ai/assistant-workspace";
+import { MedicalAnalysisPanel } from "@/components/ai/medical-analysis-panel";
 import { PageHero } from "@/components/layout/page-hero";
 import { Section } from "@/components/layout/section";
 import { aiCapabilityReport } from "@/lib/ai/config";
@@ -38,9 +39,12 @@ export default function AssistantPage() {
       />
 
       <Section spacing="sm">
-        <Suspense fallback={<WorkspaceSkeleton />}>
-          <Workspace />
-        </Suspense>
+        <div className="space-y-8">
+          <MedicalAnalysisPanel />
+          <Suspense fallback={<WorkspaceSkeleton />}>
+            <Workspace />
+          </Suspense>
+        </div>
       </Section>
     </>
   );

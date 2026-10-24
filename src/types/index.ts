@@ -46,6 +46,8 @@ export type CareService = {
 
 export type HospitalType = "Multi-speciality" | "Super-speciality" | "Day-care" | "Clinic";
 
+export type VerificationStatus = "Verified" | "Verification pending" | "Verification not confirmed";
+
 export type Hospital = {
   id: string;
   name: string;
@@ -65,7 +67,14 @@ export type Hospital = {
   teleconsult: boolean;
   /** 1 = value, 2 = mid, 3 = premium. Used only for the cost filter. */
   priceTier: 1 | 2 | 3;
-  imagePrompt: string;
+  imagePrompt?: string;
+  verificationStatus?: VerificationStatus;
+  verificationSource?: string;
+  verificationDate?: string;
+  registrationNumber?: string;
+  coordinates?: { latitude: number; longitude: number };
+  authenticImageUrl?: string;
+  imageAttribution?: string;
 };
 
 export type Doctor = {
@@ -85,7 +94,14 @@ export type Doctor = {
   availability: Availability;
   nextSlot: string;
   about: string;
-  imagePrompt: string;
+  imagePrompt?: string;
+  verificationStatus?: VerificationStatus;
+  verificationSource?: string;
+  verificationDate?: string;
+  registrationNumber?: string;
+  medicalCouncil?: string;
+  authenticImageUrl?: string;
+  imageAttribution?: string;
 };
 
 export type Specialty = {

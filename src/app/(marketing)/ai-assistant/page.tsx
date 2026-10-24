@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import { AssistantDemo } from "@/components/ai/assistant-demo";
+import { MedicalAnalysisPanel } from "@/components/ai/medical-analysis-panel";
 import { DemoNotice } from "@/components/layout/demo-notice";
 import { PageHero } from "@/components/layout/page-hero";
 import { Section, SectionHeading } from "@/components/layout/section";
@@ -251,6 +252,19 @@ export default function AiAssistantPage() {
           The transcript, suggestions and triage outcome are a scripted walkthrough for Phase 1 review. The live triage
           model arrives in Phase 2 and will be clinically validated before release.
         </DemoNotice>
+      </Section>
+
+      <Section id="medical-analysis" spacing="default" aria-labelledby="analysis-heading">
+        <Reveal>
+          <SectionHeading
+            eyebrow="Clinical Vision & Diagnostics"
+            title={<span id="analysis-heading">OpenAI Lab Report & Wound Visual Inspector</span>}
+            description="Extract biomarkers from lab reports or perform an observational visual assessment of wounds and burns. Includes diagnostic limitation warnings and emergency triage escalation."
+          />
+        </Reveal>
+        <div className="mt-8">
+          <MedicalAnalysisPanel />
+        </div>
       </Section>
 
       <Section id="how-it-works" tone="muted" spacing="default" aria-labelledby="how-it-works-heading">

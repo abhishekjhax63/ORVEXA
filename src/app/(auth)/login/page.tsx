@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { CircleCheckBig, Info, ShieldAlert } from "lucide-react";
 
+import { LocationPermissionPrompt } from "@/components/auth/location-permission-prompt";
 import { LoginForm } from "@/components/auth/login-form";
 import { getCurrentUser } from "@/lib/auth/guards";
 import { landingPathForRoles } from "@/lib/auth/roles";
@@ -63,6 +64,7 @@ export default async function LoginPage({ searchParams }: { searchParams: AuthSe
           <span>{notice.message}</span>
         </p>
       ) : null}
+      <LocationPermissionPrompt />
       <LoginForm next={next} />
     </div>
   );

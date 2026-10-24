@@ -50,18 +50,18 @@ const DEFAULT_TRANSCRIBE_MODEL: Record<AiProviderId, string> = {
 };
 
 export function getAiProviderConfig(): AiProviderConfig | undefined {
-  const requested = optionalEnv("AI_PROVIDER")?.trim().toLowerCase();
+  const requested = optionalEnv("AI_PROVIDER")?.trim().toLowerCase() || (optionalEnv("OPENAI_API_KEY") ? "openai" : undefined);
   if (!requested) return undefined;
   if (!(AI_PROVIDER_IDS as readonly string[]).includes(requested)) return undefined;
   const provider = requested as AiProviderId;
 
-  const apiKey = optionalEnv("AI_PROVIDER_API_KEY");
+  const apiKey = optionalEnv("AI_PROVIDER_API_KEY") || optionalEnv("OPENAI_API_KEY");
   if (!apiKey) return undefined;
 
   return {
     provider,
     apiKey,
-    model: optionalEnv("AI_PROVIDER_MODEL") ?? AI_PROVIDER_PROFILES[provider].defaultModel,
+    model: optionalEnv("OPENAI_MODEL") ?? optionalEnv("AI_PROVIDER_MODEL") ?? AI_PROVIDER_PROFILES[provider].defaultModel,
     transcribeModel: optionalEnv("AI_PROVIDER_TRANSCRIBE_MODEL") ?? DEFAULT_TRANSCRIBE_MODEL[provider],
     organization: optionalEnv("AI_PROVIDER_ORGANIZATION") ?? null,
     baseUrl: (optionalEnv("AI_PROVIDER_BASE_URL") ?? DEFAULT_BASE_URL[provider]).replace(/\/+$/, ""),

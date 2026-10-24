@@ -39,11 +39,9 @@ For emergencies, always direct the user to call emergency services or use the OR
 Keep answers clear, warm, and concise. Never make up clinical facts.`;
 
 export async function POST(request: Request) {
-  // ── Authentication ───────────────────────────────────────────────────────
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
-  }
+  // ── Authentication / Guest session ─────────────────────────────────────────
+  // Sakha AI assists both registered users and new visitors navigating ORVEXA.
+  const user = await getCurrentUser().catch(() => null);
 
   // ── Parse and validate body ──────────────────────────────────────────────
   let content: string;
@@ -67,15 +65,15 @@ export async function POST(request: Request) {
   // ── Check API key ────────────────────────────────────────────────────────
   const apiKey = process.env.BLUESMINDS_API_KEY;
   if (!apiKey) {
-    // Inform the user without revealing server internals.
     return NextResponse.json({
       reply:
-        "Sakha AI is not yet configured on this deployment. Please add the BLUESMINDS_API_KEY environment variable.",
+        "Sakha AI is not yet configured on this deployment. Please set the BLUESMINDS_API_KEY environment variable.",
     });
   }
 
   // ── Call the BluesMinds API ───────────────────────────────────────────────
   try {
+    const userContext = user ? ` (User: ${user.fullName})` : "";
     const response = await fetch(`${BLUESMINDS_BASE_URL}/chat/completions`, {
       method: "POST",
       headers: {
@@ -85,21 +83,18 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         model: BLUESMINDS_MODEL,
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: `${SYSTEM_PROMPT}${userContext}` },
           { role: "user", content },
         ],
-        // Reasonable defaults – no streaming for now so the whole response is
-        // received before we return it to the client.
-        max_tokens: 512,
+        // gpt-oss-20b generates reasoning tokens first; 1500 gives ample headroom
+        max_tokens: 1500,
         temperature: 0.7,
       }),
-      // 30-second timeout via AbortSignal
       signal: AbortSignal.timeout(30_000),
     });
 
     // ── Handle provider-level errors ───────────────────────────────────────
     if (response.status === 401) {
-      // Do NOT echo the key or any token detail.
       console.error("[SakhaAI] Authentication failed with BluesMinds API");
       return NextResponse.json(
         { error: "AI provider authentication failed" },
@@ -116,24 +111,51 @@ export async function POST(request: Request) {
       const text = await response.text().catch(() => "");
       console.error(`[SakhaAI] Provider error ${response.status}: ${text.slice(0, 200)}`);
       return NextResponse.json(
-        { reply: "Sakha AI encountered an error. Please try again." },
+        { reply: "Sakha AI encountered an error from the provider. Please try again." },
         { status: 200 },
       );
     }
 
     // ── Parse the OpenAI-compatible response ───────────────────────────────
     const data = await response.json();
-    const reply: string =
-      data?.choices?.[0]?.message?.content?.trim() ??
-      "No response received from Sakha AI.";
+    const choice = data?.choices?.[0];
+    const rawContent: string | null = choice?.message?.content;
+    const reasoningContent: string | null = choice?.message?.reasoning_content ?? choice?.message?.reasoning;
 
-    // Image support: the current BluesMinds model (gpt-oss-20b) is a text
-    // model and does not return image URLs. If a future model adds image
-    // content parts, parse them here. For now we pass an empty array so the
-    // UI is ready for it.
-    const images: string[] = [];
+    // Use content if available; fallback if empty
+    let reply = (rawContent && rawContent.trim()) ? rawContent.trim() : "";
+    if (!reply && reasoningContent && reasoningContent.trim()) {
+      reply = reasoningContent.trim();
+    }
+    if (!reply) {
+      reply = "I'm here to help you navigate ORVEXA. Please ask any question about hospitals, doctors, medicine delivery, or emergency care!";
+    }
 
-    return NextResponse.json({ reply, images });
+    // Image support: parse any images returned in the message payload or embedded in markdown
+    const images: { url: string; alt?: string }[] = [];
+
+    // 1. Check if provider returned structured images in message
+    if (Array.isArray(choice?.message?.images)) {
+      for (const img of choice.message.images) {
+        if (typeof img === "string" && img.startsWith("http")) {
+          images.push({ url: img, alt: "Medical visual reference" });
+        } else if (img && typeof img === "object" && typeof img.url === "string") {
+          images.push({ url: img.url, alt: img.alt || "Medical visual reference" });
+        }
+      }
+    }
+
+    // 2. Extract markdown images: ![alt](url)
+    const mdImageRegex = /!\[([^\]]*)\]\((https?:\/\/[^\s\)]+)\)/g;
+    let match;
+    while ((match = mdImageRegex.exec(reply)) !== null) {
+      images.push({ url: match[2], alt: match[1] || "Reference image" });
+    }
+
+    return NextResponse.json({
+      reply,
+      images: images.length > 0 ? images.map((i) => i.url) : undefined,
+    });
   } catch (err) {
     if (err instanceof Error && err.name === "TimeoutError") {
       return NextResponse.json(
