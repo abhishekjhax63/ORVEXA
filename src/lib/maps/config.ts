@@ -12,7 +12,7 @@
  * the listed nearby facilities, which come from our own database.
  */
 
-export type MapsProvider = "mapbox" | "google";
+export type MapsProvider = "mapbox" | "google" | "geoapify";
 
 export type MapConfig = {
   provider: MapsProvider | null;
@@ -31,7 +31,7 @@ export type MapConfig = {
 
 function readProvider(): MapsProvider | null {
   const configured = process.env.NEXT_PUBLIC_MAPS_PROVIDER?.trim().toLowerCase();
-  if (configured === "mapbox" || configured === "google") return configured;
+  if (configured === "mapbox" || configured === "google" || configured === "geoapify") return configured;
   return null;
 }
 
@@ -80,7 +80,19 @@ export function isMapConfigured(config: MapConfig = mapConfig) {
 /** Human-readable provider name for attribution and the "not configured" state. */
 export function mapProviderLabel(config: MapConfig = mapConfig) {
   if (!config.provider) return "Mapping provider not configured";
-  return config.provider === "mapbox" ? "Mapbox" : "Google Maps";
+  if (config.provider === "mapbox") return "Mapbox";
+  if (config.provider === "geoapify") return "Geoapify © OpenStreetMap contributors";
+  return "Google Maps";
+}
+
+/**
+ * Tile URL template for Geoapify map tiles (OSM-based, no extra SDK required).
+ * Returns null when the provider is not Geoapify.
+ */
+export function geoapifyTileUrl(config: MapConfig = mapConfig): string | null {
+  if (config.provider !== "geoapify" || !config.accessToken) return null;
+  // Geoapify OSM Carto style – change the style slug to switch themes.
+  return `https://maps.geoapify.com/v1/tile/osm-carto/{z}/{x}/{y}.png?apiKey=${config.accessToken}`;
 }
 
 /**

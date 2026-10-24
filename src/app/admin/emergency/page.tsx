@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { EmergencyIncidentStatus } from "@prisma/client";
+
+// The <Siren /> icon is used in the EmptyState component later.
 import { Siren } from "lucide-react";
+import { getNow } from "@/lib/now";
 
 import {
+
   ConsoleCallout,
   ConsolePageHeader,
   ConsoleSection,
@@ -71,7 +75,7 @@ export default async function EmergencyOperationsPage() {
   const { items, total, summary } = await listEmergencyIncidents({ pageSize: PAGE_SIZE });
   // The page already reads request-time state through the guard, so a clock read
   // here is a normal part of a dynamic render.
-  const now = Date.now();
+  const now = getNow();
 
   const columns: ConsoleColumn<EmergencyIncidentListItem>[] = [
     {

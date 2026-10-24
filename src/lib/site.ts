@@ -42,24 +42,44 @@ export const primaryNav: NavItem[] = [
   { title: "Hospitals & Doctors", href: "/hospitals", description: "Verified providers near you" },
   { title: "Pharmacy", href: "/pharmacy", description: "Medicines delivered in 90 minutes" },
   { title: "AI Assistant", href: "/ai-assistant", description: "Guided symptom triage" },
+  { title: "BMI & Health", href: "/health/bmi", description: "Calculate BMI and view body model" },
+  { title: "BMI & Health", href: "/health/bmi", description: "Calculate BMI and view body model" },
 ];
 
 /** Grouped links surfaced through the navbar "More" menu. */
 export const secondaryNav: NavGroup[] = [
   {
-    title: "Care services",
+    title: "Care Services",
     items: [
       { title: "Diagnostics", href: "/diagnostics", description: "Lab tests and home collection" },
       { title: "Insurance", href: "/insurance", description: "Compare and claim easily" },
       { title: "Telemedicine", href: "/services#telemedicine", description: "Consult in minutes" },
+    ],
+  },
+  {
+    title: "Emergency",
+    items: [
       { title: "Emergency SOS", href: "/emergency", description: "Raise an incident, find nearby care", badge: "24×7" },
+    ],
+  },
+  {
+    title: "AI & Records",
+    items: [
+      { title: "AI Assistant", href: "/ai-assistant", description: "Guided symptom triage" },
+      { title: "Health records", href: "/dashboard/records", description: "Your medical data" },
+    ],
+  },
+  {
+    title: "Account",
+    items: [
+      { title: "Sign in", href: "/login", description: "Access your dashboard" },
+      { title: "Create account", href: "/register", description: "Join ORVEXA" },
     ],
   },
   {
     title: "Company",
     items: [
-      { title: "About ORVEXA", href: "/about", description: "Our clinical mission" },
-      { title: "For providers", href: "/about#providers", description: "List your hospital" },
+      { title: "About", href: "/about", description: "Our clinical mission" },
       { title: "Help centre", href: "/help", description: "Answers and support" },
       { title: "Contact", href: "/contact", description: "Talk to our team" },
     ],

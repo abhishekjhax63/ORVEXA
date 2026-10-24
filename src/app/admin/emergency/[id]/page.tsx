@@ -14,6 +14,7 @@ import { INCIDENT_EVENT_LABELS, REQUEST_STATUS_LABELS } from "@/lib/emergency/st
 import { requirePlatformContext } from "@/lib/platform/console";
 import { loadEmergencyIncident, type DispatchRequestView, type EmergencyIncidentDetail } from "@/lib/platform/emergency-ops";
 import { EMERGENCY_INCIDENT_TYPE_LABELS } from "@/lib/validation/emergency";
+import { getNow } from "@/lib/now";
 
 export const metadata: Metadata = {
   title: "Emergency incident",
@@ -78,7 +79,7 @@ export default async function EmergencyIncidentPage({ params }: PageProps) {
   const incident = await loadEmergencyIncident({ incidentId: id });
   if (!incident) notFound();
 
-  const now = Date.now();
+  const now = getNow();
 
   const requestColumns: ConsoleColumn<DispatchRequestView>[] = [
     {

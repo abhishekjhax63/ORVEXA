@@ -9,6 +9,7 @@ import { ServicesOverviewSection } from "@/components/sections/services-overview
 import { TelemedicineRecordsSection } from "@/components/sections/telemedicine-records";
 import { TrustSection } from "@/components/sections/trust-section";
 import { siteConfig } from "@/lib/site";
+import SakhaAI from "@/components/assistant/SakhaAI";
 
 export const metadata: Metadata = {
   title: `${siteConfig.name} — Hospitals, doctors, diagnostics, pharmacy and emergency care in one place`,
@@ -27,6 +28,8 @@ export default function HomePage() {
       <InsuranceDiagnosticsSection />
       <TelemedicineRecordsSection />
       <TrustSection />
+      {/* Floating Sakha AI chatbot – rendered as a client component overlay */}
+      <SakhaAI />
     </>
   );
 }
