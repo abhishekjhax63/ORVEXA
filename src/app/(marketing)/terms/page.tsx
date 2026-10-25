@@ -47,7 +47,7 @@ export default function TermsPage() {
       <Section spacing="default">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] lg:gap-14">
           <nav aria-label="On this page" className="lg:sticky lg:top-28 lg:self-start">
-            <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">On this page</p>
+            <p className="eyebrow text-primary">On this page</p>
             <ol className="mt-4 flex flex-col gap-2.5 border-l border-border pl-4 text-sm">
               {toc.map((item) => (
                 <li key={item.id}>

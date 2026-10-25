@@ -28,7 +28,7 @@ function InsuranceDiagnosticsSection() {
         <Reveal>
           <article className="flex h-full flex-col gap-6 rounded-[1.75rem] border border-border bg-card p-6 shadow-[var(--shadow-soft)] sm:p-8">
             <div className="flex items-start gap-4">
-              <span aria-hidden className="grid size-12 shrink-0 place-items-center rounded-2xl bg-teal-soft text-teal-deep dark:bg-teal-mid/15 dark:text-teal-mid">
+              <span aria-hidden className="grid size-12 shrink-0 place-items-center rounded-2xl bg-leaf-soft text-leaf-deep dark:bg-leaf-mid/15 dark:text-leaf-mid">
                 <ShieldCheck className="size-6" />
               </span>
               <div>
@@ -85,7 +85,7 @@ function InsuranceDiagnosticsSection() {
             <div className="flex items-start gap-4">
               <span
                 aria-hidden
-                className="grid size-12 shrink-0 place-items-center rounded-2xl bg-cyan-soft text-cyan-deep dark:bg-cyan-mid/15 dark:text-cyan-mid"
+                className="grid size-12 shrink-0 place-items-center rounded-2xl bg-mint-soft text-mint-deep dark:bg-mint-mid/15 dark:text-mint-mid"
               >
                 <Microscope className="size-6" />
               </span>

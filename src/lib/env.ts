@@ -62,23 +62,19 @@ export function getSmsProviderConfig() {
  * inventing a result.
  */
 export function getMapsServerConfig() {
-<<<<<<< HEAD
   const geoapifyKey = optionalEnv("GEOAPIFY_API_KEY");
-  const configuredProvider = optionalEnv("MAPS_PROVIDER")?.toLowerCase();
-  const provider = (configuredProvider ?? (geoapifyKey ? "geoapify" : undefined))?.toLowerCase();
-  if (provider !== "mapbox" && provider !== "google" && provider !== "geoapify") return undefined;
-  const secretToken = optionalEnv("MAPS_SERVER_TOKEN") ?? geoapifyKey;
-=======
-  const provider = (
-    optionalEnv("MAPS_PROVIDER") ?? optionalEnv("NEXT_PUBLIC_MAPS_PROVIDER")
+  const configuredProvider = (
+    optionalEnv("MAPS_PROVIDER") ??
+    optionalEnv("NEXT_PUBLIC_MAPS_PROVIDER") ??
+    (geoapifyKey ? "geoapify" : undefined)
   )?.toLowerCase();
-  if (provider !== "mapbox" && provider !== "google" && provider !== "geoapify") return undefined;
+  if (configuredProvider !== "mapbox" && configuredProvider !== "google" && configuredProvider !== "geoapify") {
+    return undefined;
+  }
   const secretToken =
-    optionalEnv("MAPS_SERVER_TOKEN") ??
-    (provider === "geoapify" ? optionalEnv("GEOAPIFY_API_KEY") : undefined);
->>>>>>> 00c6be6 (Updated project features)
+    optionalEnv("MAPS_SERVER_TOKEN") ?? (configuredProvider === "geoapify" ? geoapifyKey : undefined);
   if (!secretToken) return undefined;
-  return { provider: provider as "mapbox" | "google" | "geoapify", secretToken } as const;
+  return { provider: configuredProvider, secretToken } as const;
 }
 
 /**

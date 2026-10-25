@@ -45,7 +45,7 @@ function FeatureNotice({ title, description, planned, icon: Icon = Construction,
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">{description}</p>
       {planned && planned.length > 0 ? (
         <div className="mt-5">
-          <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+          <p className="eyebrow text-muted-foreground">
             What will live here
           </p>
           <ul className="mt-3 flex flex-col gap-2 text-sm text-foreground">

@@ -9,6 +9,7 @@ import { emailDeliveryAvailable } from "@/lib/actions/email-delivery";
 import { fieldErrorsFromZod, formError, formSuccess, type FormState } from "@/lib/actions/form-state";
 import { issueChallenge, verifyChallenge } from "@/lib/auth/challenge";
 import { landingPathForRoles } from "@/lib/auth/roles";
+import { safeNextPath } from "@/lib/auth/redirect";
 import {
   DUMMY_PASSWORD_HASH,
   hashPassword,
@@ -70,22 +71,6 @@ function checked(formData: FormData, key: string) {
 
 function normalizeEmail(value: string) {
   return value.trim().toLowerCase();
-}
-
-/**
- * A `next` path is honoured only when it is a same-origin, absolute-path
- * relative URL. Anything protocol-relative or absolute is discarded so a crafted
- * `?next=` cannot turn sign-in into an open redirect.
- */
-function safeNextPath(value: string | undefined): string | undefined {
-  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) return undefined;
-  try {
-    const url = new URL(value, "http://internal.invalid");
-    if (url.origin !== "http://internal.invalid") return undefined;
-    return `${url.pathname}${url.search}`;
-  } catch {
-    return undefined;
-  }
 }
 
 function buildLink(path: string, token: string) {

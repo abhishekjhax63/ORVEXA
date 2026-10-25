@@ -63,65 +63,7 @@ export function proxy(request: NextRequest) {
     );
   }
 
-<<<<<<< HEAD
-  let response = NextResponse.next({ request });
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    return harden(response, { sensitive: isAdminApi(pathname) });
-  }
-
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseKey,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          for (const { name, value } of cookiesToSet) {
-            request.cookies.set(name, value);
-          }
-          response = NextResponse.next({ request });
-          for (const { name, value, options } of cookiesToSet) {
-            response.cookies.set(name, value, options);
-          }
-        },
-      },
-    },
-  );
-
-  // Must be `getUser()` and not `getSession()`: it revalidates the token with
-  // Supabase instead of trusting the cookie contents.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const isPatientArea = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
-  const isAuthPage = pathname === "/login" || pathname === "/register";
-
-  if (isPatientArea && !user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.search = "";
-    url.searchParams.set("next", pathname);
-    return harden(NextResponse.redirect(url), { sensitive: true });
-  }
-
-  if (isAuthPage && user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    url.search = "";
-    return harden(NextResponse.redirect(url));
-  }
-
-  return harden(response, { sensitive: isAdminApi(pathname) });
-=======
   return harden(NextResponse.next({ request }), { sensitive: isAdminApi(pathname) });
->>>>>>> 00c6be6 (Updated project features)
 }
 
 export const config = {

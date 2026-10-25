@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { CinematicIntro } from "@/components/intro/cinematic-intro";
 import { Hero } from "@/components/marketing/hero";
 import { AiShowcaseSection } from "@/components/sections/ai-showcase";
 import { FindCareSection } from "@/components/sections/find-care";
@@ -20,6 +21,10 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <>
+      {/* Rendered first so its skip control is the first focusable element on
+          the page. It is skipped entirely for reduced-motion visitors and for
+          repeat visits within the same browser session. */}
+      <CinematicIntro />
       <Hero />
       <FindCareSection />
       <ServicesOverviewSection />

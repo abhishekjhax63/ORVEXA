@@ -4,6 +4,7 @@ import { getAiProviderConfig, type AiProviderConfig } from "@/lib/ai/config";
 import type { AiProviderId } from "@/lib/ai/capabilities";
 import { aiFailure, type AiProvider, type AiResult } from "@/lib/ai/provider";
 import { OpenAiProvider } from "@/lib/ai/providers/openai";
+import { BluesMindsProvider } from "@/lib/ai/providers/bluesminds";
 
 /**
  * Resolves the configured AI provider.
@@ -27,6 +28,13 @@ const PROVIDER_FACTORIES: Record<AiProviderId, (config: AiProviderConfig) => AiP
       model: config.model,
       visionModel: config.visionModel,
       transcribeModel: config.transcribeModel,
+    }),
+  bluesminds: (config) =>
+    new BluesMindsProvider({
+      apiKey: config.apiKey,
+      baseUrl: config.baseUrl,
+      model: config.model,
+      visionModel: config.visionModel,
     }),
 };
 

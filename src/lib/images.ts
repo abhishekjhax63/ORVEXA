@@ -28,33 +28,33 @@ export function getNeutralMedicalPlaceholder(
 ): string {
   const icon =
     type === "doctor"
-      ? `<circle cx="50" cy="38" r="18" fill="#0284c7" opacity="0.85"/>
-         <path d="M22 82c0-15.464 12.536-28 28-28s28 12.536 28 28" fill="#0284c7" opacity="0.6"/>
+      ? `<circle cx="50" cy="38" r="18" fill="#4a8a62" opacity="0.85"/>
+         <path d="M22 82c0-15.464 12.536-28 28-28s28 12.536 28 28" fill="#4a8a62" opacity="0.6"/>
          <path d="M44 48c0 4 2.5 8 6 8s6-4 6-8" stroke="#ffffff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
          <path d="M50 56v10m-4 10h8" stroke="#ffffff" stroke-width="2.5" fill="none" stroke-linecap="round"/>`
-      : `<rect x="25" y="28" width="50" height="52" rx="4" fill="#0d9488" opacity="0.75"/>
-         <path d="M20 80h60" stroke="#0f766e" stroke-width="4" stroke-linecap="round"/>
+      : `<rect x="25" y="28" width="50" height="52" rx="4" fill="#356e4b" opacity="0.75"/>
+         <path d="M20 80h60" stroke="#24563a" stroke-width="4" stroke-linecap="round"/>
          <rect x="33" y="38" width="8" height="10" rx="1.5" fill="#ffffff" opacity="0.9"/>
          <rect x="59" y="38" width="8" height="10" rx="1.5" fill="#ffffff" opacity="0.9"/>
          <rect x="33" y="54" width="8" height="10" rx="1.5" fill="#ffffff" opacity="0.9"/>
          <rect x="59" y="54" width="8" height="10" rx="1.5" fill="#ffffff" opacity="0.9"/>
          <path d="M50 34v16m-8-8h16" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
-         <path d="M46 80v-14h8v14" fill="#134e4a"/>`;
+         <path d="M46 80v-14h8v14" fill="#123b2a"/>`;
 
   const label = title ? title.slice(0, 32) : type === "doctor" ? "Doctor Profile" : "Healthcare Facility";
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
     <defs>
       <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#0f172a" />
-        <stop offset="100%" stop-color="#1e293b" />
+        <stop offset="0%" stop-color="#08291d" />
+        <stop offset="100%" stop-color="#123b2a" />
       </linearGradient>
     </defs>
     <rect width="100" height="100" fill="url(#bgGrad)"/>
     <g transform="translate(0, -4)">
       ${icon}
     </g>
-    <text x="50" y="93" font-family="system-ui, sans-serif" font-size="5" font-weight="600" fill="#94a3b8" text-anchor="middle" letter-spacing="0.5">
+    <text x="50" y="93" font-family="system-ui, sans-serif" font-size="5" font-weight="600" fill="#9bc7a8" text-anchor="middle" letter-spacing="0.5">
       ${label.toUpperCase()}
     </text>
   </svg>`;
@@ -87,7 +87,7 @@ export const AUTHENTIC_EDITORIAL_ASSETS = {
 /**
  * Replaces synthetic AI generation with authentic photography or neutral clinical placeholder.
  */
-export function healthImage(prompt: string, size: ImageSize = "landscape_4_3"): string {
+export function healthImage(prompt: string): string {
   const p = prompt.toLowerCase();
   if (p.includes("consult") || p.includes("video") || p.includes("telemedicine")) {
     return AUTHENTIC_EDITORIAL_ASSETS.consultation;

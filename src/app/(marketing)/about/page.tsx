@@ -22,7 +22,6 @@ export const metadata: Metadata = {
 
 const missionImage = healthImage(
   "An Indian doctor and a care coordinator reviewing a patient's digital health timeline on a tablet in a bright modern clinic consultation room",
-  "landscape_4_3",
 );
 
 /** The three failure modes ORVEXA is designed against. */

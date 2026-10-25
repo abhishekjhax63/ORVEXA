@@ -53,7 +53,7 @@ function VerifyEmailForm({ token, emailDeliveryConfigured, deliveryNotice }: Ver
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
-        <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1 text-xs font-semibold tracking-[0.14em] text-primary uppercase">
+        <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1 eyebrow text-primary">
           Email verification
         </span>
         <h1 className="text-2xl font-semibold sm:text-3xl">

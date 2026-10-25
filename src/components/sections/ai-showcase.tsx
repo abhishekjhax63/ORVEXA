@@ -27,7 +27,7 @@ function AiShowcaseSection() {
           <RevealGroup as="ul" className="mt-8 grid gap-4 sm:grid-cols-2">
             {aiCapabilities.map((capability) => (
               <RevealItem as="li" key={capability.id}>
-                <div className="flex h-full gap-3 rounded-2xl border border-border bg-card p-4">
+                <div className="flex h-full gap-3 rounded-2xl border border-border bg-card p-4 transition-[border-color,box-shadow] duration-[var(--duration-base)] ease-[var(--ease-soft)] hover:border-primary/30 hover:shadow-[var(--shadow-soft)]">
                   <span
                     aria-hidden
                     className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary"

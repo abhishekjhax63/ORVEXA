@@ -59,7 +59,7 @@ function PageHero({
 
         <div className={cn("grid gap-10", aside ? "lg:grid-cols-[1.15fr_0.85fr] lg:items-center" : "")}>
           <div className="flex max-w-3xl flex-col gap-5">
-            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card/80 px-3 py-1 text-xs font-semibold tracking-[0.14em] text-primary uppercase">
+            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card/80 px-3 py-1 eyebrow text-primary">
               {eyebrow}
             </span>
             <h1 className="text-3xl font-semibold sm:text-4xl lg:text-5xl lg:leading-[1.1]">{title}</h1>

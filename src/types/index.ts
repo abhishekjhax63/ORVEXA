@@ -69,9 +69,16 @@ export type Hospital = {
   cashlessInsurance: boolean | null;
   teleconsult: boolean | null;
   /** 1 = value, 2 = mid, 3 = premium. Used only for the cost filter. */
-<<<<<<< HEAD
-  priceTier: 1 | 2 | 3;
-  imagePrompt?: string;
+  priceTier: 1 | 2 | 3 | null;
+  imagePrompt: string | null;
+  /** Official page for this facility at its source registry. */
+  sourceUrl: string | null;
+  /**
+   * Optional verification metadata. These are populated only for records whose
+   * details were checked against an official registry (NABH, State Medical
+   * Council, ROHINI and similar). A record without them is rendered as
+   * unverified rather than filled in with an invented value.
+   */
   verificationStatus?: VerificationStatus;
   verificationSource?: string;
   verificationDate?: string;
@@ -79,11 +86,6 @@ export type Hospital = {
   coordinates?: { latitude: number; longitude: number };
   authenticImageUrl?: string;
   imageAttribution?: string;
-=======
-  priceTier: 1 | 2 | 3 | null;
-  imagePrompt: string | null;
-  sourceUrl: string | null;
->>>>>>> 00c6be6 (Updated project features)
 };
 
 export type Doctor = {
@@ -105,26 +107,24 @@ export type Doctor = {
   reviewCount: number | null;
   consultationFee: number | null;
   modes: ConsultationMode[];
-<<<<<<< HEAD
-  availability: Availability;
-  nextSlot: string;
-  about: string;
-  imagePrompt?: string;
-  verificationStatus?: VerificationStatus;
-  verificationSource?: string;
-  verificationDate?: string;
-  registrationNumber?: string;
-  medicalCouncil?: string;
-  authenticImageUrl?: string;
-  imageAttribution?: string;
-=======
   availability: Availability | null;
   nextSlot: string | null;
   about: string | null;
   imagePrompt: string | null;
   sourceUrl: string | null;
   profileUrl: string | null;
->>>>>>> 00c6be6 (Updated project features)
+  /**
+   * Optional verification metadata, populated only where the clinician's
+   * registration has actually been checked against their State Medical Council
+   * record. Absent means "not confirmed", never "assumed valid".
+   */
+  verificationSource?: string;
+  verificationDate?: string;
+  registrationNumber?: string;
+  medicalCouncil?: string;
+  coordinates?: { latitude: number; longitude: number };
+  authenticImageUrl?: string;
+  imageAttribution?: string;
 };
 
 export type Specialty = {

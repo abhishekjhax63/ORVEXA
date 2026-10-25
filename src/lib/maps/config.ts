@@ -114,18 +114,10 @@ export function geoapifyTileUrl(config: MapConfig = mapConfig): string | null {
  */
 export function mapAttribution(config: MapConfig = mapConfig) {
   if (!config.provider) return null;
-<<<<<<< HEAD
   if (config.provider === "geoapify") {
     return "Powered by Geoapify | © OpenStreetMap contributors";
   }
-  return config.provider === "mapbox"
-    ? "© Mapbox © OpenStreetMap"
-    : "© Google Maps";
-=======
-  if (config.provider === "mapbox") return "© Mapbox © OpenStreetMap";
-  if (config.provider === "geoapify") return "© Geoapify © OpenStreetMap contributors";
-  return "© Google Maps";
->>>>>>> 00c6be6 (Updated project features)
+  return config.provider === "mapbox" ? "© Mapbox © OpenStreetMap" : "© Google Maps";
 }
 
 /** Opens the device's own maps app for turn-by-turn directions to a point. */

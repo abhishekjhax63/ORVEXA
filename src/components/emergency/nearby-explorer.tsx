@@ -267,7 +267,9 @@ export function NearbyExplorer({ className }: { className?: string }) {
     setRoute({ status: "idle" });
   }
 
-  const facilities = nearby.status === "ready" ? nearby.data.facilities : [];
+  // Memoised so the empty fallback is a stable reference: a fresh `[]` on every
+  // render would invalidate every downstream useMemo that depends on it.
+  const facilities = useMemo(() => (nearby.status === "ready" ? nearby.data.facilities : []), [nearby]);
   const selected = useMemo(() => facilities.find((facility) => facility.id === selectedId) ?? null, [facilities, selectedId]);
 
   const mapCenter = useMemo<Coordinates>(() => {

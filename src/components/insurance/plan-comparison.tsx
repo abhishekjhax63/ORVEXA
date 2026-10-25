@@ -328,7 +328,7 @@ function PlanComparison() {
                     <div>
                       <dt className="text-muted-foreground">Rating</dt>
                       <dd className="mt-0.5 flex items-center gap-1 font-semibold">
-                        <Star aria-hidden className="size-3 fill-amber-400 text-amber-400" />
+                        <Star aria-hidden className="size-3 fill-warning text-warning" />
                         {plan.rating}
                       </dd>
                     </div>

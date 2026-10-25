@@ -174,30 +174,28 @@ export default function MapView({
 
     map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), "top-right");
 
-<<<<<<< HEAD
     map.on("error", (e) => {
-      // Don't crash UI on tile load error
+      // A failed tile request must never take the page down: the map keeps
+      // whatever it has drawn and the surrounding UI stays usable.
       if (e?.error) {
         console.warn("[map] Map tile warning:", e.error?.message || e.error);
       }
     });
 
-    // Keep map resized cleanly on responsive layout changes
+    // The container is resized by the surrounding layout (sheet, drawer,
+    // orientation change), and Mapbox only measures on its own events.
     const resizeObserver = new ResizeObserver(() => {
       map.resize();
     });
     resizeObserver.observe(container);
 
-    return () => {
-      resizeObserver.disconnect();
-      for (const marker of markersRef.current.values()) marker.remove();
-      markersRef.current.clear();
-=======
+    // Captured now so the cleanup removes the markers from the same map that
+    // this effect populated, not whatever `markersRef.current` points at later.
     const markers = markersRef.current;
     return () => {
+      resizeObserver.disconnect();
       for (const marker of markers.values()) marker.remove();
       markers.clear();
->>>>>>> 00c6be6 (Updated project features)
       map.remove();
       mapRef.current = null;
     };

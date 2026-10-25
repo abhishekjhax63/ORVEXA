@@ -78,7 +78,7 @@ export default function EmergencyPage() {
         aside={
           <div className="rounded-[1.75rem] border border-border bg-card/85 p-6 shadow-[var(--shadow-panel)] backdrop-blur-sm">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">Service availability</p>
+              <p className="eyebrow text-primary">Service availability</p>
               <Badge variant="demo">Demo</Badge>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
@@ -152,7 +152,7 @@ export default function EmergencyPage() {
                   ) : null}
                 </div>
                 <div className="min-w-0 pt-1">
-                  <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                  <p className="eyebrow text-muted-foreground">
                     Step {String(index + 1).padStart(2, "0")}
                   </p>
                   <h3 className="mt-1.5 text-lg font-semibold">{step.title}</h3>
@@ -227,11 +227,11 @@ export default function EmergencyPage() {
       <Section id="capabilities" tone="navy" spacing="default" aria-labelledby="capabilities-heading">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-30 [background-image:radial-gradient(38rem_24rem_at_12%_0%,rgba(34,211,238,0.22),transparent_62%),radial-gradient(34rem_22rem_at_88%_100%,rgba(45,212,191,0.2),transparent_60%)]"
+          className="pointer-events-none absolute inset-0 opacity-30 [background-image:radial-gradient(38rem_24rem_at_12%_0%,rgba(184,243,107,0.16),transparent_62%),radial-gradient(34rem_22rem_at_88%_100%,rgba(46,125,79,0.28),transparent_60%)]"
         />
         <div className="relative">
           <Reveal className="max-w-3xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold tracking-[0.14em] text-teal-200 uppercase">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 eyebrow text-lime-200">
               What this prototype does not provide
             </span>
             <h2
@@ -252,7 +252,7 @@ export default function EmergencyPage() {
                 <div className="flex h-full flex-col gap-3 rounded-2xl border border-white/12 bg-white/[0.04] p-5">
                   <span
                     aria-hidden
-                    className="grid size-10 place-items-center rounded-xl bg-white/10 text-teal-200"
+                    className="grid size-10 place-items-center rounded-xl bg-white/10 text-lime-200"
                   >
                     <capability.icon className="size-5" />
                   </span>

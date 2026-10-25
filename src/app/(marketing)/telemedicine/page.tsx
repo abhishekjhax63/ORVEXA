@@ -40,7 +40,7 @@ export default function TelemedicinePage({ searchParams }: { searchParams: Searc
         ]}
         aside={
           <div className="rounded-[1.75rem] border border-border bg-card/85 p-6 shadow-[var(--shadow-panel)] backdrop-blur-sm">
-            <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">How it works</p>
+            <p className="eyebrow text-primary">How it works</p>
             <ol className="mt-5 space-y-3 text-sm">
               <li className="flex gap-3">
                 <span aria-hidden className="grid size-6 shrink-0 place-items-center rounded-lg bg-primary-soft text-xs font-semibold text-primary">1</span>

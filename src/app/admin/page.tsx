@@ -34,8 +34,11 @@ export default async function ConsoleHomePage() {
     context.user.platformStaffMemberships.map((membership) => membership.role),
   );
 
-  // "Your account" is a link out to the person's own settings, not a workspace.
-  const workspaces = nav.filter((section) => section.title !== "Your account");
+  // Every section of the navigation the account actually receives, not just the
+  // platform ones. `navigationForRoles` withdraws any workspace whose pages have
+  // not been written yet, so this list is what a person can open right now, and
+  // it includes the consumer and emergency surfaces that reach every account.
+  const reachable = nav.filter((section) => section.title !== "Your account");
   const permissions = [...context.permissions].sort();
 
   return (
@@ -43,7 +46,7 @@ export default async function ConsoleHomePage() {
       <ConsolePageHeader
         eyebrow="Platform operations"
         title={`Good to see you, ${context.user.fullName.split(" ")[0]}`}
-        description="This is the platform operations console. Everything below is a queue your account has been granted, and nothing else in the console is reachable from here."
+        description="This is the platform operations console. Everything below is a section your account has actually been given, and nothing else in the console is reachable from here. A workspace that is not listed is one that has not been built yet, or one your roles do not include."
       />
 
       {context.staffRoleLabels.length === 0 ? (
@@ -64,7 +67,7 @@ export default async function ConsoleHomePage() {
         </ConsoleCallout>
       )}
 
-      {workspaces.length === 0 ? (
+      {reachable.length === 0 ? (
         <ConsoleCallout tone="warning" title="Nothing is available yet">
           <p>
             No workspace is currently reachable from this account. Ask an ORVEXA administrator to grant the operations
@@ -73,16 +76,16 @@ export default async function ConsoleHomePage() {
         </ConsoleCallout>
       ) : (
         <ConsoleSection
-          title="Your workspaces"
-          description="Open a queue to work it. Each page shows what it is counting before it shows the count."
+          title="What this account can reach"
+          description="Every section the console will offer this account, in the same order as the sidebar. Each page states its own scope and counts."
         >
           <div className="grid gap-4 lg:grid-cols-2">
-            {workspaces.map((section) => (
+            {reachable.map((section) => (
               <Card key={section.title}>
                 <CardHeader>
                   <CardTitle className="text-base">{section.title}</CardTitle>
                   <CardDescription>
-                    {section.items.length} {section.items.length === 1 ? "queue" : "queues"} available
+                    {section.items.length} {section.items.length === 1 ? "destination" : "destinations"}
                   </CardDescription>
                 </CardHeader>
                 <ul className="flex flex-col gap-1 px-4 pb-5">

@@ -16,6 +16,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AuthDivider, GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { Field, Input, Label, Select } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { cities } from "@/data/providers";
@@ -66,7 +67,7 @@ function todayIsoDate() {
  * points at how listing works. Role selection here never reaches the server: the
  * action grants `PATIENT` and nothing else.
  */
-function RegisterForm() {
+function RegisterForm({ googleAvailable }: { googleAvailable: boolean }) {
   const formId = useId();
   const [role, setRole] = useState<Role>("patient");
   const [password, setPassword] = useState("");
@@ -108,7 +109,7 @@ function RegisterForm() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
-        <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1 text-xs font-semibold tracking-[0.14em] text-primary uppercase">
+        <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1 eyebrow text-primary">
           Create account
         </span>
         <h1 className="text-2xl font-semibold sm:text-3xl">Join ORVEXA</h1>
@@ -116,6 +117,9 @@ function RegisterForm() {
           One account keeps your consultations, reports, prescriptions and claims in a single timeline.
         </p>
       </header>
+
+      <GoogleSignInButton available={googleAvailable} label="Sign up with Google" />
+      <AuthDivider label="or register with email and mobile" />
 
       <div className="flex flex-col gap-2">
         <span className="text-sm font-medium text-foreground">I am registering as</span>

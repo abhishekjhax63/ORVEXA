@@ -1,12 +1,20 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/guards";
+import { parseChatHistory } from "@/lib/assistant/chat-history";
 import { consumeRateLimit, RATE_LIMITS } from "@/lib/security/rate-limit";
+import { clientIpFromHeaders } from "@/lib/security/request";
 
 /**
  * POST /api/assistant/message
  *
- * Body:    { content: string }
+ * Body:    { content: string; history?: { role: "user" | "assistant"; content: string }[] }
  * Returns: { reply: string; images?: string[] }
+ *
+ * This route handles TEXT turns only. A turn carrying an image goes to
+ * `/api/assistant/vision`, which routes it to a vision-capable model. The model
+ * reached from here is text-only, and the system prompt says so — so if a user
+ * refers to an image that was never delivered, the assistant says it cannot see
+ * images instead of describing one it never received.
  *
  * Provider: BluesMinds (OpenAI-compatible API)
  * Base URL: https://api.bluesminds.com/v1
@@ -37,26 +45,23 @@ const SYSTEM_PROMPT =
 You help users navigate ORVEXA's features: hospital search, doctor appointments, diagnostics, pharmacy, insurance, and telemedicine.
 You provide general health education and guidance. You do NOT diagnose medical conditions or replace a qualified clinician.
 For emergencies, always direct the user to call emergency services or use the ORVEXA SOS button.
+You cannot see, receive or open images on this channel. If the user refers to a photo, a report image or an attachment of any kind, tell them plainly that you cannot view images and that they should attach it with the image button so the image-aware assistant can look at it. Never describe, guess at, or claim to have examined an image.
 Keep answers clear, warm, and concise. Never make up clinical facts.`;
 
 export async function POST(request: Request) {
-<<<<<<< HEAD
   // ── Authentication / Guest session ─────────────────────────────────────────
-  // Sakha AI assists both registered users and new visitors navigating ORVEXA.
+  // Sakha AI assists both registered users and new visitors navigating ORVEXA,
+  // so a guest turn is allowed. Abuse is bounded by the rate limit below, keyed
+  // on the account when signed in and on the client IP otherwise.
   const user = await getCurrentUser().catch(() => null);
-=======
-  // ── Authentication ───────────────────────────────────────────────────────
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "Sign in to use Sakha AI." }, { status: 401 });
-  }
->>>>>>> 00c6be6 (Updated project features)
 
   // ── Parse and validate body ──────────────────────────────────────────────
   let content: string;
+  let history: unknown;
   try {
     const body = await request.json();
     content = typeof body?.content === "string" ? body.content.trim() : "";
+    history = body?.history;
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
@@ -74,25 +79,21 @@ export async function POST(request: Request) {
   // ── Check API key ────────────────────────────────────────────────────────
   const apiKey = process.env.BLUESMINDS_API_KEY;
   if (!apiKey) {
-<<<<<<< HEAD
-    return NextResponse.json({
-      reply:
-        "Sakha AI is not yet configured on this deployment. Please set the BLUESMINDS_API_KEY environment variable.",
-    });
-=======
     return NextResponse.json(
       { error: "Sakha AI is not configured on this deployment." },
       { status: 503 },
     );
   }
 
-  const limit = await consumeRateLimit("aiTurn", `user:${user.id}`, RATE_LIMITS.aiTurn);
+  const rateLimitIdentity = user
+    ? `user:${user.id}`
+    : `ip:${clientIpFromHeaders(request.headers) ?? "unknown"}`;
+  const limit = await consumeRateLimit("aiTurn", rateLimitIdentity, RATE_LIMITS.aiTurn);
   if (!limit.allowed) {
     return NextResponse.json(
       { error: "Sakha AI is handling a lot of requests from your account. Try again shortly." },
       { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } },
     );
->>>>>>> 00c6be6 (Updated project features)
   }
 
   // ── Call the BluesMinds API ───────────────────────────────────────────────
@@ -108,6 +109,10 @@ export async function POST(request: Request) {
         model: BLUESMINDS_MODEL,
         messages: [
           { role: "system", content: `${SYSTEM_PROMPT}${userContext}` },
+          // Earlier turns, so a follow-up keeps its thread. Read through the
+          // shared validator: only `user` and `assistant` roles survive, so a
+          // crafted body cannot inject a synthetic `system` turn.
+          ...parseChatHistory(history),
           { role: "user", content },
         ],
         // gpt-oss-20b generates reasoning tokens first; 1500 gives ample headroom
@@ -134,34 +139,16 @@ export async function POST(request: Request) {
     if (!response.ok) {
       console.error(`[SakhaAI] Provider returned HTTP ${response.status}`);
       return NextResponse.json(
-<<<<<<< HEAD
-        { reply: "Sakha AI encountered an error from the provider. Please try again." },
-        { status: 200 },
-=======
         { error: "Sakha AI encountered an error. Please try again." },
         { status: 502 },
->>>>>>> 00c6be6 (Updated project features)
       );
     }
 
     // ── Parse the OpenAI-compatible response ───────────────────────────────
-<<<<<<< HEAD
     const data = await response.json();
     const choice = data?.choices?.[0];
     const rawContent: string | null = choice?.message?.content;
     const reasoningContent: string | null = choice?.message?.reasoning_content ?? choice?.message?.reasoning;
-=======
-    const data = (await response.json()) as {
-      choices?: { message?: { content?: unknown } }[];
-    };
-    const reply = data.choices?.[0]?.message?.content;
-    if (typeof reply !== "string" || !reply.trim()) {
-      return NextResponse.json(
-        { error: "Sakha AI did not return a response. Please try again." },
-        { status: 502 },
-      );
-    }
->>>>>>> 00c6be6 (Updated project features)
 
     // Use content if available; fallback if empty
     let reply = (rawContent && rawContent.trim()) ? rawContent.trim() : "";
@@ -172,7 +159,6 @@ export async function POST(request: Request) {
       reply = "I'm here to help you navigate ORVEXA. Please ask any question about hospitals, doctors, medicine delivery, or emergency care!";
     }
 
-<<<<<<< HEAD
     // Image support: parse any images returned in the message payload or embedded in markdown
     const images: { url: string; alt?: string }[] = [];
 
@@ -195,12 +181,9 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({
-      reply,
+      reply: reply.trim(),
       images: images.length > 0 ? images.map((i) => i.url) : undefined,
     });
-=======
-    return NextResponse.json({ reply: reply.trim(), images });
->>>>>>> 00c6be6 (Updated project features)
   } catch (err) {
     if (err instanceof Error && err.name === "TimeoutError") {
       return NextResponse.json(

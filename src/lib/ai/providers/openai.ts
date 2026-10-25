@@ -182,6 +182,13 @@ export class OpenAiProvider implements AiProvider {
       return outcome(aiFailure<{ text: string }>("unsupported_capability"), startedAt, inputChars);
     }
 
+    // Earlier turns travel as text so a follow-up keeps its thread. Only the
+    // turn being asked about carries the image.
+    const history = (request.history ?? []).slice(-MAX_HISTORY_TURNS).map((turn) => ({
+      role: turn.role,
+      content: [{ type: "input_text" as const, text: turn.content }],
+    }));
+
     const call = await this.postJson<ResponsesResponse>(
       "/responses",
       {
@@ -193,6 +200,7 @@ export class OpenAiProvider implements AiProvider {
           "advise urgent medical help immediately and tell the user not to wait for an AI response. For report images, " +
           "explain only clearly legible text and identify anything unreadable or ambiguous.",
         input: [
+          ...history,
           {
             role: "user",
             content: [

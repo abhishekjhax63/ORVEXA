@@ -99,7 +99,7 @@ export default function DiagnosticsPage() {
         aside={
           <div className="rounded-[1.75rem] border border-border bg-card/85 p-6 shadow-[var(--shadow-panel)] backdrop-blur-sm">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">Service status</p>
+              <p className="eyebrow text-primary">Service status</p>
               <Badge variant="demo">Demo</Badge>
             </div>
             <dl className="mt-5 grid grid-cols-2 gap-4">
@@ -260,7 +260,7 @@ export default function DiagnosticsPage() {
 
       <Section id="trust" tone="navy" spacing="default" aria-labelledby="trust-heading">
         <Reveal className="max-w-3xl">
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold tracking-[0.14em] text-teal-200 uppercase">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 eyebrow text-lime-200">
             No connected laboratory service
           </span>
           <h2 id="trust-heading" className="mt-4 text-3xl font-semibold text-white sm:text-4xl lg:text-[2.6rem]">
@@ -278,7 +278,7 @@ export default function DiagnosticsPage() {
               <div className="flex h-full gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-5">
                 <span
                   aria-hidden
-                  className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/10 text-teal-200"
+                  className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/10 text-lime-200"
                 >
                   <ShieldCheck className="size-5" />
                 </span>

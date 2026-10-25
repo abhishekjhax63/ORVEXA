@@ -5,6 +5,7 @@ import { BadgeCheck, ShieldCheck } from "lucide-react";
 import { LocationPermissionPrompt } from "@/components/auth/location-permission-prompt";
 import { RegisterForm } from "@/components/auth/register-form";
 import { getCurrentUser } from "@/lib/auth/guards";
+import { googleOAuthAvailable } from "@/lib/auth/google";
 import { landingPathForRoles } from "@/lib/auth/roles";
 
 export const metadata: Metadata = {
@@ -30,7 +31,7 @@ export default async function RegisterPage() {
   return (
     <div className="flex flex-col gap-6">
       <LocationPermissionPrompt />
-      <RegisterForm />
+      <RegisterForm googleAvailable={googleOAuthAvailable()} />
 
       <section
         aria-labelledby="partner-roles-note"

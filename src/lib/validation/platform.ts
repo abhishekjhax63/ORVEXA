@@ -274,20 +274,6 @@ const optionalIsoInstant = z.preprocess(
   isoInstant.optional(),
 );
 
-const stringList = z
-  .preprocess(
-    (value) =>
-      typeof value === "string"
-        ? value
-            .split(",")
-            .map((part) => part.trim())
-            .filter(Boolean)
-        : value,
-    z.array(z.string().trim().min(1).max(160)).max(60),
-  )
-  .optional()
-  .default([]);
-
 /** A bounded pagination pair. `page` is 1-based; the service clamps the size. */
 const pagination = {
   page: z.coerce.number().int().min(1).max(10_000).optional().default(1),

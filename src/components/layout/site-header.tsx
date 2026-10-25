@@ -41,12 +41,14 @@ function NavLink({
   active,
   className,
   onClick,
+  indicatorId,
 }: {
   href: string;
   title: string;
   active: boolean;
   className?: string;
   onClick?: () => void;
+  indicatorId?: string;
 }) {
   return (
     <Link
@@ -54,16 +56,18 @@ function NavLink({
       onClick={onClick}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "relative rounded-full px-3.5 py-2 text-sm font-medium transition-colors",
-        active ? "text-primary" : "text-foreground/80 hover:text-primary",
+        "relative inline-flex items-center rounded-lg px-3.5 py-2 text-sm font-medium transition-colors duration-[var(--duration-base)] ease-[var(--ease-soft)]",
+        active ? "text-primary" : "text-foreground/75 hover:bg-muted hover:text-primary",
         className,
       )}
     >
       {title}
-      {active ? (
-        <span
+      {active && indicatorId ? (
+        <motion.span
+          layoutId={indicatorId}
           aria-hidden
-          className="absolute inset-x-3.5 -bottom-0.5 h-0.5 rounded-full bg-[linear-gradient(90deg,var(--brand-from),var(--brand-to))]"
+          className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-accent"
+          transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
         />
       ) : null}
     </Link>
@@ -113,12 +117,16 @@ function SiteHeader() {
           : "border-b border-transparent bg-transparent",
       )}
     >
-      <div className="hidden border-b border-border/70 bg-navy-900 text-white lg:block dark:bg-navy-950">
+      {/* The desktop bar and primary nav switch on at `xl`, not `lg`: at 1024px
+          the full action cluster measured 1062px and forced a horizontal
+          scrollbar on every route. Between 1024px and 1279px the drawer below
+          carries the navigation instead. */}
+      <div className="hidden border-b border-border/70 bg-forest-900 text-white xl:block dark:bg-forest-950">
         <Container className="flex h-9 items-center justify-between text-xs">
           <p className="flex items-center gap-2 text-white/80">
             <span aria-hidden className="relative flex size-2">
-              <span className="absolute inline-flex size-2 animate-pulse-ring rounded-full bg-teal-300" />
-              <span className="relative inline-flex size-2 rounded-full bg-teal-300" />
+              <span className="absolute inline-flex size-2 animate-pulse-ring rounded-full bg-lime-300" />
+              <span className="relative inline-flex size-2 rounded-full bg-lime-300" />
             </span>
             In an emergency, call {siteConfig.emergencyNumber} directly; ORVEXA cannot dispatch an ambulance
           </p>
@@ -130,25 +138,31 @@ function SiteHeader() {
               <Phone aria-hidden className="size-3.5" />
               Contact {siteConfig.supportPhone}
             </a>
-            <Link href="/emergency" className="font-semibold text-teal-200 transition-colors hover:text-white">
+            <Link href="/emergency" className="font-semibold text-lime-200 transition-colors hover:text-white">
               Emergency {siteConfig.emergencyNumber}
             </Link>
           </div>
         </Container>
       </div>
 
-      <Container className="flex h-16 items-center justify-between gap-4 lg:h-18">
+      <Container className="flex h-16 items-center justify-between gap-4 xl:h-18">
         <Logo />
 
-        <nav aria-label="Primary" className="hidden items-center gap-0.5 lg:flex">
+        <nav aria-label="Primary" className="hidden items-center gap-0.5 xl:flex">
           {primaryNav.map((item) => (
-            <NavLink key={item.href} href={item.href} title={item.title} active={isActive(pathname, item.href)} />
+            <NavLink
+              key={item.href}
+              href={item.href}
+              title={item.title}
+              active={isActive(pathname, item.href)}
+              indicatorId="primary-nav-indicator"
+            />
           ))}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="inline-flex items-center gap-1 rounded-full px-3.5 py-2 text-sm font-medium text-foreground/80 transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring/40"
+                className="inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-medium text-foreground/75 transition-colors duration-[var(--duration-base)] ease-[var(--ease-soft)] hover:bg-muted hover:text-primary focus-visible:ring-2 focus-visible:ring-ring/40"
               >
                 More
                 <ChevronDown aria-hidden className="size-3.5" />
@@ -205,7 +219,7 @@ function SiteHeader() {
             aria-expanded={menuOpen}
             aria-controls="mobile-navigation"
             aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
-            className="grid size-10 place-items-center rounded-full border border-border bg-card/70 text-foreground transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/40 lg:hidden"
+            className="grid size-10 place-items-center rounded-full border border-border bg-card/70 text-foreground transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/40 xl:hidden"
           >
             {menuOpen ? <X aria-hidden className="size-4.5" /> : <Menu aria-hidden className="size-4.5" />}
           </button>
@@ -223,7 +237,7 @@ function SiteHeader() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-x-0 top-full max-h-[calc(100vh-4rem)] overflow-y-auto border-b border-border bg-card shadow-[var(--shadow-panel)] lg:hidden"
+            className="absolute inset-x-0 top-full max-h-[calc(100vh-4rem)] overflow-y-auto border-b border-border bg-card shadow-[var(--shadow-panel)] xl:hidden"
           >
             <Container className="flex flex-col gap-6 py-6">
               <nav aria-label="Mobile primary" className="flex flex-col gap-1">
@@ -259,7 +273,7 @@ function SiteHeader() {
 
               {secondaryNav.map((group) => (
                 <div key={group.title} className="space-y-2">
-                  <p className="px-1 text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                  <p className="px-1 eyebrow text-muted-foreground">
                     {group.title}
                   </p>
                   <div className="grid grid-cols-2 gap-2">
@@ -278,7 +292,7 @@ function SiteHeader() {
 
               <div className="flex flex-col gap-3 border-t border-border pt-5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                  <span className="eyebrow text-muted-foreground">
                     Theme
                   </span>
                   <ThemeToggle />

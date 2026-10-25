@@ -5,7 +5,6 @@ import type { AiCapability, AiUrgencyBand } from "@prisma/client";
 import { optionalEnv } from "@/lib/env";
 import {
   AI_PROVIDER_IDS,
-  AI_PROVIDER_PROFILES,
   providerProfile,
   type AiProviderId,
   type AiProviderProfile,
@@ -45,37 +44,72 @@ export type AiProviderConfig = {
 
 const DEFAULT_BASE_URL: Record<AiProviderId, string> = {
   openai: "https://api.openai.com/v1",
+  bluesminds: "https://api.bluesminds.com/v1",
 };
 
-const DEFAULT_TRANSCRIBE_MODEL: Record<AiProviderId, string> = {
+/** Speech-to-text models. `null` when the provider serves none. */
+const DEFAULT_TRANSCRIBE_MODEL: Record<AiProviderId, string | null> = {
   openai: "whisper-1",
+  bluesminds: null,
 };
+
+/**
+ * Credentials for the configured provider.
+ *
+ * `AI_PROVIDER_*` is the generic override and always wins. BluesMinds keeps its
+ * own variables because the Sakha chat route reads them directly, so those are
+ * read as a fallback instead of asking the deployment to hold the same secret
+ * twice under two names — one key, one place to rotate.
+ */
+function providerApiKey(provider: AiProviderId): string | undefined {
+  const generic = optionalEnv("AI_PROVIDER_API_KEY");
+  if (generic) return generic;
+  if (provider === "bluesminds") return optionalEnv("BLUESMINDS_API_KEY");
+  return undefined;
+}
+
+/** The provider's own variable, when it has one, ahead of the built-in default. */
+function providerScopedEnv(provider: AiProviderId, name: string): string | undefined {
+  if (provider !== "bluesminds") return undefined;
+  return optionalEnv(`BLUESMINDS_${name}`);
+}
 
 export function getAiProviderConfig(): AiProviderConfig | undefined {
-  const requested = optionalEnv("AI_PROVIDER")?.trim().toLowerCase() || (optionalEnv("OPENAI_API_KEY") ? "openai" : undefined);
+  const requested = optionalEnv("AI_PROVIDER")?.trim().toLowerCase();
   if (!requested) return undefined;
   if (!(AI_PROVIDER_IDS as readonly string[]).includes(requested)) return undefined;
   const provider = requested as AiProviderId;
 
-  const apiKey = optionalEnv("AI_PROVIDER_API_KEY") || optionalEnv("OPENAI_API_KEY");
+  const apiKey = providerApiKey(provider);
   if (!apiKey) return undefined;
+
+  const profile = providerProfile(provider);
 
   return {
     provider,
     apiKey,
-<<<<<<< HEAD
-    model: optionalEnv("OPENAI_MODEL") ?? optionalEnv("AI_PROVIDER_MODEL") ?? AI_PROVIDER_PROFILES[provider].defaultModel,
-=======
-    model: optionalEnv("AI_PROVIDER_MODEL") ?? AI_PROVIDER_PROFILES[provider].defaultModel,
+    model: optionalEnv("AI_PROVIDER_MODEL") ?? providerScopedEnv(provider, "MODEL") ?? profile.defaultModel,
+    // Never falls back to the text model: `visionModel` in the profile is a
+    // model that was verified to read images, and `AI_PROVIDER_MODEL` is not.
     visionModel:
       optionalEnv("AI_PROVIDER_VISION_MODEL") ??
-      optionalEnv("AI_PROVIDER_MODEL") ??
-      AI_PROVIDER_PROFILES[provider].defaultModel,
->>>>>>> 00c6be6 (Updated project features)
-    transcribeModel: optionalEnv("AI_PROVIDER_TRANSCRIBE_MODEL") ?? DEFAULT_TRANSCRIBE_MODEL[provider],
+      providerScopedEnv(provider, "VISION_MODEL") ??
+      profile.visionModel,
+    transcribeModel:
+      optionalEnv("AI_PROVIDER_TRANSCRIBE_MODEL") ??
+      providerScopedEnv(provider, "TRANSCRIBE_MODEL") ??
+      DEFAULT_TRANSCRIBE_MODEL[provider] ??
+      // The provider serves no speech-to-text model. The value is recorded so
+      // the transcript request can be refused with a reason instead of being
+      // sent to a model that does not exist.
+      "",
     organization: optionalEnv("AI_PROVIDER_ORGANIZATION") ?? null,
-    baseUrl: (optionalEnv("AI_PROVIDER_BASE_URL") ?? DEFAULT_BASE_URL[provider]).replace(/\/+$/, ""),
-    profile: providerProfile(provider),
+    baseUrl:
+      (optionalEnv("AI_PROVIDER_BASE_URL") ?? providerScopedEnv(provider, "BASE_URL") ?? DEFAULT_BASE_URL[provider]).replace(
+        /\/+$/,
+        "",
+      ),
+    profile,
   };
 }
 

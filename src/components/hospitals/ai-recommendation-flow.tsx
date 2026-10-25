@@ -215,7 +215,7 @@ export function AiRecommendationFlow() {
         const hospLon = hosp.coordinates?.longitude ?? userLon;
         const dist = hosp.coordinates
           ? calculateHaversineKm(userLat, userLon, hospLat, hospLon)
-          : hosp.distanceKm;
+          : (hosp.distanceKm ?? 0);
 
         let score = 100 - dist * 2;
         if (hosp.verificationStatus === "Verified") score += 30;
@@ -394,7 +394,7 @@ export function AiRecommendationFlow() {
                     >
                       <Icon className="size-4 text-primary" />
                       <span className="font-semibold text-foreground line-clamp-1">{spec.name}</span>
-                      <span className="text-[10px] text-muted-foreground line-clamp-1">{spec.commonConditions[0]}</span>
+                      <span className="text-[10px] text-muted-foreground line-clamp-1">{spec.description}</span>
                     </button>
                   );
                 })}
@@ -695,9 +695,6 @@ export function AiRecommendationFlow() {
                                   title={`Book at ${(p as Hospital).name}`}
                                   description={`${(p as Hospital).type} · ${(p as Hospital).locality}, ${(p as Hospital).city}. Choose a department and preferred date.`}
                                   fields={buildHospitalFields(p as Hospital)}
-                                  submitLabel="Request appointment"
-                                  successTitle="Appointment request ready"
-                                  successBody={`${p.name} would receive your request with the preferred date you chose.`}
                                   footnote="Phase 1 validates your details and shows the confirmation state."
                                 />
                               ) : (
@@ -708,9 +705,6 @@ export function AiRecommendationFlow() {
                                   title={`Consult ${(p as Doctor).name}`}
                                   description={`${(p as Doctor).specialty} · ${(p as Doctor).hospitalName}, ${(p as Doctor).city}. Next slot: ${(p as Doctor).nextSlot}.`}
                                   fields={buildDoctorFields(p as Doctor)}
-                                  submitLabel="Request slot"
-                                  successTitle="Consultation request ready"
-                                  successBody={`${p.name} would receive your request with the preferred date you chose.`}
                                   footnote="Phase 1 validates your details and shows the confirmation state."
                                 />
                               )}

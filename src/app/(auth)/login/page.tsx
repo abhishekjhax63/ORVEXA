@@ -5,6 +5,7 @@ import { CircleCheckBig, Info, ShieldAlert } from "lucide-react";
 import { LocationPermissionPrompt } from "@/components/auth/location-permission-prompt";
 import { LoginForm } from "@/components/auth/login-form";
 import { getCurrentUser } from "@/lib/auth/guards";
+import { googleOAuthAvailable } from "@/lib/auth/google";
 import { landingPathForRoles } from "@/lib/auth/roles";
 
 export const metadata: Metadata = {
@@ -37,6 +38,37 @@ const NOTICE_CLASS = {
 };
 
 /**
+ * Why a Google sign-in came back without a session. Each value is a short
+ * machine reason produced by the callback route, never provider text, so the
+ * copy here is the only thing shown to the visitor.
+ */
+const OAUTH_NOTICES: Record<string, { tone: "info" | "warning"; message: string }> = {
+  cancelled: { tone: "info", message: "Google sign-in was cancelled. You can try again or sign in below." },
+  unconfigured: {
+    tone: "warning",
+    message: "Google sign-in is not configured on this deployment. Use email, mobile or OTP below.",
+  },
+  provider_error: { tone: "warning", message: "Google could not complete the sign-in. Please try again." },
+  invalid_request: { tone: "warning", message: "That Google sign-in link was incomplete. Please start again." },
+  state_mismatch: {
+    tone: "warning",
+    message: "That sign-in attempt expired or was opened in a different browser. Please start again.",
+  },
+  exchange_failed: { tone: "warning", message: "Google rejected the sign-in exchange. Please try again." },
+  profile_failed: { tone: "warning", message: "Google did not return your profile. Please try again." },
+  email_unavailable: {
+    tone: "warning",
+    message: "Your Google account has no verified email address, so ORVEXA cannot open an account for it.",
+  },
+  account_unavailable: {
+    tone: "warning",
+    message: "Your ORVEXA account could not be opened right now. Please try email or mobile sign-in.",
+  },
+  account_inactive: { tone: "warning", message: "This ORVEXA account is not active. Contact support for help." },
+  rate_limited: { tone: "warning", message: "Too many sign-in attempts from here. Wait a few minutes and try again." },
+};
+
+/**
  * Sign-in page.
  *
  * Reads `?next=` so a visitor who was interrupted mid-flow returns to where they
@@ -48,12 +80,16 @@ export default async function LoginPage({ searchParams }: { searchParams: AuthSe
   const params = await searchParams;
   const next = first(params.next);
   const status = first(params.status);
+  const oauth = first(params.oauth);
 
   const user = await getCurrentUser();
   if (user) redirect(landingPathForRoles(user.roles));
 
   const notice = status ? STATUS_NOTICES[status] : undefined;
   const NoticeIcon = notice ? NOTICE_ICON[notice.tone] : null;
+
+  const oauthNotice = oauth ? OAUTH_NOTICES[oauth] : undefined;
+  const OauthIcon = oauthNotice ? NOTICE_ICON[oauthNotice.tone] : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -66,8 +102,17 @@ export default async function LoginPage({ searchParams }: { searchParams: AuthSe
           <span>{notice.message}</span>
         </p>
       ) : null}
+      {oauthNotice && OauthIcon ? (
+        <p
+          role="status"
+          className={`flex items-start gap-2 rounded-xl border px-4 py-3 text-sm ${NOTICE_CLASS[oauthNotice.tone]}`}
+        >
+          <OauthIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
+          <span>{oauthNotice.message}</span>
+        </p>
+      ) : null}
       <LocationPermissionPrompt />
-      <LoginForm next={next} />
+      <LoginForm next={next} googleAvailable={googleOAuthAvailable()} />
     </div>
   );
 }

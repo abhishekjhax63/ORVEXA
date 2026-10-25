@@ -21,7 +21,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import type { MedicalAnalysisResponse, LabResultItem } from "@/app/api/assistant/analyze-report/route";
+import type { MedicalAnalysisResponse } from "@/app/api/assistant/analyze-report/route";
 
 export function MedicalAnalysisPanel() {
   const [activeTab, setActiveTab] = useState<"lab_report" | "wound_skin">("lab_report");

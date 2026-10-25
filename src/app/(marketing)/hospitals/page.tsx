@@ -3,12 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { ArrowRight, ExternalLink, PhoneCall, Siren } from "lucide-react";
 
-<<<<<<< HEAD
-import { RequestDialog } from "@/components/forms/request-dialog";
 import { AiRecommendationFlow } from "@/components/hospitals/ai-recommendation-flow";
-import { buildDoctorFields } from "@/components/hospitals/booking-fields";
-=======
->>>>>>> 00c6be6 (Updated project features)
 import { ProviderDirectory } from "@/components/hospitals/provider-directory";
 import { PageHero } from "@/components/layout/page-hero";
 import { Section, SectionHeading } from "@/components/layout/section";
@@ -85,7 +80,7 @@ export default function HospitalsPage(props: PageProps<"/hospitals">) {
         aside={
           <div className="rounded-[1.75rem] border border-border bg-card/85 p-6 shadow-[var(--shadow-panel)] backdrop-blur-sm">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">Directory snapshot</p>
+              <p className="eyebrow text-primary">Directory snapshot</p>
               <Badge variant="warning">Unverified</Badge>
             </div>
             <dl className="mt-5 grid grid-cols-2 gap-4">

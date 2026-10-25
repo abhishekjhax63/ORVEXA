@@ -11,7 +11,10 @@ function LogoMark({ className }: { className?: string }) {
       alt=""
       width={36}
       height={36}
-      className={cn("size-9 shrink-0 rounded-xl object-cover", className)}
+      className={cn(
+        "size-9 shrink-0 rounded-xl object-cover ring-1 ring-forest-950/10 shadow-[var(--shadow-soft)]",
+        className,
+      )}
     />
   );
 }
@@ -26,11 +29,13 @@ function Logo({ className, href = "/" }: { className?: string; href?: string }) 
       )}
       aria-label={`${siteConfig.name} home`}
     >
-      <LogoMark className="transition-transform duration-300 group-hover:scale-105" />
+      <LogoMark className="transition-transform duration-[var(--duration-base)] ease-[var(--ease-soft)] group-hover:scale-105" />
       <span className="flex flex-col leading-none">
-        <span className="text-[1.05rem] font-semibold tracking-[0.16em]">ORVEXA</span>
-        <span className="mt-1 text-[0.6rem] font-medium tracking-[0.22em] text-muted-foreground uppercase">
-          Health ecosystem
+        <span className="[font-family:var(--font-display)] text-[1.05rem] font-semibold tracking-[0.16em]">
+          ORVEXA
+        </span>
+        <span className="mt-1 text-[0.6rem] font-medium tracking-[0.18em] text-muted-foreground uppercase">
+          Healthcare, Connected.
         </span>
       </span>
     </Link>

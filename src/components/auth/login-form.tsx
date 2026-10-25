@@ -6,6 +6,7 @@ import { CircleAlert, Eye, EyeOff, Loader2, Lock, Smartphone } from "lucide-reac
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AuthDivider, GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { Field, Input, Label } from "@/components/ui/input";
 import { idleFormState } from "@/lib/actions/form-state";
 import { login } from "@/lib/actions/auth";
@@ -13,6 +14,8 @@ import { login } from "@/lib/actions/auth";
 type LoginFormProps = {
   /** Relative path to return to after sign-in, resolved from `?next=`. */
   next?: string;
+  /** Whether the deployment has a Google OAuth client configured. */
+  googleAvailable: boolean;
 };
 
 /**
@@ -24,7 +27,7 @@ type LoginFormProps = {
  * appears however the form is submitted. The only client-side work is the
  * password visibility toggle and the remembered-device checkbox.
  */
-function LoginForm({ next }: LoginFormProps) {
+function LoginForm({ next, googleAvailable }: LoginFormProps) {
   const formId = useId();
   const [showPassword, setShowPassword] = useState(false);
   const [state, formAction, pending] = useActionState(login, idleFormState);
@@ -38,7 +41,7 @@ function LoginForm({ next }: LoginFormProps) {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
-        <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1 text-xs font-semibold tracking-[0.14em] text-primary uppercase">
+        <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1 eyebrow text-primary">
           Patient sign in
         </span>
         <h1 className="text-2xl font-semibold sm:text-3xl">Welcome back to ORVEXA</h1>
@@ -56,6 +59,9 @@ function LoginForm({ next }: LoginFormProps) {
           <span>{formError}</span>
         </p>
       ) : null}
+
+      <GoogleSignInButton available={googleAvailable} next={next} />
+      <AuthDivider label="or sign in with email or mobile" />
 
       <form action={formAction} className="flex flex-col gap-5">
         {next ? <input type="hidden" name="next" value={next} /> : null}

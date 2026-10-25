@@ -14,8 +14,9 @@
 
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Minus, SendHorizontal, Bot, RefreshCw, ChevronDown, Search, ImagePlus } from "lucide-react";
+import { X, Minus, SendHorizontal, Bot, RefreshCw, ChevronDown, Search, ImagePlus, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useIsHydrated } from "@/hooks/use-hydrated";
 import { cn } from "@/lib/utils";
 
 // ─── Configurable name ───────────────────────────────────────────────────────
@@ -28,6 +29,26 @@ interface ChatMessage {
   content: string;
   imageAttached?: boolean;
   error?: boolean;
+}
+
+const SUPPORTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+/**
+ * The transcript the server needs to answer a follow-up.
+ *
+ * Error bubbles are dropped: they are UI, not something either party said, and
+ * replaying them to the model invites it to comment on its own failure. A
+ * duplicate of the turn being sent is dropped too, so retrying a failed turn
+ * does not send it twice.
+ */
+function buildHistory(list: ChatMessage[], pendingContent: string) {
+  const turns = list
+    .filter((message) => !message.error)
+    .map((message) => ({ role: message.role, content: message.content }));
+
+  const last = turns[turns.length - 1];
+  if (last && last.role === "user" && last.content === pendingContent) turns.pop();
+  return turns;
 }
 
 type ImageSearchResult = {
@@ -63,14 +84,8 @@ const SUGGESTED_PROMPTS = [
   "How does telemedicine work?",
 ];
 
-<<<<<<< HEAD
-// ─── Image card ───────────────────────────────────────────────────────────────
-// Image card – uses a plain <img> for provider-returned image URLs.
-function ImageCard({ src, alt }: { src: string; alt: string }) {
-=======
 // ─── Image search result ──────────────────────────────────────────────────────
 function ImageResultCard({ image }: { image: ImageSearchResult }) {
->>>>>>> 00c6be6 (Updated project features)
   const [state, setState] = useState<"loading" | "ok" | "error">("loading");
   return (
     <a
@@ -120,15 +135,34 @@ export default function SakhaAI() {
   const [searchLoading, setSearchLoading] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const atBottomRef = useRef(true);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
 
   useEffect(() => {
+    // Runs as cleanup, so it revokes the *previous* preview when the selection
+    // is replaced and the last one when the panel unmounts.
     return () => {
       if (selectedImage) URL.revokeObjectURL(selectedImage.preview);
     };
   }, [selectedImage]);
+
+  /**
+   * Whether to offer "Take photo".
+   *
+   * `capture` is only acted on by browsers with a camera behind a coarse
+   * pointer. Showing the button on a desktop would open the same file picker
+   * the attach button already opens, which reads as a broken control.
+   *
+   * Read through `useIsHydrated` rather than a mounting effect: the server and
+   * hydration renders then agree on the markup, and no state is set from an
+   * effect. `isHydrated` short-circuits first, so `window` is never touched
+   * during a server render.
+   */
+  const isHydrated = useIsHydrated();
+  const canCapture =
+    isHydrated && window.matchMedia?.("(pointer: coarse)").matches === true && "mediaDevices" in navigator;
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -160,7 +194,15 @@ export default function SakhaAI() {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    // Named explicitly: an iPhone set to "High Efficiency" delivers HEIC, and
+    // "unsupported type" would leave the user with no idea what to change.
+    if (file.type === "image/heic" || file.type === "image/heif") {
+      setComposerError(
+        "iPhone HEIC photos are not supported yet. Set Camera → Formats to “Most Compatible”, or attach a JPEG or PNG.",
+      );
+      return;
+    }
+    if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
       setComposerError("Choose a JPEG, PNG, or WebP image.");
       return;
     }
@@ -184,6 +226,7 @@ export default function SakhaAI() {
   async function sendMessage(text?: string, imageFile = selectedImage?.file ?? null, retry = false) {
     const content = (text ?? input).trim();
     if (!content || loading) return;
+    const history = buildHistory(messages, content);
     setInput("");
     setComposerError(null);
     setRetryRequest({ content, image: imageFile });
@@ -199,8 +242,8 @@ export default function SakhaAI() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
           imageFile
-            ? { question: content, image: await fileToDataUrl(imageFile) }
-            : { content },
+            ? { question: content, image: await fileToDataUrl(imageFile), history }
+            : { content, history },
         ),
       });
 
@@ -290,53 +333,36 @@ export default function SakhaAI() {
     }
   }
 
-// ─── Glowing launcher with gentle floating and shimmer effect ───────────────
+  // ─── Glowing launcher ─────────────────────────────────────────────────────
   const launcher = (
     <motion.button
       key="launcher"
       initial={{ scale: 0, opacity: 0 }}
-      animate={{
-        scale: 1,
-        opacity: 1,
-        y: [0, -6, 0],
-      }}
-      transition={{
-        y: {
-          duration: 3,
-          repeat: Infinity,
-          ease: "easeInOut",
-        },
-        scale: { type: "spring", stiffness: 300, damping: 20 },
-      }}
+      animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0, opacity: 0 }}
       whileHover={{ scale: 1.08 }}
-      whileTap={{ scale: 0.95 }}
+      whileTap={{ scale: 0.96 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
       onClick={() => { setOpen(true); setMinimised(false); }}
       aria-label={`Open ${CHATBOT_NAME}`}
       className={cn(
-        // Position: bottom-right, comfortable elevation above mobile navbars
-        "fixed bottom-6 right-6 z-40 sm:bottom-8 sm:right-8",
-        "flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full",
-        "bg-gradient-to-tr from-teal-600 via-cyan-600 to-teal-500 text-white",
-        // Glowing border effect
-        "ring-2 ring-cyan-300/60 shadow-[0_0_24px_rgba(6,182,212,0.45)]",
+        // Position: bottom-right, above SOS (which sits at bottom-4 right-4, so we go higher)
+        "fixed bottom-20 right-4 z-50 md:bottom-6 md:right-6",
+        "flex h-14 w-14 items-center justify-center rounded-full",
+        "bg-primary text-primary-foreground shadow-lg",
+        // Glowing border effect via box-shadow
+        "ring-2 ring-primary/30",
         "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/50",
-        "overflow-hidden cursor-pointer",
+        // Floating pulse – uses CSS animation so reduced-motion (via MotionConfig) is not affected
+        "animate-bounce motion-reduce:animate-none",
       )}
     >
-      <Bot className="h-7 w-7 text-white drop-shadow" aria-hidden />
-
-      {/* Shimmer sweep animation */}
+      <Bot className="h-6 w-6" aria-hidden />
+      {/* Glow halo */}
       <span
         aria-hidden
-        className="pointer-events-none absolute -inset-full h-[200%] w-[200%] rotate-45 bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform animate-[shimmer_3.5s_infinite] motion-reduce:hidden"
-      />
-
-      {/* Subtle pulsing aura */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-cyan-400/50 animate-ping opacity-30 motion-reduce:hidden"
-        style={{ animationDuration: "3s" }}
+        className="absolute inset-0 rounded-full bg-primary/20 animate-ping motion-reduce:hidden"
+        style={{ animationDuration: "2.5s" }}
       />
     </motion.button>
   );
@@ -600,6 +626,15 @@ export default function SakhaAI() {
                   className="sr-only"
                   aria-label="Choose an image to ask Sakha AI about"
                 />
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={chooseImage}
+                  className="sr-only"
+                  aria-label="Take a photo to ask Sakha AI about"
+                />
                 <div className="flex items-end gap-2">
                   <Button
                     type="button"
@@ -613,6 +648,20 @@ export default function SakhaAI() {
                   >
                     <ImagePlus aria-hidden />
                   </Button>
+                  {canCapture && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10 rounded-xl"
+                      onClick={() => cameraInputRef.current?.click()}
+                      disabled={loading}
+                      aria-label="Take a photo"
+                      title="Take a photo"
+                    >
+                      <Camera aria-hidden />
+                    </Button>
+                  )}
                   <textarea
                     ref={inputRef}
                     rows={1}

@@ -16,7 +16,12 @@ function PharmacyShowcaseSection() {
   return (
     <Section id="pharmacy" tone="muted" spacing="default">
       <div className="grid gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:gap-16">
-        <div>
+        {/* `min-w-0` on both tracks: a grid item's automatic minimum is its
+            min-content width, so the nowrap price/pack text inside the refill
+            rows pinned each `auto` track at ~348px and overflowed the 360px
+            viewport. Allowing the tracks to shrink lets the internal `truncate`
+            ellipsis do its job instead. */}
+        <div className="min-w-0">
           <Reveal>
             <SectionHeading
               eyebrow="MediCare pharmacy"
@@ -28,10 +33,13 @@ function PharmacyShowcaseSection() {
           <Reveal className="mt-8" delay={0.05}>
             <ul className="grid gap-4 sm:grid-cols-2">
               {pharmacyHighlights.map((highlight) => (
-                <li key={highlight.title} className="flex gap-3 rounded-2xl border border-border bg-card p-4">
+                <li
+                  key={highlight.title}
+                  className="flex gap-3 rounded-2xl border border-border bg-card p-4 transition-[border-color,box-shadow] duration-[var(--duration-base)] ease-[var(--ease-soft)] hover:border-primary/30 hover:shadow-[var(--shadow-soft)]"
+                >
                   <span
                     aria-hidden
-                    className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent"
+                    className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary"
                   >
                     <highlight.icon className="size-4.5" />
                   </span>
@@ -59,7 +67,7 @@ function PharmacyShowcaseSection() {
           </Reveal>
         </div>
 
-        <Reveal delay={0.1}>
+        <Reveal delay={0.1} className="min-w-0">
           <div className="rounded-[1.75rem] border border-border bg-card shadow-[var(--shadow-lift)]">
             <div className="flex flex-wrap items-center gap-3 border-b border-border px-5 py-4">
               <span aria-hidden className="grid size-9 place-items-center rounded-xl bg-primary-soft text-primary">

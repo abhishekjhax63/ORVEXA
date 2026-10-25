@@ -198,6 +198,15 @@ export type AiVisionQuestionRequest = {
   mimeType: string;
   /** Base64 data URL validated by the server. */
   dataUrl: string;
+  /**
+   * Earlier turns of the same conversation, oldest first.
+   *
+   * A follow-up about an image ("and what about the second line?") is not
+   * answerable without the turn it refers to, so the assistant routes forward
+   * the transcript they already hold rather than treating each image question
+   * as the first thing ever said.
+   */
+  history?: { role: "user" | "assistant"; content: string }[];
   signal?: AbortSignal;
 };
 

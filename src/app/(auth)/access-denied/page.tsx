@@ -100,7 +100,7 @@ export default async function AccessDeniedPage({ searchParams }: { searchParams:
       </div>
 
       <div className="rounded-2xl border border-border bg-card-elevated p-5">
-        <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">Your access</p>
+        <p className="eyebrow text-muted-foreground">Your access</p>
         <p className="mt-2 text-sm font-medium text-foreground">{ROLE_LABELS[role]}</p>
         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{ROLE_DESCRIPTIONS[role]}</p>
         {required ? (

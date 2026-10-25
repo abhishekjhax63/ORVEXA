@@ -28,9 +28,9 @@ import type { AiCapability, AiExtractionStatus, AiMalwareScanStatus, AiUploadKin
  *    as evidence the assistant reasoned over.
  */
 
-export type AiProviderId = "openai";
+export type AiProviderId = "openai" | "bluesminds";
 
-export const AI_PROVIDER_IDS = ["openai"] as const satisfies readonly AiProviderId[];
+export const AI_PROVIDER_IDS = ["openai", "bluesminds"] as const satisfies readonly AiProviderId[];
 
 export type AiProviderProfile = {
   id: AiProviderId;
@@ -60,6 +60,16 @@ export type AiProviderProfile = {
   /** Prompt and safety policy revisions, bumped whenever the prompts change. */
   promptVersion: string;
   defaultModel: string;
+  /**
+   * Model used when a request carries an image.
+   *
+   * It is a profile field rather than an environment-only override because the
+   * default must never be a text-only model: a deployment that configures a
+   * chat model and forgets the vision model would otherwise advertise
+   * `VISION_IMAGE` in `native` and then send images to a model that cannot read
+   * them. Verified against the account before being recorded here.
+   */
+  visionModel: string;
 };
 
 export const AI_PROVIDER_PROFILES: Record<AiProviderId, AiProviderProfile> = {
@@ -87,6 +97,64 @@ export const AI_PROVIDER_PROFILES: Record<AiProviderId, AiProviderProfile> = {
     },
     promptVersion: "orvexa.triage.v1",
     defaultModel: "gpt-4o",
+    visionModel: "gpt-4o",
+  },
+
+  /**
+   * BluesMinds — the OpenAI-compatible account this deployment already uses for
+   * the Sakha assistant (see `src/app/api/assistant/message/route.ts`).
+   *
+   * Every entry below was verified against the live account rather than read
+   * from documentation:
+   *
+   *  - `POST /chat/completions` with an `image_url` part is read correctly. A
+   *    64x64 test image with a red left half and a blue right half was described
+   *    as "red on the left and blue on the right" by
+   *    `meta/llama-3.2-11b-vision-instruct`.
+   *  - The configured chat model `openai/gpt-oss-20b` is text-only. Asked about
+   *    the same image it answered "I'm sorry, but I can't view images." It is
+   *    therefore `defaultModel` but never `visionModel`.
+   *  - `POST /responses` is proxied for text, but the same endpoint carrying an
+   *    `input_image` part fails (404 from upstream, 502 on the text model), so
+   *    this provider does not use the Responses API at all.
+   *  - `POST /audio/transcriptions` answers 503 `model_not_found` for
+   *    `whisper-1`: the account serves no speech-to-text model.
+   *
+   * Document reading was not verified, so it is listed as unsupported rather
+   * than assumed to work. That is the fail-closed direction: a PDF is attached
+   * to the clinician report and the user is told it was not interpreted.
+   */
+  bluesminds: {
+    id: "bluesminds",
+    label: "BluesMinds",
+    native: ["TEXT", "VISION_IMAGE"],
+    unsupported: ["VIDEO", "AUDIO_TRANSCRIPTION", "DOCUMENT"],
+    unsupportedReason: {
+      VIDEO:
+        "The configured model has no validated video input. ORVEXA will attach a short video to a clinician report, but it is never analysed by the assistant.",
+      AUDIO_TRANSCRIPTION:
+        "The configured BluesMinds account serves no speech-to-text model, so a voice note cannot be transcribed here. Type the symptoms instead, or run this deployment on a provider that offers transcription.",
+      DOCUMENT:
+        "Document reading has not been verified against the configured BluesMinds account, so a report is attached to the conversation but the assistant does not read it. Only the text you type is assessed.",
+    },
+    providerCeilings: {
+      // The proxy publishes no image count limit; these are the values the
+      // account accepted in testing, kept conservative.
+      requestBytes: 20 * 1024 * 1024,
+      imagesPerRequest: 4,
+      audioBytes: 0,
+      audioSeconds: 0,
+      documentBytes: 0,
+    },
+    acceptedMimeTypes: {
+      IMAGE: ["image/jpeg", "image/png", "image/webp"],
+      VIDEO: ["video/mp4", "video/webm", "video/quicktime"],
+      DOCUMENT: ["application/pdf", "text/plain"],
+      AUDIO: [],
+    },
+    promptVersion: "orvexa.triage.v1",
+    defaultModel: "openai/gpt-oss-20b",
+    visionModel: "meta/llama-3.2-11b-vision-instruct",
   },
 };
 

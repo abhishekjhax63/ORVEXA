@@ -1,12 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Inter, Plus_Jakarta_Sans } from "next/font/google";
 
 import { AppProviders } from "@/components/providers/app-providers";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
   display: "swap",
 });
@@ -55,8 +61,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   colorScheme: "light dark",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#061225" },
+    { media: "(prefers-color-scheme: light)", color: "#fafbf8" },
+    { media: "(prefers-color-scheme: dark)", color: "#071e14" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -68,7 +74,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en-IN"
       data-scroll-behavior="smooth"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable}`}
+      className={`${inter.variable} ${jakarta.variable} ${geistMono.variable}`}
     >
       <body className="flex min-h-dvh flex-col bg-background text-foreground antialiased">
         <AppProviders>

@@ -173,7 +173,7 @@ function ConsoleShell({
         <aside className="hidden w-72 shrink-0 lg:block">
           <div className="sticky top-24 flex max-h-[calc(100dvh-8rem)] flex-col gap-4 overflow-y-auto pb-4">
             <div className="rounded-2xl border border-border bg-card/70 p-4">
-              <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">Acting as</p>
+              <p className="eyebrow text-muted-foreground">Acting as</p>
               <p className="mt-2 text-sm font-semibold text-foreground">{operatorName}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {(consoleRoles.length > 0 ? consoleRoles : ["Platform administrator"]).map((label) => (

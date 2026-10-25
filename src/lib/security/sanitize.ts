@@ -24,7 +24,6 @@
  */
 
 /** C0 and C1 control characters, excluding tab, newline and carriage return. */
-// eslint-disable-next-line no-control-regex
 const UNSAFE_CONTROL_CHARACTERS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g;
 /** Zero-width and bidi-override characters, which make two strings render alike. */
 const INVISIBLE_FORMATTING = /[\u200B-\u200F\u202A-\u202E\u2060-\u2064\uFEFF]/g;

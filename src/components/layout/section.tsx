@@ -14,7 +14,8 @@ const sectionVariants = cva("relative w-full", {
     tone: {
       default: "",
       muted: "bg-muted/50",
-      navy: "bg-navy-900 text-white dark:bg-navy-950",
+      mint: "bg-leaf-soft/55 dark:bg-forest-900/60",
+      navy: "bg-forest-900 text-white dark:bg-forest-950",
       gradient: "aurora",
     },
   },
@@ -59,11 +60,12 @@ function SectionHeading({
     >
       <div className={cn("flex flex-col gap-3", align === "center" ? "items-center" : "items-start", "max-w-3xl")}>
         {eyebrow ? (
-          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1 text-xs font-semibold tracking-[0.14em] text-primary uppercase">
+          <span className="eyebrow inline-flex items-center gap-2.5 text-forest-700 dark:text-lime-300">
+            <span aria-hidden className="size-1.5 rounded-full bg-accent" />
             {eyebrow}
           </span>
         ) : null}
-        <h2 className="text-3xl font-semibold sm:text-4xl lg:text-[2.6rem] lg:leading-[1.12]">{title}</h2>
+        <h2 className="text-3xl font-semibold sm:text-4xl lg:text-[2.6rem] lg:leading-[1.1]">{title}</h2>
         {description ? (
           <p className="text-base leading-relaxed text-muted-foreground sm:text-lg">{description}</p>
         ) : null}

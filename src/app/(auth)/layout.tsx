@@ -20,12 +20,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
       <aside
         aria-hidden
-        className="relative hidden flex-col justify-between overflow-hidden bg-[linear-gradient(150deg,var(--brand-from),#04101f_60%,#02080f)] p-12 text-white lg:flex"
+        className="relative hidden flex-col justify-between overflow-hidden bg-[linear-gradient(150deg,var(--brand-from),#08291d_60%,#04160f)] p-12 text-white lg:flex"
       >
         <div className="relative z-10">
           <span className="inline-flex items-center gap-2.5 text-[1.05rem] font-semibold tracking-[0.16em]">
             <span className="grid size-9 place-items-center rounded-xl bg-white/12 ring-1 ring-white/20">
-              <ShieldCheck className="size-5 text-teal-200" />
+              <ShieldCheck className="size-5 text-lime-200" />
             </span>
             {siteConfig.name}
           </span>
@@ -39,13 +39,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
         <dl className="relative z-10 grid max-w-md gap-5 text-sm">
           <div>
-            <dt className="font-semibold text-teal-200">Your records stay yours</dt>
+            <dt className="font-semibold text-lime-200">Your records stay yours</dt>
             <dd className="mt-1 text-white/70">
               Health information is shared only with your explicit consent, and never sold.
             </dd>
           </div>
           <div>
-            <dt className="font-semibold text-teal-200">Emergency help is never gated</dt>
+            <dt className="font-semibold text-lime-200">Emergency help is never gated</dt>
             <dd className="mt-1 text-white/70">
               SOS access stays available on every account, whatever else you use ORVEXA for.
             </dd>
@@ -53,7 +53,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </dl>
         <span
           aria-hidden
-          className="pointer-events-none absolute -right-24 -bottom-24 size-96 rounded-full bg-teal-400/15 blur-3xl"
+          className="pointer-events-none absolute -right-24 -bottom-24 size-96 rounded-full bg-lime-400/15 blur-3xl"
         />
       </aside>
 

@@ -44,7 +44,6 @@ export const metadata: Metadata = {
 
 const qualityImage = healthImage(
   "Indian pharmacist in a clean licensed pharmacy checking medicine strips against a printed prescription, temperature-controlled storage cabinet behind the counter, soft daylight, professional healthcare photography",
-  "landscape_4_3",
 );
 
 type JourneyStep = {
@@ -151,7 +150,7 @@ export default function PharmacyPage() {
         aside={
           <div className="rounded-[1.75rem] border border-border bg-card/85 p-6 shadow-[var(--shadow-panel)] backdrop-blur-sm">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">Prototype status</p>
+              <p className="eyebrow text-primary">Prototype status</p>
               <Badge variant="demo">Demo</Badge>
             </div>
             <ul className="mt-5 flex flex-col gap-4">
@@ -167,7 +166,7 @@ export default function PharmacyPage() {
                 </div>
               </li>
               <li className="flex gap-3">
-                <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent">
+                <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-xl bg-mint-soft text-mint-deep dark:bg-mint-mid/15 dark:text-mint-mid">
                   <ShieldCheck className="size-4.5" />
                 </span>
                 <div>
@@ -178,7 +177,7 @@ export default function PharmacyPage() {
                 </div>
               </li>
               <li className="flex gap-3">
-                <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-xl bg-cyan-soft text-cyan-deep dark:bg-cyan-mid/15 dark:text-cyan-mid">
+                <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-xl bg-mint-soft text-mint-deep dark:bg-mint-mid/15 dark:text-mint-mid">
                   <Snowflake className="size-4.5" />
                 </span>
                 <div>
@@ -215,7 +214,7 @@ export default function PharmacyPage() {
           {pharmacyHighlights.map((highlight) => (
             <RevealItem as="li" key={highlight.title} className="h-full">
               <div className="flex h-full flex-col gap-3 rounded-2xl border border-border bg-card p-5">
-                <span aria-hidden className="grid size-10 place-items-center rounded-xl bg-accent-soft text-accent">
+                <span aria-hidden className="grid size-10 place-items-center rounded-xl bg-mint-soft text-mint-deep dark:bg-mint-mid/15 dark:text-mint-mid">
                   <highlight.icon className="size-5" />
                 </span>
                 <p className="text-sm font-semibold">{highlight.title}</p>
@@ -288,12 +287,12 @@ export default function PharmacyPage() {
       <Section id="prescription" tone="navy" spacing="default" aria-labelledby="prescription-heading">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-30 [background-image:radial-gradient(38rem_24rem_at_12%_0%,rgba(34,211,238,0.22),transparent_62%),radial-gradient(34rem_22rem_at_88%_100%,rgba(45,212,191,0.2),transparent_60%)]"
+          className="pointer-events-none absolute inset-0 opacity-30 [background-image:radial-gradient(38rem_24rem_at_12%_0%,rgba(184,243,107,0.16),transparent_62%),radial-gradient(34rem_22rem_at_88%_100%,rgba(46,125,79,0.28),transparent_60%)]"
         />
         <div className="relative grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-start lg:gap-16">
           <div>
             <Reveal>
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold tracking-[0.14em] text-teal-200 uppercase">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 eyebrow text-lime-200">
                 Prescription policy
               </span>
               <h2
@@ -311,7 +310,7 @@ export default function PharmacyPage() {
             <Reveal className="mt-8">
               <ul className="flex flex-col gap-4">
                 <li className="flex gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-                  <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/10 text-teal-200">
+                  <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/10 text-lime-200">
                     <FileText className="size-5" />
                   </span>
                   <div>
@@ -324,7 +323,7 @@ export default function PharmacyPage() {
                   </div>
                 </li>
                 <li className="flex gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-                  <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/10 text-teal-200">
+                  <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/10 text-lime-200">
                     <ListChecks className="size-5" />
                   </span>
                   <div>
@@ -336,7 +335,7 @@ export default function PharmacyPage() {
                   </div>
                 </li>
                 <li className="flex gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-                  <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/10 text-amber-300">
+                  <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/10 text-lime-200">
                     <TriangleAlert className="size-5" />
                   </span>
                   <div>
@@ -354,7 +353,7 @@ export default function PharmacyPage() {
           <Reveal delay={0.08}>
             <div className="flex flex-col gap-5 rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-6 sm:p-8">
               <div className="flex items-start gap-4">
-                <span aria-hidden className="grid size-11 shrink-0 place-items-center rounded-2xl bg-white/10 text-teal-200">
+                <span aria-hidden className="grid size-11 shrink-0 place-items-center rounded-2xl bg-white/10 text-lime-200">
                   <Headset className="size-5" />
                 </span>
                 <div>
@@ -419,7 +418,7 @@ export default function PharmacyPage() {
               />
 
               <p className="flex items-start gap-2 border-t border-white/10 pt-5 text-xs leading-relaxed text-white/60">
-                <PhoneCall aria-hidden className="mt-0.5 size-3.5 shrink-0 text-teal-200" />
+                <PhoneCall aria-hidden className="mt-0.5 size-3.5 shrink-0 text-lime-200" />
                 For general ORVEXA support, call{" "}
                 <a
                   href={`tel:${siteConfig.supportPhone.replace(/\s/g, "")}`}

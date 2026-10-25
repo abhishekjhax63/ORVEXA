@@ -164,7 +164,7 @@ export default function InsurancePage() {
         aside={
           <div className="rounded-[1.75rem] border border-border bg-card/85 p-6 shadow-[var(--shadow-panel)] backdrop-blur-sm">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">Read this first</p>
+              <p className="eyebrow text-primary">Read this first</p>
               <ShieldAlert aria-hidden className="size-4 shrink-0 text-warning" />
             </div>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
@@ -244,7 +244,7 @@ export default function InsurancePage() {
             <div className="flex flex-col gap-5 rounded-[1.75rem] border border-border bg-card p-6 shadow-[var(--shadow-soft)] sm:p-7">
               <span
                 aria-hidden
-                className="grid size-11 place-items-center rounded-2xl bg-teal-soft text-teal-deep dark:bg-teal-mid/15 dark:text-teal-mid"
+                className="grid size-11 place-items-center rounded-2xl bg-leaf-soft text-leaf-deep dark:bg-leaf-mid/15 dark:text-leaf-mid"
               >
                 <Wallet className="size-5" />
               </span>
@@ -334,7 +334,7 @@ export default function InsurancePage() {
       <Section id="eligibility" tone="navy" spacing="default" aria-labelledby="eligibility-heading">
         <div className="grid gap-10 lg:grid-cols-[1fr_0.85fr] lg:items-start">
           <Reveal>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold tracking-[0.14em] text-teal-200 uppercase">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 eyebrow text-lime-200">
               Eligibility checks unavailable
             </span>
             <h2
@@ -353,7 +353,7 @@ export default function InsurancePage() {
                 <li key={factor.title} className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
                   <span
                     aria-hidden
-                    className="grid size-9 place-items-center rounded-xl bg-white/10 text-teal-200"
+                    className="grid size-9 place-items-center rounded-xl bg-white/10 text-lime-200"
                   >
                     <ShieldCheck className="size-4.5" />
                   </span>

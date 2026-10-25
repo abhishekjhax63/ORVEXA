@@ -176,7 +176,7 @@ export default function AiAssistantPage() {
         aside={
           <div className="rounded-[1.75rem] border border-border bg-card/85 p-6 shadow-[var(--shadow-panel)] backdrop-blur-sm">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">Important limits</p>
+              <p className="eyebrow text-primary">Important limits</p>
               <Badge variant="demo">Demo</Badge>
             </div>
             <ul className="mt-5 space-y-4">
@@ -212,7 +212,7 @@ export default function AiAssistantPage() {
 
           <Reveal delay={0.06}>
             <div className="flex flex-col gap-5 rounded-[1.75rem] border border-border bg-card p-6 shadow-[var(--shadow-soft)]">
-              <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.14em] text-primary uppercase">
+              <div className="flex items-center gap-2 eyebrow text-primary">
                 <MessageSquare aria-hidden className="size-4" />
                 What this demonstrates
               </div>
@@ -336,11 +336,11 @@ export default function AiAssistantPage() {
       <Section id="safety" tone="navy" spacing="default" aria-labelledby="safety-heading">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-30 [background-image:radial-gradient(38rem_24rem_at_12%_0%,rgba(34,211,238,0.22),transparent_62%),radial-gradient(34rem_22rem_at_88%_100%,rgba(45,212,191,0.2),transparent_60%)]"
+          className="pointer-events-none absolute inset-0 opacity-30 [background-image:radial-gradient(38rem_24rem_at_12%_0%,rgba(184,243,107,0.16),transparent_62%),radial-gradient(34rem_22rem_at_88%_100%,rgba(46,125,79,0.28),transparent_60%)]"
         />
         <div className="relative">
           <Reveal className="max-w-3xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold tracking-[0.14em] text-teal-200 uppercase">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 eyebrow text-lime-200">
               Safety and limits
             </span>
             <h2
@@ -358,13 +358,13 @@ export default function AiAssistantPage() {
             <Reveal>
               <div className="flex h-full flex-col rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-6">
                 <div className="flex items-center gap-2 text-sm font-semibold text-white">
-                  <CircleCheck aria-hidden className="size-4.5 text-teal-200" />
+                  <CircleCheck aria-hidden className="size-4.5 text-lime-200" />
                   What the assistant can do
                 </div>
                 <ul className="mt-5 space-y-3.5">
                   {canDo.map((item) => (
                     <li key={item} className="flex items-start gap-3 text-sm text-white/75">
-                      <CircleCheck aria-hidden className="mt-0.5 size-4 shrink-0 text-teal-200" />
+                      <CircleCheck aria-hidden className="mt-0.5 size-4 shrink-0 text-lime-200" />
                       {item}
                     </li>
                   ))}
@@ -422,9 +422,9 @@ export default function AiAssistantPage() {
           </Reveal>
 
           <Reveal className="mt-6" delay={0.08}>
-            <div className="rounded-[1.75rem] border border-white/10 bg-navy-950/40 p-6">
+            <div className="rounded-[1.75rem] border border-white/10 bg-forest-950/40 p-6">
               <div className="flex items-center gap-2 text-sm font-semibold text-white">
-                <LockKeyhole aria-hidden className="size-4.5 text-teal-200" />
+                <LockKeyhole aria-hidden className="size-4.5 text-lime-200" />
                 Live workspace requirements
               </div>
               <p className="mt-4 text-sm leading-relaxed text-white/70">
@@ -433,19 +433,19 @@ export default function AiAssistantPage() {
               </p>
               <ul className="mt-4 grid gap-3 sm:grid-cols-3">
                 <li className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs font-semibold text-teal-200 uppercase">AI provider</p>
+                  <p className="text-xs font-semibold text-lime-200 uppercase">AI provider</p>
                   <p className="mt-1.5 text-xs leading-relaxed text-white/65">
                     Text analysis requires an operator-configured provider and credentials.
                   </p>
                 </li>
                 <li className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs font-semibold text-teal-200 uppercase">Image uploads</p>
+                  <p className="text-xs font-semibold text-lime-200 uppercase">Image uploads</p>
                   <p className="mt-1.5 text-xs leading-relaxed text-white/65">
                     Require a signed-in account, private storage, a compatible model and malware scanning.
                   </p>
                 </li>
                 <li className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs font-semibold text-teal-200 uppercase">No clinician handoff</p>
+                  <p className="text-xs font-semibold text-lime-200 uppercase">No clinician handoff</p>
                   <p className="mt-1.5 text-xs leading-relaxed text-white/65">
                     The directory does not create appointments or share your conversation with providers.
                   </p>

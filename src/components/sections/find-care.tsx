@@ -39,7 +39,7 @@ function FindCareSection() {
           <RevealItem as="li" key={specialty.id}>
             <Link
               href={`/hospitals?specialty=${encodeURIComponent(specialty.name)}`}
-              className="group flex h-full flex-col gap-2.5 rounded-2xl border border-border bg-card p-4 transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[var(--shadow-panel)]"
+              className="group flex h-full flex-col gap-2.5 rounded-2xl border border-border bg-card p-4 transition-[border-color,box-shadow,transform] duration-[var(--duration-base)] ease-[var(--ease-soft)] hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[var(--shadow-panel)]"
             >
               <span
                 aria-hidden

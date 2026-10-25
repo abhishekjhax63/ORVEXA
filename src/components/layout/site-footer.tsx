@@ -8,42 +8,44 @@ import { footerNav, copyrightYear, siteConfig } from "@/lib/site";
 
 function SiteFooter() {
   return (
-    <footer className="relative mt-auto border-t border-border bg-navy-900 text-navy-100 dark:bg-navy-950">
+    <footer className="relative mt-auto border-t border-border bg-forest-900 text-forest-100 dark:bg-forest-950">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,var(--brand-to),transparent)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,var(--accent),transparent)]"
       />
       <Container className="py-14 lg:py-16">
         <div className="grid gap-12 lg:grid-cols-[1.4fr_2fr]">
           <div className="flex flex-col gap-5">
             <Link href="/" className="inline-flex items-center gap-2.5" aria-label={`${siteConfig.name} home`}>
               <LogoMark />
-              <span className="text-[1.05rem] font-semibold tracking-[0.16em] text-white">ORVEXA</span>
+              <span className="[font-family:var(--font-display)] text-[1.05rem] font-semibold tracking-[0.16em] text-white">
+                ORVEXA
+              </span>
             </Link>
-            <p className="max-w-sm text-sm leading-relaxed text-navy-100/75">
+            <p className="max-w-sm text-sm leading-relaxed text-forest-100/75">
               {siteConfig.description}
             </p>
             <dl className="flex flex-col gap-3 text-sm">
               <div className="flex items-start gap-3">
                 <dt className="sr-only">Emergency helpline</dt>
-                <Siren aria-hidden className="mt-0.5 size-4 shrink-0 text-teal-300" />
+                <Siren aria-hidden className="mt-0.5 size-4 shrink-0 text-lime-300" />
                 <dd>
                   <a
                     href={`tel:${siteConfig.emergencyNumber}`}
-                    className="font-semibold text-white transition-colors hover:text-teal-200"
+                    className="font-semibold text-white transition-colors hover:text-lime-200"
                   >
                     Emergency {siteConfig.emergencyNumber}
                   </a>
-                  <span className="ml-2 text-navy-100/60">ambulance dispatch</span>
+                  <span className="ml-2 text-forest-100/60">ambulance dispatch</span>
                 </dd>
               </div>
               <div className="flex items-start gap-3">
                 <dt className="sr-only">Care desk phone</dt>
-                <Phone aria-hidden className="mt-0.5 size-4 shrink-0 text-teal-300" />
+                <Phone aria-hidden className="mt-0.5 size-4 shrink-0 text-lime-300" />
                 <dd>
                   <a
                     href={`tel:${siteConfig.supportPhone.replace(/\s/g, "")}`}
-                    className="text-navy-100/85 transition-colors hover:text-white"
+                    className="text-forest-100/85 transition-colors hover:text-white"
                   >
                     {siteConfig.supportPhone}
                   </a>
@@ -51,11 +53,11 @@ function SiteFooter() {
               </div>
               <div className="flex items-start gap-3">
                 <dt className="sr-only">Support email</dt>
-                <Mail aria-hidden className="mt-0.5 size-4 shrink-0 text-teal-300" />
+                <Mail aria-hidden className="mt-0.5 size-4 shrink-0 text-lime-300" />
                 <dd>
                   <a
                     href={`mailto:${siteConfig.supportEmail}`}
-                    className="text-navy-100/85 transition-colors hover:text-white"
+                    className="text-forest-100/85 transition-colors hover:text-white"
                   >
                     {siteConfig.supportEmail}
                   </a>
@@ -63,11 +65,17 @@ function SiteFooter() {
               </div>
               <div className="flex items-start gap-3">
                 <dt className="sr-only">Registered address</dt>
-                <MapPin aria-hidden className="mt-0.5 size-4 shrink-0 text-teal-300" />
-                <dd className="text-navy-100/75">{siteConfig.address}</dd>
+                <MapPin aria-hidden className="mt-0.5 size-4 shrink-0 text-lime-300" />
+                <dd className="text-forest-100/75">{siteConfig.address}</dd>
               </div>
             </dl>
-            <Button asChild variant="gradient" size="lg" className="w-fit">
+            {/* The footer sits on a deep surface, so the call to action uses the
+                lime accent with dark text rather than the dark brand gradient. */}
+            <Button
+              asChild
+              size="lg"
+              className="w-fit bg-accent text-accent-foreground ring-1 ring-inset ring-white/20 hover:brightness-105"
+            >
               <Link href="/hospitals">Find care near you</Link>
             </Button>
           </div>
@@ -81,7 +89,7 @@ function SiteFooter() {
                     <li key={`${group.title}-${item.href}-${item.title}`}>
                       <Link
                         href={item.href}
-                        className="text-navy-100/75 transition-colors hover:text-white hover:underline hover:underline-offset-4"
+                        className="text-forest-100/75 transition-colors hover:text-white hover:underline hover:underline-offset-4"
                       >
                         {item.title}
                       </Link>
@@ -93,7 +101,7 @@ function SiteFooter() {
           </nav>
         </div>
 
-        <div className="mt-12 flex flex-col gap-6 border-t border-white/10 pt-8 text-xs text-navy-100/65 lg:flex-row lg:items-start lg:justify-between">
+        <div className="mt-12 flex flex-col gap-6 border-t border-white/10 pt-8 text-xs text-forest-100/65 lg:flex-row lg:items-start lg:justify-between">
           <p className="max-w-3xl leading-relaxed">
             ORVEXA is a healthcare coordination platform, not a medical provider. Content here is for information
             only and never replaces advice from a registered medical practitioner. Some features use static or

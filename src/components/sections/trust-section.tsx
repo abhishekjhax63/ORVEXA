@@ -50,7 +50,8 @@ function TrustSection() {
       <Section tone="muted" spacing="default">
         <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-start lg:gap-16">
           <Reveal>
-            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1 text-xs font-semibold tracking-[0.14em] text-primary uppercase">
+            <span className="eyebrow inline-flex items-center gap-2.5 text-forest-700 dark:text-lime-300">
+              <span aria-hidden className="size-1.5 rounded-full bg-accent" />
               For providers
             </span>
             <h2 className="mt-4 text-3xl font-semibold sm:text-4xl lg:text-[2.6rem] lg:leading-[1.12]">
@@ -76,7 +77,7 @@ function TrustSection() {
           <RevealGroup as="ul" className="grid gap-4 sm:grid-cols-2">
             {providerOnboarding.map((step) => (
               <RevealItem as="li" key={step.id}>
-                <div className="flex h-full flex-col gap-3 rounded-2xl border border-border bg-card p-5">
+                <div className="flex h-full flex-col gap-3 rounded-2xl border border-border bg-card p-5 transition-[border-color,box-shadow] duration-[var(--duration-base)] ease-[var(--ease-soft)] hover:border-primary/30 hover:shadow-[var(--shadow-soft)]">
                   <div className="flex items-center gap-3">
                     <span
                       aria-hidden

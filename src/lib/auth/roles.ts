@@ -1407,6 +1407,78 @@ function careProviderNav(permissions: Set<Permission>): NavSection[] {
   return [{ title: "Care services", items }];
 }
 
+// ---------------------------------------------------------------------------
+// Routes that exist.
+//
+// The console shell promises that a link it renders is a page that will open.
+// That promise was broken: the Phase 1–11 navigation described 114 destinations
+// and 98 of them had never been written, so console accounts clicked into 404s —
+// four of them on the sign-in redirect itself.
+//
+// Rather than delete the navigation, which still records which workspace each
+// permission is *meant* to open, every section is filtered through this list.
+// A workspace is withdrawn until its pages exist; adding a route here puts its
+// link back in the console of every account whose permissions reach it, and
+// moves the sign-in landing back with it. Nothing else has to change.
+//
+// It is kept honest by `test/unit/auth-roles.test.ts`, which walks `src/app` and
+// fails if a route listed here has no `page.tsx` behind it.
+// ---------------------------------------------------------------------------
+const IMPLEMENTED_ROUTES = new Set<string>([
+  "/",
+  "/about",
+  "/access-denied",
+  "/admin",
+  "/admin/emergency",
+  "/admin/emergency/integrations",
+  "/ai-assistant",
+  "/assistant",
+  "/assistant/history",
+  "/contact",
+  "/dashboard",
+  "/dashboard/consultations",
+  "/diagnostics",
+  "/emergency",
+  "/emergency/contacts",
+  "/emergency/incidents",
+  "/emergency/nearby",
+  "/forgot-password",
+  "/help",
+  "/hospitals",
+  "/insurance",
+  "/login",
+  "/pharmacy",
+  "/privacy",
+  "/provider",
+  "/provider/telemedicine",
+  "/register",
+  "/reset-password",
+  "/services",
+  "/telemedicine",
+  "/terms",
+  "/verify-email",
+]);
+
+/** Whether a route has a page behind it today. */
+export function isImplementedRoute(href: string): boolean {
+  return IMPLEMENTED_ROUTES.has(href.split("#")[0]);
+}
+
+/**
+ * Withdraws navigation items whose route does not exist yet.
+ *
+ * A section left with no reachable item is dropped rather than rendered as a
+ * heading over an empty list.
+ */
+function filterToImplementedRoutes(nav: NavSection[]): NavSection[] {
+  const sections: NavSection[] = [];
+  for (const section of nav) {
+    const items = section.items.filter((item) => isImplementedRoute(item.href));
+    if (items.length > 0) sections.push({ ...section, items });
+  }
+  return sections;
+}
+
 /** Navigation is derived from permissions on the server, never from a client claim. */
 export function navigationForRoles(
   roles: readonly AppRole[],
@@ -1472,18 +1544,35 @@ export function navigationForRoles(
 
   if (permissions.has("emergency.raise")) nav.push(EMERGENCY_NAV);
 
-  return nav;
+  // Last step, deliberately: the sections above describe the console the
+  // permissions entitle an account to, and this decides how much of it has
+  // actually been built. A link can only survive if a page is behind it.
+  return filterToImplementedRoutes(nav);
 }
 
+/**
+ * Where each role signs in to, once that console exists.
+ *
+ * A role absent from this table has no console at all and falls through to the
+ * account dashboard — AMBULANCE_PARTNER today.
+ */
+const ROLE_CONSOLE_HOME: Partial<Record<AppRole, string>> = {
+  PLATFORM_ADMIN: "/admin",
+  HOSPITAL_ADMIN: "/hospital",
+  DOCTOR: "/provider",
+  PHARMACY_PARTNER: "/pharmacy/portal",
+  LAB_PARTNER: "/lab",
+  INSURANCE_PARTNER: "/insurer",
+};
+
 export function landingPathForRoles(roles: readonly AppRole[]): string {
-  const role = primaryRole(roles);
-  if (role === "PLATFORM_ADMIN") return "/admin";
-  if (role === "PHARMACY_PARTNER") return "/pharmacy/portal";
-  if (role === "LAB_PARTNER") return "/lab";
-  if (role === "INSURANCE_PARTNER") return "/insurer";
-  if (role === "HOSPITAL_ADMIN") return "/hospital";
-  if (role === "DOCTOR") return "/provider";
-  return "/dashboard";
+  const home = ROLE_CONSOLE_HOME[primaryRole(roles)];
+  // Four of the six consoles above have never been written, so their routes are
+  // 404s. Redirecting a partner into a 404 immediately after sign-in is worse
+  // than sending them to the account dashboard, so the landing is taken only
+  // when a page is actually behind it. This reads the same list the navigation
+  // is filtered through, so building a console restores its landing by itself.
+  return home !== undefined && isImplementedRoute(home) ? home : "/dashboard";
 }
 
 /**
@@ -1495,6 +1584,12 @@ export function landingPathForRoles(roles: readonly AppRole[]): string {
  * whose account carries no administrative `Role` at all: a platform staff row is
  * what makes the console their workplace. Sign-in calls this only after
  * resolving memberships; a person with none keeps their platform landing page.
+ *
+ * A hospital membership currently has no destination of its own: the `/hospital`
+ * workspace is not written yet, so an on-shift nurse keeps the account dashboard
+ * rather than being redirected into a 404. The membership still resolves — it is
+ * what grants the `hospital.*` permissions — it just has no page to open, and
+ * the check below picks it up the moment that page exists.
  */
 export function landingPathForUser(
   roles: readonly AppRole[],
@@ -1502,6 +1597,6 @@ export function landingPathForUser(
   platformStaffRoles: readonly PlatformStaffRole[] = [],
 ): string {
   if (platformStaffRoles.length > 0) return "/admin";
-  if (hospitalStaffRoles.length > 0) return "/hospital";
+  if (hospitalStaffRoles.length > 0 && isImplementedRoute("/hospital")) return "/hospital";
   return landingPathForRoles(roles);
 }

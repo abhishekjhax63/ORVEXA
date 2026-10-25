@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/guards";
 import { getAiProvider } from "@/lib/ai/service";
 import { sniffContainerType } from "@/lib/ai/validation";
+import { parseChatHistory } from "@/lib/assistant/chat-history";
 import { readLimitedRequestText } from "@/lib/security/request-body";
 import { consumeRateLimit, RATE_LIMITS } from "@/lib/security/rate-limit";
 
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Send a valid image question." }, { status: 400 });
   }
 
-  const { question, image } = body as { question?: unknown; image?: unknown };
+  const { question, image, history } = body as { question?: unknown; image?: unknown; history?: unknown };
   if (typeof question !== "string" || !question.trim() || question.trim().length > 2000) {
     return NextResponse.json({ error: "Add a question of up to 2,000 characters." }, { status: 400 });
   }
@@ -86,6 +87,7 @@ export async function POST(request: Request) {
     question: question.trim(),
     mimeType,
     dataUrl: image,
+    history: parseChatHistory(history),
   });
   if (!result.result.ok) {
     const error = result.result.error;

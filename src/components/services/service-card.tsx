@@ -8,10 +8,10 @@ import type { CareService } from "@/types";
 
 /** Accent treatments are mapped to static class names so Tailwind can see them. */
 const accentStyles: Record<CareService["accent"], string> = {
-  aqua: "bg-aqua-100 text-aqua-700 dark:bg-aqua-500/15 dark:text-aqua-300",
-  teal: "bg-teal-soft text-teal-deep dark:bg-teal-mid/15 dark:text-teal-mid",
-  cyan: "bg-cyan-soft text-cyan-deep dark:bg-cyan-mid/15 dark:text-cyan-mid",
-  navy: "bg-navy-100 text-navy-700 dark:bg-navy-400/15 dark:text-navy-200",
+  aqua: "bg-lime-100 text-lime-800 dark:bg-lime-400/15 dark:text-lime-300",
+  teal: "bg-leaf-soft text-leaf-deep dark:bg-leaf-mid/15 dark:text-leaf-mid",
+  cyan: "bg-mint-soft text-mint-deep dark:bg-mint-mid/15 dark:text-mint-mid",
+  navy: "bg-forest-100 text-forest-800 dark:bg-forest-400/15 dark:text-forest-200",
 };
 
 function priceLabel(priceFrom: number | null) {
