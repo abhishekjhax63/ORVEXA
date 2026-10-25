@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, MapPin, Search, ShieldCheck, Siren, Sparkles, Star } from "lucide-react";
+import { Activity, ArrowRight, Building2, Search, ShieldCheck, Siren, Sparkles, Star } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
 import { CareSearch } from "@/components/marketing/care-search";
@@ -10,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { platformHighlights } from "@/data/content";
 import { specialties as careSpecialties } from "@/data/providers";
+import { generateAIImage } from "@/lib/images";
 
 const easeOut = [0.22, 1, 0.36, 1] as const;
 
@@ -23,6 +25,15 @@ const popularSearches = [
 
 /** First entries of the application's own speciality taxonomy. */
 const heroSpecialties = careSpecialties.slice(0, 6);
+
+/**
+ * Press/hover feedback for plain links, which carry no transition of their own.
+ * `Button` already transitions `transform`, so it only needs the tap scale —
+ * passing this whole string would clobber its multi-property transition.
+ */
+const pressLink =
+  "transition-[transform,color,background-color,border-color] duration-200 ease-[var(--ease-soft)] motion-safe:hover:-translate-y-0.5 motion-safe:active:scale-[0.97]";
+const pressButton = "motion-safe:active:scale-[0.97]";
 
 function Hero() {
   const reduceMotion = useReducedMotion();
@@ -45,10 +56,32 @@ function Hero() {
           transition: { duration: 0.6, delay, ease: easeOut },
         };
 
+  /* A slow, permanent drift on the portrait so the hero never reads as a
+     static screenshot. Neutered for reduced motion. */
+  const drift = reduceMotion
+    ? {}
+    : { animate: { y: [0, -10, 0] }, transition: { duration: 8, repeat: Infinity, ease: "easeInOut" as const } };
+
   return (
     <section className="relative isolate overflow-hidden pt-12 pb-20 sm:pt-16 lg:pt-20 lg:pb-28">
+      {/* Hospital ambience — a real clinical setting, graded back into the page
+          so it sets the scene without competing with the copy. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-20 overflow-hidden">
+        <Image
+          src={generateAIImage(
+            "Professional architectural photography of a modern hospital atrium, clean glass ceilings, soft natural light, minimalist clinical design, premium healthcare ambience, realistic 8k photography",
+            "landscape_16_9",
+          )}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center opacity-[0.12]"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,color-mix(in_oklab,var(--background)_86%,transparent)_0%,var(--background)_74%)]" />
+      </div>
+
       <div aria-hidden className="aurora pointer-events-none absolute inset-0 -z-10" />
-      <div aria-hidden className="grid-backdrop pointer-events-none absolute inset-0 -z-10 opacity-40" />
       <div
         aria-hidden
         className="pointer-events-none absolute -top-40 -right-32 -z-10 size-[34rem] rounded-full bg-[radial-gradient(circle_at_center,color-mix(in_oklab,var(--accent)_26%,transparent),transparent_68%)] blur-3xl"
@@ -82,13 +115,13 @@ function Hero() {
             </motion.p>
 
             <motion.div {...rise(0.18)} className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-              <Button asChild variant="gradient" size="lg">
+              <Button asChild variant="gradient" size="lg" className={pressButton}>
                 <Link href="/hospitals">
                   <Search aria-hidden />
                   Find Nearby Care
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg">
+              <Button asChild variant="outline" size="lg" className={pressButton}>
                 <Link href="/assistant">
                   <Sparkles aria-hidden />
                   Explore AI Assistant
@@ -96,7 +129,7 @@ function Hero() {
               </Button>
               <Link
                 href="/emergency"
-                className="inline-flex items-center gap-2 rounded-xl px-2 py-2 text-sm font-semibold text-emergency transition-colors duration-[var(--duration-base)] ease-[var(--ease-soft)] hover:bg-emergency-soft"
+                className={`inline-flex items-center gap-2 rounded-xl px-2 py-2 text-sm font-semibold text-emergency hover:bg-emergency-soft ${pressLink}`}
               >
                 <Siren aria-hidden className="size-4" />
                 Emergency SOS
@@ -123,81 +156,95 @@ function Hero() {
           </div>
 
           {/* ---------------------------------------------------------------- *
-           * Layered interface composition
+           * Sakha — the AI care guide, presented in a hospital setting
            * ---------------------------------------------------------------- */}
           <motion.div {...rise(0.14)} className="relative mx-auto w-full max-w-lg lg:max-w-none">
             <div
               aria-hidden
-              className="absolute -inset-6 -z-10 rounded-[2.5rem] bg-[radial-gradient(58%_58%_at_72%_18%,color-mix(in_oklab,var(--accent)_30%,transparent),transparent_72%)] blur-2xl"
+              className="absolute -inset-6 -z-10 rounded-[2.75rem] bg-[radial-gradient(60%_60%_at_70%_14%,color-mix(in_oklab,var(--accent)_34%,transparent),transparent_72%)] blur-2xl"
             />
 
-            <div className="surface-panel relative rounded-3xl p-3">
-              {/* Map preview. Nothing is plotted because no maps provider is
-                  configured, so the panel says so instead of implying live data. */}
-              <div className="relative aspect-[5/4] overflow-hidden rounded-2xl bg-[linear-gradient(152deg,#0a3226,#08291d_56%,#061d14)] ring-1 ring-inset ring-white/10">
+            <div className="surface-panel relative rounded-[2rem] p-2 shadow-[var(--shadow-panel)]">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-[1.6rem] bg-forest-950">
+                <motion.div {...drift} className="absolute inset-0">
+                  <Image
+                    src={generateAIImage(
+                      "Professional studio portrait of Sakha, a friendly Indian female AI doctor, clean white coat, warm approachable smile, modern hospital atrium background, cinematic lighting, realistic 8k photography",
+                      "portrait_4_3",
+                    )}
+                    alt="Sakha, the ORVEXA AI care guide, standing in a modern hospital atrium"
+                    fill
+                    priority
+                    sizes="(min-width: 1024px) 42vw, 100vw"
+                    className="object-cover object-top"
+                  />
+                </motion.div>
+
+                {/* Cinematic emerald grade keeps the portrait on-theme. */}
                 <div
                   aria-hidden
-                  className="absolute inset-0 opacity-[0.22] [background-image:linear-gradient(to_right,rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:44px_44px]"
+                  className="absolute inset-0 [background:linear-gradient(180deg,rgba(8,41,29,0.32)_0%,rgba(8,41,29,0.06)_34%,rgba(8,41,29,0.55)_68%,rgba(8,41,29,0.92)_100%)]"
                 />
                 <div
                   aria-hidden
-                  className="absolute -top-14 left-1/3 size-56 rounded-full bg-[radial-gradient(circle,color-mix(in_oklab,var(--accent)_34%,transparent),transparent_70%)] blur-2xl"
+                  className="absolute inset-0 rounded-[1.6rem] ring-1 ring-inset ring-white/15"
                 />
 
-                <div className="absolute top-4 left-4 flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-2.5 py-1 text-[0.68rem] font-medium text-white backdrop-blur">
-                    <MapPin aria-hidden className="size-3" />
-                    Patna
+                {/* Persona identity. */}
+                <div className="absolute top-4 left-4 flex items-center gap-2.5 rounded-2xl border border-white/15 bg-white/10 px-2.5 py-1.5 backdrop-blur-md">
+                  <span className="relative size-8 shrink-0 overflow-hidden rounded-full ring-1 ring-white/30">
+                    <Image
+                      src={generateAIImage(
+                        "Close-up portrait of Sakha AI doctor, friendly Indian female practitioner, soft approachable expression, clean professional medical attire, realistic photography",
+                        "square",
+                      )}
+                      alt=""
+                      fill
+                      sizes="32px"
+                      className="object-cover"
+                    />
                   </span>
-                  <span className="inline-flex items-center rounded-lg border border-white/15 bg-white/10 px-2.5 py-1 text-[0.68rem] font-medium text-white/75 backdrop-blur">
-                    Maps provider not configured
+                  <span className="leading-tight">
+                    <span className="block text-[0.72rem] font-semibold text-white">Sakha AI</span>
+                    <span className="block text-[0.6rem] text-white/70">Your care guide</span>
                   </span>
+                  <span aria-hidden className="ml-0.5 size-1.5 animate-pulse rounded-full bg-lime-300" />
                 </div>
 
-                <div className="absolute inset-0 grid place-items-center px-6 text-center">
-                  <div className="max-w-xs">
-                    <span
-                      aria-hidden
-                      className="mx-auto grid size-11 place-items-center rounded-xl bg-white/10 text-lime-300 ring-1 ring-white/15"
-                    >
-                      <MapPin className="size-5" />
-                    </span>
-                    <p className="mt-4 text-sm font-semibold text-white">Interactive provider map</p>
-                    <p className="mt-1.5 text-xs leading-relaxed text-white/65">
-                      Location search, routing and plotted facilities need a configured maps provider, so nothing is
-                      shown here yet.
-                    </p>
-                    <Button asChild variant="gradient" size="sm" className="mt-4">
-                      <Link href="/emergency/nearby">
-                        Open nearby care
-                        <ArrowRight aria-hidden />
-                      </Link>
-                    </Button>
-                  </div>
+                <div className="absolute inset-x-4 bottom-4">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[0.65rem] font-medium text-white/85 backdrop-blur">
+                    <Activity aria-hidden className="size-3" />
+                    Care that stays connected
+                  </span>
+                  <p className="mt-2.5 text-lg leading-snug font-semibold text-white sm:text-xl">
+                    One companion from first search to follow-up.
+                  </p>
+                  <p className="mt-1.5 text-xs leading-relaxed text-white/70">
+                    Informational guidance only — never a diagnosis or a prescription. Emergency signs always need real
+                    care.
+                  </p>
                 </div>
               </div>
 
-              {/* Search filter entry point — the real speciality taxonomy. */}
-              <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
-                {heroSpecialties.map((specialty) => (
-                  <Link
-                    key={specialty.id}
-                    href={`/hospitals?specialty=${encodeURIComponent(specialty.name)}`}
-                    className="shrink-0 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium transition-colors duration-[var(--duration-base)] ease-[var(--ease-soft)] hover:border-primary/45 hover:text-primary"
-                  >
-                    {specialty.name}
-                  </Link>
-                ))}
-              </div>
-
-              {/* Provider result preview, backed by the supplied directory counts. */}
-              <div className="mt-1 flex items-center gap-3 px-2 py-3">
-                <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary-soft text-primary">
-                  <Search className="size-4" />
+              {/* Directory trust strip — real counts, neutral imagery policy. */}
+              <div className="mt-2 flex items-center gap-3 rounded-[1.4rem] border border-border bg-card p-2.5">
+                <span className="relative size-14 shrink-0 overflow-hidden rounded-xl ring-1 ring-forest-950/10">
+                  <Image
+                    src={generateAIImage(
+                      "Professional team photo of Indian healthcare practitioners, diverse group of doctors in clean white coats, standing in a modern clinic corridor, warm lighting, high-end professional photography",
+                      "square",
+                    )}
+                    alt=""
+                    fill
+                    sizes="56px"
+                    className="object-cover"
+                  />
                 </span>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">Patna provider directory</p>
-                  <p className="truncate text-xs text-muted-foreground">20 hospital listings · 83 doctor records</p>
+                  <p className="truncate text-sm font-semibold">Patna care network</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    20 hospital listings · 83 doctor records
+                  </p>
                 </div>
                 <Badge variant="warning" className="ml-auto shrink-0">
                   Unverified
@@ -228,9 +275,9 @@ function Hero() {
                 <Sparkles aria-hidden className="size-3.5 text-primary" />
                 AI health assistant
               </p>
-              <p className="mt-2 text-sm font-semibold">Informational guidance only</p>
+              <p className="mt-2 text-sm font-semibold">Ask, or paste a photo</p>
               <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                Not a diagnosis or prescription. Emergency signs always need real care.
+                Share a report or a photo right in the chat. Guidance only — not a diagnosis.
               </p>
               <Button asChild variant="ghost" size="sm" className="-ml-2 mt-1.5 h-7 px-2 text-xs">
                 <Link href="/assistant">
@@ -247,6 +294,7 @@ function Hero() {
          * ------------------------------------------------------------------ */}
         <motion.div {...rise(0.3)} className="mt-16 lg:mt-20">
           <CareSearch variant="hero" />
+
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
               <Star aria-hidden className="size-3.5 text-warning" />
@@ -256,9 +304,22 @@ function Hero() {
               <Link
                 key={item.label}
                 href={item.href}
-                className="rounded-lg border border-border bg-card/70 px-3 py-1 text-xs font-medium transition-colors duration-[var(--duration-base)] ease-[var(--ease-soft)] hover:border-primary/45 hover:text-primary"
+                className={`rounded-lg border border-border bg-card/70 px-3 py-1 text-xs font-medium hover:border-primary/45 hover:text-primary ${pressLink}`}
               >
                 {item.label}
+              </Link>
+            ))}
+          </div>
+
+          <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1">
+            {heroSpecialties.map((specialty) => (
+              <Link
+                key={specialty.id}
+                href={`/hospitals?specialty=${encodeURIComponent(specialty.name)}`}
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium hover:border-primary/45 hover:text-primary ${pressLink}`}
+              >
+                <Building2 aria-hidden className="size-3.5 text-primary/70" />
+                {specialty.name}
               </Link>
             ))}
           </div>

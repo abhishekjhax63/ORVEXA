@@ -190,28 +190,59 @@ export default function SakhaAI() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }
 
-  function chooseImage(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file) return;
+  /**
+   * Single validation path for every image source — file picker, camera and
+   * clipboard — so an unsupported paste reports the same thing a bad file does.
+   */
+  function validateImage(file: File): string | null {
     // Named explicitly: an iPhone set to "High Efficiency" delivers HEIC, and
     // "unsupported type" would leave the user with no idea what to change.
     if (file.type === "image/heic" || file.type === "image/heif") {
-      setComposerError(
-        "iPhone HEIC photos are not supported yet. Set Camera → Formats to “Most Compatible”, or attach a JPEG or PNG.",
-      );
-      return;
+      return "iPhone HEIC photos are not supported yet. Set Camera → Formats to “Most Compatible”, or attach a JPEG or PNG.";
     }
     if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
-      setComposerError("Choose a JPEG, PNG, or WebP image.");
-      return;
+      return "Choose a JPEG, PNG, or WebP image.";
     }
     if (file.size <= 0 || file.size > 5 * 1024 * 1024) {
-      setComposerError("Choose a non-empty image up to 5 MB.");
+      return "Choose a non-empty image up to 5 MB.";
+    }
+    return null;
+  }
+
+  function acceptImage(file: File) {
+    const error = validateImage(file);
+    if (error) {
+      setComposerError(error);
       return;
     }
     setComposerError(null);
+    // Replaces any existing attachment; the preview effect revokes the old URL.
     setSelectedImage({ file, preview: URL.createObjectURL(file) });
+  }
+
+  function chooseImage(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (file) acceptImage(file);
+  }
+
+  /**
+   * Clipboard paste. Only intercepts when the clipboard actually carries an
+   * image, so pasting text into the composer still behaves normally.
+   */
+  function handlePaste(event: React.ClipboardEvent<HTMLElement>) {
+    if (loading) return;
+    const items = event.clipboardData?.items;
+    if (!items) return;
+    for (let index = 0; index < items.length; index += 1) {
+      const item = items[index];
+      if (item.kind !== "file" || !item.type.startsWith("image/")) continue;
+      const file = item.getAsFile();
+      if (!file) continue;
+      event.preventDefault();
+      acceptImage(file);
+      return;
+    }
   }
 
   async function fileToDataUrl(file: File): Promise<string> {
@@ -391,6 +422,7 @@ export default function SakhaAI() {
       role="dialog"
       aria-label={`${CHATBOT_NAME} chat`}
       aria-modal="false"
+      onPaste={handlePaste}
     >
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 bg-primary text-primary-foreground shrink-0">
@@ -673,7 +705,9 @@ export default function SakhaAI() {
                     }}
                     onKeyDown={handleKey}
                     disabled={loading}
-                    placeholder={selectedImage ? "Ask about this image…" : "Type a message… (Enter to send)"}
+                    placeholder={
+                      selectedImage ? "Ask about this image…" : "Type a message…  (Enter to send · paste a photo)"
+                    }
                     aria-label="Chat message input"
                     className={cn(
                       "min-h-[40px] max-h-[120px] min-w-0 flex-1 resize-none overflow-y-auto rounded-xl border border-input bg-background px-3 py-2 text-sm",

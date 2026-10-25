@@ -262,11 +262,7 @@ function AssistantWorkspace({
 
   // --- Attachments ----------------------------------------------------------
 
-  async function chooseFile(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file) return;
-
+  async function uploadFile(file: File) {
     const kind = MIME_TO_UPLOAD_KIND[file.type];
     if (!kind) {
       setError("That file type is not supported. Choose a JPEG, PNG, or WebP image, PDF or text document, audio, or short video.");
@@ -296,6 +292,32 @@ function AssistantWorkspace({
       return;
     }
     setUploads((previous) => [...previous, result.data.upload]);
+  }
+
+  function chooseFile(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (file) void uploadFile(file);
+  }
+
+  /**
+   * Clipboard paste. A pasted screenshot or photo becomes an attachment exactly
+   * as if it had been chosen from the picker; a plain-text paste is left alone
+   * so a description can still be pasted into the text fields normally.
+   */
+  function handlePaste(event: React.ClipboardEvent<HTMLFormElement>) {
+    if (busy !== null || !stored) return;
+    const items = event.clipboardData?.items;
+    if (!items) return;
+    for (let index = 0; index < items.length; index += 1) {
+      const item = items[index];
+      if (item.kind !== "file" || !item.type.startsWith("image/")) continue;
+      const file = item.getAsFile();
+      if (!file) continue;
+      event.preventDefault();
+      void uploadFile(file);
+      return;
+    }
   }
 
   async function removeUpload(uploadId: string) {
@@ -482,7 +504,7 @@ function AssistantWorkspace({
         </CardContent>
       </Card>
 
-      <form onSubmit={submit} className="space-y-6">
+      <form onSubmit={submit} onPaste={handlePaste} className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -713,7 +735,10 @@ function AssistantWorkspace({
                 disabled={!stored || busy !== null || !signedIn}
               />
               <p className="text-xs text-muted-foreground">
-                Examples: a skin change, visible cut, burn, swelling, or a medical report. Review the preview and scan status before asking; image output is not a diagnosis. If scanning is not configured, the upload is clearly labeled unscanned.
+                Examples: a skin change, visible cut, burn, swelling, or a medical report. You can also paste a
+                screenshot or photo straight in (Ctrl/Cmd&nbsp;+&nbsp;V). Review the preview and scan status before
+                asking; image output is not a diagnosis. If scanning is not configured, the upload is clearly labeled
+                unscanned.
               </p>
             </div>
 

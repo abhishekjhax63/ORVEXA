@@ -111,11 +111,11 @@ function CinematicIntro() {
           exit={{ opacity: 0, scale: 1.015 }}
           transition={{ duration: 0.62, ease: EASE_CINEMATIC }}
         >
-          {/* Ambient brand light + faint measurement grid. */}
-          <div aria-hidden className="aurora pointer-events-none absolute inset-0 opacity-70" />
+          {/* Ambient brand light — a single soft emerald wash, no grid. */}
+          <div aria-hidden className="aurora pointer-events-none absolute inset-0 opacity-80" />
           <div
             aria-hidden
-            className="grid-backdrop pointer-events-none absolute inset-0 opacity-[0.32] [mask-image:radial-gradient(58%_48%_at_50%_44%,#000_0%,transparent_100%)]"
+            className="pointer-events-none absolute inset-0 [background:radial-gradient(46%_38%_at_50%_42%,color-mix(in_oklab,var(--color-lime-400)_26%,transparent),transparent_72%)]"
           />
 
           <p role="status" className="sr-only">
@@ -138,56 +138,56 @@ function CinematicIntro() {
                 animate={{ opacity: 1, rotateY: 0, rotateX: 0, scale: 1, y: 0 }}
                 transition={{ duration: 1.5, ease: EASE_CINEMATIC }}
               >
-                {/* Extruded body of the sealed medallion. Each disc sits on its
+                {/* Extruded body of the sealed medallion. Each plate sits on its
                     own Z plane, so the perspective rotation exposes real depth. */}
-                <span className="absolute size-[13rem] rounded-full bg-forest-950/35 blur-[6px] [transform:translateZ(-76px)_scale(0.9)]" />
-                <span className="absolute size-[13rem] rounded-full bg-forest-950 [transform:translateZ(-60px)]" />
-                <span className="absolute size-[13rem] rounded-full bg-forest-900 [transform:translateZ(-45px)]" />
-                <span className="absolute size-[13rem] rounded-full bg-forest-800 [transform:translateZ(-30px)]" />
-                <span className="absolute size-[13rem] rounded-full bg-forest-700 [transform:translateZ(-15px)]" />
+                <span className="absolute size-[12.5rem] rounded-[2.4rem] bg-forest-950/35 blur-[6px] [transform:translateZ(-76px)_scale(0.9)]" />
+                <span className="absolute size-[12.5rem] rounded-[2.4rem] bg-forest-950 [transform:translateZ(-60px)]" />
+                <span className="absolute size-[12.5rem] rounded-[2.4rem] bg-forest-900 [transform:translateZ(-45px)]" />
+                <span className="absolute size-[12.5rem] rounded-[2.4rem] bg-forest-800 [transform:translateZ(-30px)]" />
+                <span className="absolute size-[12.5rem] rounded-[2.4rem] bg-forest-700 [transform:translateZ(-15px)]" />
 
                 {/* Polished face. */}
-                <span className="relative grid size-[13rem] place-items-center overflow-hidden rounded-full bg-white shadow-[0_30px_70px_-30px_rgba(8,41,29,0.55)] ring-1 ring-forest-950/10 [transform:translateZ(6px)]">
+                <span className="relative grid size-[12.5rem] place-items-center overflow-hidden rounded-[2.4rem] bg-[#eaf3ee] shadow-[0_30px_70px_-30px_rgba(8,41,29,0.55)] ring-1 ring-forest-950/10 [transform:translateZ(6px)]">
                   <span
                     aria-hidden
-                    className="absolute inset-0 rounded-full opacity-[0.5] [background:conic-gradient(from_140deg,rgba(184,243,107,0.55),transparent_28%,transparent_64%,rgba(18,59,42,0.35))]"
+                    className="absolute inset-0 rounded-[2.4rem] opacity-[0.45] [background:conic-gradient(from_140deg,rgba(184,243,107,0.5),transparent_30%,transparent_62%,rgba(18,59,42,0.3))]"
                   />
                   <span
                     aria-hidden
                     className="animate-spin-slow absolute -inset-1/4 [background:conic-gradient(from_0deg,transparent_0%,rgba(184,243,107,0.35)_12%,transparent_26%)]"
                   />
                   <Image
-                    src="/orvexa-logo.png"
+                    src="/brand/logo-emerald-mark.png"
                     alt=""
                     width={220}
                     height={220}
                     priority
-                    className="relative size-[7.75rem] object-contain"
+                    className="relative size-[10.25rem] object-contain"
                   />
                 </span>
 
-                {/* Chromatic light streaks, as in the logo reference. */}
+                {/* Chromatic light streaks, in the brand's emerald/mint/teal. */}
                 <span className="pointer-events-none absolute inset-[-42%] [transform:translateZ(24px)]">
                   <motion.span
-                    className="absolute top-[28%] left-[-20%] h-px w-[86%] bg-[linear-gradient(90deg,transparent,rgba(34,211,238,0.85),transparent)] blur-[1.5px]"
+                    className="absolute top-[28%] left-[-20%] h-px w-[86%] bg-[linear-gradient(90deg,transparent,rgba(45,212,191,0.85),transparent)] blur-[1.5px]"
                     initial={{ x: "-40%", opacity: 0 }}
                     animate={{ x: "60%", opacity: [0, 0.9, 0] }}
                     transition={{ duration: 1.9, delay: 0.32, ease: "easeInOut" }}
                   />
                   <motion.span
-                    className="absolute top-[52%] left-[-14%] h-px w-[80%] bg-[linear-gradient(90deg,transparent,rgba(217,70,239,0.7),transparent)] blur-[1.5px]"
+                    className="absolute top-[52%] left-[-14%] h-px w-[80%] bg-[linear-gradient(90deg,transparent,rgba(184,243,107,0.8),transparent)] blur-[1.5px]"
                     initial={{ x: "45%", opacity: 0 }}
                     animate={{ x: "-55%", opacity: [0, 0.8, 0] }}
                     transition={{ duration: 2, delay: 0.44, ease: "easeInOut" }}
                   />
                   <motion.span
-                    className="absolute top-[70%] left-[-24%] h-px w-[92%] bg-[linear-gradient(90deg,transparent,rgba(167,139,250,0.7),transparent)] blur-[1.5px]"
+                    className="absolute top-[70%] left-[-24%] h-px w-[92%] bg-[linear-gradient(90deg,transparent,rgba(74,138,98,0.8),transparent)] blur-[1.5px]"
                     initial={{ x: "-30%", opacity: 0 }}
                     animate={{ x: "55%", opacity: [0, 0.75, 0] }}
                     transition={{ duration: 1.85, delay: 0.56, ease: "easeInOut" }}
                   />
                   <motion.span
-                    className="absolute top-[12%] left-[6%] h-24 w-px bg-[linear-gradient(180deg,transparent,rgba(184,243,107,0.8),transparent)] blur-[1.5px]"
+                    className="absolute top-[12%] left-[6%] h-24 w-px bg-[linear-gradient(180deg,transparent,rgba(45,212,191,0.8),transparent)] blur-[1.5px]"
                     initial={{ y: "-25%", opacity: 0 }}
                     animate={{ y: "25%", opacity: [0, 0.85, 0] }}
                     transition={{ duration: 1.7, delay: 0.5, ease: "easeInOut" }}

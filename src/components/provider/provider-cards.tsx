@@ -3,7 +3,7 @@ import { ExternalLink, MapPin, Phone, Stethoscope } from "lucide-react";
 
 import { ProviderImage } from "@/components/provider/provider-image";
 import { Badge } from "@/components/ui/badge";
-import { getNeutralMedicalPlaceholder } from "@/lib/images";
+import { getDoctorImage, getHospitalImage, getNeutralMedicalPlaceholder } from "@/lib/images";
 import { cn } from "@/lib/utils";
 import type { Hospital } from "@/types";
 
@@ -23,6 +23,7 @@ type HospitalCardProps = {
 /** Presentational hospital card shared by the homepage spotlight and the directory. */
 function HospitalCard({ hospital, action, className }: HospitalCardProps) {
   const phoneHref = telephoneHref(hospital.phone);
+  const image = getHospitalImage(hospital);
 
   return (
     <article
@@ -34,10 +35,10 @@ function HospitalCard({ hospital, action, className }: HospitalCardProps) {
     >
       <div className="flex aspect-[16/9] items-center justify-between gap-4 bg-primary-soft px-6">
         <ProviderImage
-          src={hospital.authenticImageUrl ?? null}
+          src={image.url}
           alt={`${hospital.name}, ${hospital.locality}, ${hospital.city}`}
           placeholder={getNeutralMedicalPlaceholder("hospital", hospital.name)}
-          attribution={hospital.imageAttribution}
+          attribution={image.attribution}
           width={240}
           height={240}
           className="size-24 shrink-0 rounded-xl border border-border/60"
@@ -134,6 +135,7 @@ type DoctorCardProps = {
 /** Presentational doctor card shared by the homepage spotlight and the directory. */
 function DoctorCard({ doctor, action, className }: DoctorCardProps) {
   const phoneHref = telephoneHref(doctor.phone);
+  const image = getDoctorImage(doctor);
 
   return (
     <article
@@ -145,10 +147,10 @@ function DoctorCard({ doctor, action, className }: DoctorCardProps) {
     >
       <div className="flex items-start gap-4">
         <ProviderImage
-          src={doctor.authenticImageUrl ?? null}
+          src={image.url}
           alt={`${doctor.name}, ${doctor.specialty}`}
           placeholder={getNeutralMedicalPlaceholder("doctor", doctor.name)}
-          attribution={doctor.imageAttribution}
+          attribution={image.attribution}
           width={128}
           height={128}
           className="size-16 shrink-0 rounded-full border border-border/60"

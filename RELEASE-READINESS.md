@@ -140,6 +140,10 @@ copy-pasted, and a trailing `# ...` is not stripped by every shell, so it would
 be passed to the command as arguments (a `(...)` in the comment can even be read
 as a glob qualifier and abort the whole line).
 
+`npm run dev` and `npm start` both bind **port 3000**, so run only one at a time
+— the second exits with `EADDRINUSE: address already in use 0.0.0.0:3000`. Free
+the port first with `lsof -ti:3000 | xargs -r kill`.
+
 ```bash
 # Install
 npm ci

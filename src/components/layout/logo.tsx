@@ -7,14 +7,12 @@ import { cn } from "@/lib/utils";
 function LogoMark({ className }: { className?: string }) {
   return (
     <Image
-      src="/orvexa-logo.png"
+      src="/brand/logo-emerald-mark.png"
       alt=""
-      width={36}
-      height={36}
-      className={cn(
-        "size-9 shrink-0 rounded-xl object-cover ring-1 ring-forest-950/10 shadow-[var(--shadow-soft)]",
-        className,
-      )}
+      width={72}
+      height={72}
+      priority
+      className={cn("size-9 shrink-0 object-contain drop-shadow-[0_6px_16px_rgba(8,41,29,0.18)]", className)}
     />
   );
 }

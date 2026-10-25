@@ -34,7 +34,10 @@ function PageHero({
   return (
     <div className={cn("relative overflow-hidden border-b border-border bg-card", className)}>
       <div aria-hidden className="pointer-events-none absolute inset-0 aurora opacity-70" />
-      <div aria-hidden className="pointer-events-none absolute inset-0 grid-backdrop opacity-[0.35]" />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 [background:radial-gradient(40%_60%_at_88%_0%,color-mix(in_oklab,var(--accent)_18%,transparent),transparent_70%)]"
+      />
       <Container className="relative py-14 sm:py-18 lg:py-20">
         {breadcrumbs?.length ? (
           <nav aria-label="Breadcrumb" className="mb-6">

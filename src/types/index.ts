@@ -86,6 +86,7 @@ export type Hospital = {
   coordinates?: { latitude: number; longitude: number };
   authenticImageUrl?: string;
   imageAttribution?: string;
+  about?: string;
 };
 
 export type Doctor = {

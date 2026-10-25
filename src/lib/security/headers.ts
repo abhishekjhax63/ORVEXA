@@ -48,7 +48,10 @@ function contentSecurityPolicy() {
     "default-src 'self'",
     "base-uri 'self'",
     "object-src 'none'",
-    "frame-ancestors 'none'",
+    // Nothing may be framed in production. Development allows the same origin
+    // only, so the IDE preview pane and other local tooling can embed the app
+    // without the policy that protects real deployments being loosened.
+    isProduction ? "frame-ancestors 'none'" : "frame-ancestors 'self'",
     "form-action 'self'",
     // Next.js runtime bootstrap, plus the payment and video SDKs.
     `script-src ${scriptSources.join(" ")}`,
@@ -97,7 +100,7 @@ export const SECURITY_HEADERS: ReadonlyArray<{ key: string; value: string }> = [
    */
   { key: "X-Content-Type-Options", value: "nosniff" },
   /** CSP `frame-ancestors` covers modern browsers; this covers the rest. */
-  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Frame-Options", value: isProduction ? "DENY" : "SAMEORIGIN" },
   /**
    * Patient identifiers appear in URLs (`/appointments/<id>`). Sending only the
    * origin on cross-site navigation keeps those ids out of third-party logs.
