@@ -29,14 +29,14 @@ function TelemedicineRecordsSection() {
       <div className="relative">
         <Reveal className="max-w-3xl">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold tracking-[0.14em] text-teal-200 uppercase">
-            Telemedicine &amp; records
+            Service availability
           </span>
           <h2 className="mt-4 text-3xl font-semibold text-white sm:text-4xl lg:text-[2.6rem] lg:leading-[1.12]">
-            Consult from anywhere. Keep every record forever.
+            Telemedicine and patient records are not connected
           </h2>
           <p className="mt-4 text-base leading-relaxed text-white/70 sm:text-lg">
-            Video consultations, e-signed prescriptions and a clinical timeline that belongs to the patient — not to
-            whichever hospital happened to issue it.
+            This build does not offer video consultations, digital prescriptions, a patient-record dashboard or ABHA
+            linkage.
           </p>
         </Reveal>
 
@@ -58,7 +58,7 @@ function TelemedicineRecordsSection() {
                   </span>
                   <div>
                     <p className="text-sm font-semibold">Telemedicine</p>
-                    <p className="text-xs text-white/70">Encrypted WebRTC · average wait 12 minutes</p>
+                    <p className="text-xs text-white/70">Illustrative module · consultations are not connected</p>
                   </div>
                 </div>
               </div>
@@ -81,7 +81,7 @@ function TelemedicineRecordsSection() {
                 <li className="mt-auto pt-2">
                   <Button asChild variant="outline" className="border-white/25 bg-white/5 text-white hover:bg-white/10 hover:text-white">
                     <Link href="/services#telemedicine">
-                      Start a consultation
+                      Review consultation status
                       <ArrowRight aria-hidden />
                     </Link>
                   </Button>
@@ -107,7 +107,7 @@ function TelemedicineRecordsSection() {
                   </span>
                   <div>
                     <p className="text-sm font-semibold">Health records vault</p>
-                    <p className="text-xs text-white/70">ABHA linked · AES-256 at rest</p>
+                    <p className="text-xs text-white/70">Records storage and ABHA linkage are not configured</p>
                   </div>
                 </div>
               </div>
@@ -129,8 +129,8 @@ function TelemedicineRecordsSection() {
                 ))}
                 <li className="mt-auto pt-2">
                   <Button asChild variant="outline" className="border-white/25 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-                    <Link href="/dashboard/records">
-                      Open my records
+                    <Link href="/help#search">
+                      Review record status
                       <ArrowRight aria-hidden />
                     </Link>
                   </Button>

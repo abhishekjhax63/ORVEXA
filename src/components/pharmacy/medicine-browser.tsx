@@ -60,8 +60,8 @@ type CartEntry = { medicine: Medicine; quantity: number };
 
 /**
  * MediCare catalogue browser. Search, category filtering, sorting and the cart
- * all run client-side over the typed demo inventory. Checkout is deliberately
- * not wired in Phase 1 and says so instead of faking a confirmed order.
+ * all run client-side over the sample inventory. Checkout is not connected and
+ * says so instead of faking a confirmed order.
  */
 function MedicineBrowser() {
   const [query, setQuery] = useState("");
@@ -357,7 +357,7 @@ function MedicineBrowser() {
               </p>
             </div>
             <Badge variant="neutral" className="ml-auto">
-              Phase 1 preview
+              Sample data
             </Badge>
           </div>
 
@@ -366,7 +366,7 @@ function MedicineBrowser() {
               icon={ShoppingCart}
               size="compact"
               title="Your cart is empty"
-              description="Add a medicine to see how the MediCare flow works. Nothing is ordered, charged or delivered in Phase 1."
+              description="Add a sample item to preview the local cart. Nothing is ordered, charged or delivered."
               secondaryAction={
                 <Button asChild variant="outline" size="sm">
                   <Link href="/help#pharmacy">Prescription help</Link>
@@ -449,7 +449,7 @@ function MedicineBrowser() {
                   Proceed to checkout
                 </Button>
                 <p className="text-center text-xs text-muted-foreground">
-                  Checkout and payment go live in Phase 2.
+                  Checkout and payment are not connected.
                 </p>
               </div>
             </>
@@ -462,7 +462,7 @@ function MedicineBrowser() {
           <DialogHeader>
             <DialogTitle>Checkout is not live yet</DialogTitle>
             <DialogDescription>
-              MediCare ordering, payments and delivery tracking arrive with the pharmacy integration in Phase 2. Your
+              MediCare ordering, payments and delivery tracking are not connected. Your
               cart lives in this browser only — no order is placed, no pharmacist is assigned and no payment is taken.
             </DialogDescription>
           </DialogHeader>
@@ -475,11 +475,11 @@ function MedicineBrowser() {
 
           <div className="flex flex-col gap-3">
             <RequestDialog
-              triggerLabel="Remind me when it launches"
+              triggerLabel="Preview the reminder form"
               triggerSize="lg"
               triggerClassName="w-full"
-              title="Get told when MediCare ordering opens"
-              description="Leave a number and we will message you the moment ordering, payment and delivery tracking go live in your pin code."
+              title="Pharmacy reminder form preview"
+              description="This local preview does not register a reminder or send a message. Do not enter real contact details."
               fields={[
                 {
                   name: "patientName",
@@ -503,10 +503,7 @@ function MedicineBrowser() {
                   description: "We only alert pin codes that MediCare can serve.",
                 },
               ]}
-              submitLabel="Notify me"
-              successTitle="You are on the launch list"
-              successBody="You would receive a single message when MediCare ordering opens in your pin code."
-              footnote="Phase 1 has no notification backend. This form validates your details and shows the confirmation state, but no message leaves your browser."
+              footnote="Do not enter real contact details. This prototype has no notification backend."
             />
             <Button asChild variant="outline" size="lg" className="w-full">
               <Link href="/help#pharmacy">

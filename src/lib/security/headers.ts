@@ -36,6 +36,14 @@ const isProduction = process.env.NODE_ENV === "production";
  * quietly POST a patient's data to an unknown host.
  */
 function contentSecurityPolicy() {
+  const scriptSources = [
+    "'self'",
+    "'unsafe-inline'",
+    "https://checkout.razorpay.com",
+    "https://sdk.twilio.com",
+  ];
+  if (!isProduction) scriptSources.push("'unsafe-eval'");
+
   const directives = [
     "default-src 'self'",
     "base-uri 'self'",
@@ -43,7 +51,7 @@ function contentSecurityPolicy() {
     "frame-ancestors 'none'",
     "form-action 'self'",
     // Next.js runtime bootstrap, plus the payment and video SDKs.
-    "script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://sdk.twilio.com",
+    `script-src ${scriptSources.join(" ")}`,
     "style-src 'self' 'unsafe-inline'",
     // Map tiles, signed document previews and the platform image service are
     // all cross-origin; `data:`/`blob:` cover canvas-generated assets.
@@ -55,6 +63,7 @@ function contentSecurityPolicy() {
       "wss://*.supabase.co",
       "https://api.mapbox.com",
       "https://events.mapbox.com",
+      "https://maps.geoapify.com",
       "https://api.razorpay.com",
       "https://lumberjack.razorpay.com",
     ].join(" "),
@@ -94,17 +103,13 @@ export const SECURITY_HEADERS: ReadonlyArray<{ key: string; value: string }> = [
    * origin on cross-site navigation keeps those ids out of third-party logs.
    */
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  /**
-   * Deny the powerful browser APIs by default. Geolocation and camera are not
-   * enabled here: emergency location is captured server-side, and video runs in
-   * the provider's SDK, not through a raw `getUserMedia` in our own frame.
-   */
+  /** Allow consent-driven location and media capture in this origin only. */
   {
     key: "Permissions-Policy",
     value: [
-      "camera=()",
-      "microphone=()",
-      "geolocation=()",
+      "camera=(self)",
+      "microphone=(self)",
+      "geolocation=(self)",
       "payment=(self)",
       "usb=()",
       "browsing-topics=()",

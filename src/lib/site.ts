@@ -6,15 +6,15 @@
 
 export const siteConfig = {
   name: "ORVEXA",
-  legalName: "ORVEXA Health Technologies Pvt. Ltd.",
+  legalName: "ORVEXA",
   tagline: "One ecosystem for every health decision",
   description:
-    "ORVEXA brings hospitals, doctors, diagnostics, pharmacy delivery, insurance and AI-assisted care guidance into a single, trusted healthcare platform built for India.",
+    "ORVEXA is a healthcare platform prototype with a supplied Patna provider directory and AI-assisted guidance features that depend on deployment configuration.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.orvexa.health",
-  supportEmail: "care@orvexa.health",
-  supportPhone: "+91 1800 200 4000",
+  supportEmail: "flex8india@gmail.com",
+  supportPhone: "7061241812",
   emergencyNumber: "108",
-  address: "Prestige Tech Park, Outer Ring Road, Bengaluru, Karnataka 560103",
+  address: "Amity University Patna, Bailey Road, 801503, Patna, Bihar",
   locale: "en-IN",
 } as const;
 
@@ -39,11 +39,9 @@ export type NavGroup = {
 /** Links rendered inline in the desktop navbar. */
 export const primaryNav: NavItem[] = [
   { title: "Services", href: "/services", description: "Every ORVEXA care module" },
-  { title: "Hospitals & Doctors", href: "/hospitals", description: "Verified providers near you" },
-  { title: "Pharmacy", href: "/pharmacy", description: "Medicines delivered in 90 minutes" },
-  { title: "AI Assistant", href: "/ai-assistant", description: "Guided symptom triage" },
-  { title: "BMI & Health", href: "/health/bmi", description: "Calculate BMI and view body model" },
-  { title: "BMI & Health", href: "/health/bmi", description: "Calculate BMI and view body model" },
+  { title: "Hospitals & Doctors", href: "/hospitals", description: "Supplied, unverified Patna listings" },
+  { title: "Pharmacy", href: "/pharmacy", description: "Browse pharmacy information" },
+  { title: "AI Assistant", href: "/assistant", description: "AI workspace and image analysis" },
 ];
 
 /** Grouped links surfaced through the navbar "More" menu. */
@@ -51,22 +49,21 @@ export const secondaryNav: NavGroup[] = [
   {
     title: "Care Services",
     items: [
-      { title: "Diagnostics", href: "/diagnostics", description: "Lab tests and home collection" },
-      { title: "Insurance", href: "/insurance", description: "Compare and claim easily" },
-      { title: "Telemedicine", href: "/services#telemedicine", description: "Consult in minutes" },
+      { title: "Diagnostics", href: "/diagnostics", description: "Sample packages; no lab booking" },
+      { title: "Insurance", href: "/insurance", description: "Information; no insurer integration" },
+      { title: "Telemedicine", href: "/services#telemedicine", description: "Telemedicine service status" },
     ],
   },
   {
     title: "Emergency",
     items: [
-      { title: "Emergency SOS", href: "/emergency", description: "Raise an incident, find nearby care", badge: "24×7" },
+      { title: "Emergency information", href: "/emergency", description: "Call 108 directly; ORVEXA cannot dispatch" },
     ],
   },
   {
-    title: "AI & Records",
+    title: "AI workspace",
     items: [
-      { title: "AI Assistant", href: "/ai-assistant", description: "Guided symptom triage" },
-      { title: "Health records", href: "/dashboard/records", description: "Your medical data" },
+      { title: "AI Assistant", href: "/assistant", description: "AI workspace and image analysis" },
     ],
   },
   {
@@ -79,9 +76,9 @@ export const secondaryNav: NavGroup[] = [
   {
     title: "Company",
     items: [
-      { title: "About", href: "/about", description: "Our clinical mission" },
-      { title: "Help centre", href: "/help", description: "Answers and support" },
-      { title: "Contact", href: "/contact", description: "Talk to our team" },
+      { title: "About", href: "/about", description: "About ORVEXA" },
+      { title: "Help centre", href: "/help", description: "Project information and service status" },
+      { title: "Contact", href: "/contact", description: "Provided contact details" },
     ],
   },
 ];
@@ -95,16 +92,14 @@ export const footerNav: NavGroup[] = [
       { title: "Diagnostics", href: "/diagnostics" },
       { title: "Pharmacy", href: "/pharmacy" },
       { title: "Insurance", href: "/insurance" },
-      { title: "AI Health Assistant", href: "/ai-assistant" },
+      { title: "AI Health Assistant", href: "/assistant" },
     ],
   },
   {
     title: "Patients",
     items: [
-      { title: "Patient dashboard", href: "/dashboard" },
-      { title: "Book an appointment", href: "/hospitals" },
-      { title: "Health records", href: "/dashboard/records" },
-      { title: "Emergency SOS", href: "/emergency" },
+      { title: "Browse provider listings", href: "/hospitals" },
+      { title: "Emergency information", href: "/emergency" },
       { title: "Sign in", href: "/login" },
       { title: "Create account", href: "/register" },
     ],

@@ -7,7 +7,6 @@ import {
   CalendarClock,
   Check,
   ClipboardList,
-  FlaskConical,
   Home,
   LifeBuoy,
   Microscope,
@@ -29,15 +28,9 @@ import { diagnosticPackages, diagnosticsTrust } from "@/data/diagnostics";
 export const metadata: Metadata = {
   title: "Diagnostics and lab tests",
   description:
-    "Book NABL-accredited pathology and radiology tests with certified home sample collection in serviceable areas. Digital reports are filed inside your ORVEXA health record.",
+    "Browse sample diagnostic packages. ORVEXA has no connected laboratory, booking, sample collection or report-delivery service.",
   alternates: { canonical: "/diagnostics" },
 };
-
-/** Both figures come from the catalogue so the hero can never contradict it. */
-const fastestReportHours = Math.min(
-  ...diagnosticPackages.map((item) => Number(item.reportTime.match(/\d+/)?.[0] ?? Number.MAX_SAFE_INTEGER)),
-);
-const homeCollectionCount = diagnosticPackages.filter((item) => item.homeCollection).length;
 
 type CollectionStep = {
   icon: LucideIcon;
@@ -51,33 +44,31 @@ type CollectionStep = {
 const collectionSteps: CollectionStep[] = [
   {
     icon: CalendarClock,
-    title: "Choose a package or a single test",
+    title: "Browse the sample catalogue",
     description:
-      "Pick from the catalogue or ask the care desk to build a panel. Price, fasting window and report timing are confirmed before you pay.",
-    meta: "2 minutes",
+      "Package names, prices, fasting details and report times are illustrative only and have not been confirmed by a lab.",
+    meta: "Sample information",
   },
   {
     icon: Home,
-    title: "A certified phlebotomist reaches you",
+    title: "No home collection service",
     description:
-      "In serviceable pin codes a background-verified phlebotomist arrives within 60 minutes of your slot, carrying single-use, pre-barcoded vials.",
-    meta: "Within 60 minutes",
+      "ORVEXA is not connected to phlebotomists or collection centres. Contact a licensed laboratory directly.",
+    meta: "Not available",
   },
   {
-    icon: FlaskConical,
-    title: "Samples processed at an accredited lab",
+    icon: Microscope,
+    title: "No laboratory integration",
     description:
-      "Cold-chain transport to the nearest NABL-accredited laboratory, where a pathologist verifies every result before it is released.",
-    meta: "Same day",
+      "No partner laboratory, accreditation record, sample tracking or result-verification workflow is connected.",
+    meta: "Not available",
   },
   {
     icon: ClipboardList,
-    title: "Report filed in your ORVEXA record",
+    title: "No report delivery",
     description:
-      "The digital report is stored against your patient record and can be shared with any doctor you consult next — no forwarding, no scanning.",
-    meta: "In 8–24 hours",
-    href: "/dashboard/records",
-    hrefLabel: "Open health records",
+      "This page cannot receive or store diagnostic reports. Do not enter personal or medical information into a sample booking flow.",
+    meta: "Not available",
   },
 ];
 
@@ -86,8 +77,8 @@ export default function DiagnosticsPage() {
     <>
       <PageHero
         eyebrow="Diagnostics"
-        title="NABL-accredited lab tests with home sample collection"
-        description="Every package is processed at a laboratory that holds current NABL accreditation, and in serviceable pin codes a certified phlebotomist reaches you within 60 minutes of your chosen slot. Reports are filed as digital records inside your ORVEXA account, not left as a PDF in an inbox."
+        title="Sample diagnostic packages"
+        description="This is a sample catalogue for demonstration only. ORVEXA does not book tests, arrange sample collection, verify laboratory accreditation or deliver reports."
         breadcrumbs={[
           { title: "Home", href: "/" },
           { title: "Diagnostics", href: "/diagnostics" },
@@ -96,53 +87,51 @@ export default function DiagnosticsPage() {
           <>
             <Button asChild variant="gradient" size="lg">
               <a href="#packages">
-                Browse health packages
+                Browse sample packages
                 <ArrowRight aria-hidden />
               </a>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <a href="#process">How collection works</a>
+              <a href="#process">Service availability</a>
             </Button>
           </>
         }
         aside={
           <div className="rounded-[1.75rem] border border-border bg-card/85 p-6 shadow-[var(--shadow-panel)] backdrop-blur-sm">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">Collection facts</p>
+              <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">Service status</p>
               <Badge variant="demo">Demo</Badge>
             </div>
             <dl className="mt-5 grid grid-cols-2 gap-4">
               <div>
-                <dt className="text-xs text-muted-foreground">Laboratory standard</dt>
-                <dd className="mt-1 text-2xl font-semibold">NABL</dd>
+                <dt className="text-xs text-muted-foreground">Lab integration</dt>
+                <dd className="mt-1 text-2xl font-semibold">None</dd>
               </div>
               <div>
-                <dt className="text-xs text-muted-foreground">Fastest report</dt>
-                <dd className="mt-1 text-2xl font-semibold">{fastestReportHours} hrs</dd>
+                <dt className="text-xs text-muted-foreground">Accreditation</dt>
+                <dd className="mt-1 text-2xl font-semibold">Unverified</dd>
               </div>
               <div>
-                <dt className="text-xs text-muted-foreground">Packages with home collection</dt>
-                <dd className="mt-1 text-2xl font-semibold">
-                  {homeCollectionCount}/{diagnosticPackages.length}
-                </dd>
+                <dt className="text-xs text-muted-foreground">Home collection</dt>
+                <dd className="mt-1 text-2xl font-semibold">Unavailable</dd>
               </div>
               <div>
-                <dt className="text-xs text-muted-foreground">Tests on platform</dt>
-                <dd className="mt-1 text-2xl font-semibold">1,200+</dd>
+                <dt className="text-xs text-muted-foreground">Report delivery</dt>
+                <dd className="mt-1 text-2xl font-semibold">Unavailable</dd>
               </div>
             </dl>
             <ul className="mt-6 space-y-2.5 border-t border-border pt-5 text-xs text-muted-foreground">
               <li className="flex items-start gap-2">
                 <ShieldCheck aria-hidden className="mt-0.5 size-3.5 shrink-0 text-success" />
-                Accreditation checked and re-verified every year
+                No laboratory accreditation has been verified
               </li>
               <li className="flex items-start gap-2">
                 <Microscope aria-hidden className="mt-0.5 size-3.5 shrink-0 text-primary" />
-                Pathologist sign-off on every released report
+                No report review workflow is connected
               </li>
               <li className="flex items-start gap-2">
                 <Timer aria-hidden className="mt-0.5 size-3.5 shrink-0 text-primary" />
-                95% of bookings reported inside the promised window
+                No booking or turnaround-time service is connected
               </li>
             </ul>
           </div>
@@ -153,12 +142,12 @@ export default function DiagnosticsPage() {
         <Reveal>
           <SectionHeading
             eyebrow="Health packages"
-            title={<span id="packages-heading">Find the right panel, then book a collection</span>}
-            description="Filter by concern, search the tests inside each package and compare prices, fasting requirements and report windows. Discounts are calculated from the listed price and MRP."
+            title={<span id="packages-heading">Explore the sample catalogue</span>}
+            description="Filter the illustrative package list and review its sample test names and prices. None of the packages, discounts, report times or collection options are confirmed offers."
             actions={
               <Button asChild variant="outline">
                 <a href="#process">
-                  What happens after booking
+                  What is and is not available
                   <ArrowRight aria-hidden />
                 </a>
               </Button>
@@ -169,17 +158,17 @@ export default function DiagnosticsPage() {
           <PackageBrowser />
         </div>
         <DemoNotice className="mt-8">
-          Package prices, test counts and report timings are illustrative samples for Phase 1 reviews. No collection
-          request leaves your browser until the laboratory APIs are connected.
+          All package details are sample data. Booking is unavailable; do not submit personal, contact or medical
+          information here.
         </DemoNotice>
       </Section>
 
       <Section id="process" tone="muted" spacing="default" aria-labelledby="process-heading">
         <Reveal>
           <SectionHeading
-            eyebrow="Sample collection"
-            title={<span id="process-heading">From booking to a signed report</span>}
-            description="Four steps, each one recorded so you always know where your sample is and who is handling it."
+            eyebrow="Service status"
+            title={<span id="process-heading">No live diagnostics workflow</span>}
+            description="These status cards explain which laboratory services are not connected to ORVEXA."
           />
         </Reveal>
 
@@ -217,8 +206,7 @@ export default function DiagnosticsPage() {
         <Reveal className="mt-8">
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
             <BadgeIndianRupee aria-hidden className="size-4 text-primary" />
-            Fasting packages are scheduled in the early slots. Pay only after the collection is confirmed, and
-            reschedule free of charge up to two hours before the visit.
+            This sample page does not accept payment, schedule collection or confirm a laboratory appointment.
           </p>
         </Reveal>
       </Section>
@@ -228,7 +216,7 @@ export default function DiagnosticsPage() {
           <SectionHeading
             eyebrow="Test reference"
             title={<span id="tests-heading">What each package actually tests</span>}
-            description="A quick reference of the headline markers in every package. The complete assay list is shared before collection, and you can ask for a single test instead of a panel."
+            description="Sample test names only. They are not a confirmed assay list or a medical recommendation; contact a licensed laboratory for current details."
           />
         </Reveal>
 
@@ -255,11 +243,11 @@ export default function DiagnosticsPage() {
                     ))}
                   </ul>
                   <p className="mt-4 text-xs">
-                    Headline markers only. This panel runs {pkg.testCount} analytes in total.
+                    Sample information only. The actual test panel and analytes have not been verified.
                   </p>
                   <Button asChild variant="link" size="sm" className="mt-1 px-0">
                     <a href="#packages">
-                      See price and book this package
+                      See sample package
                       <ArrowRight aria-hidden />
                     </a>
                   </Button>
@@ -273,14 +261,14 @@ export default function DiagnosticsPage() {
       <Section id="trust" tone="navy" spacing="default" aria-labelledby="trust-heading">
         <Reveal className="max-w-3xl">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold tracking-[0.14em] text-teal-200 uppercase">
-            Why the report can be trusted
+            No connected laboratory service
           </span>
           <h2 id="trust-heading" className="mt-4 text-3xl font-semibold text-white sm:text-4xl lg:text-[2.6rem]">
-            Accreditation, chain of custody and a second read on imaging
+            Accreditation, sample handling and report review are not provided
           </h2>
           <p className="mt-4 text-base leading-relaxed text-white/70 sm:text-lg">
-            A laboratory result is only useful if you can rely on it later, in front of another doctor. These are the
-            controls behind every ORVEXA diagnostics order.
+            ORVEXA does not currently integrate with laboratories or process diagnostic orders. No quality, collection
+            or reporting controls are available through this page.
           </p>
         </Reveal>
 
@@ -308,10 +296,10 @@ export default function DiagnosticsPage() {
         <Reveal>
           <div className="flex flex-col items-start gap-6 rounded-[1.75rem] border border-border bg-card p-6 shadow-[var(--shadow-soft)] sm:p-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
-              <h2 className="text-2xl font-semibold sm:text-3xl">A result you don&apos;t understand is not a result</h2>
+              <h2 className="text-2xl font-semibold sm:text-3xl">Discuss health questions with a clinician</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Talk the report through with a specialist, keep every past report in one place, and reach the care desk
-                if a value needs a second opinion.
+                ORVEXA cannot interpret sample diagnostic-package data as a real result. For care, contact a qualified
+                clinician directly.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -319,12 +307,6 @@ export default function DiagnosticsPage() {
                 <Link href="/hospitals?view=doctors">
                   <Stethoscope aria-hidden />
                   Discuss results with a specialist
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link href="/dashboard/records">
-                  <ClipboardList aria-hidden />
-                  Open health records
                 </Link>
               </Button>
               <Button asChild variant="ghost" size="lg">

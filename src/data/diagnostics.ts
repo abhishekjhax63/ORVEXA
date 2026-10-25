@@ -138,8 +138,8 @@ export const diagnosticPackages: DiagnosticPackage[] = [
 ];
 
 export const diagnosticsTrust = [
-  { label: "NABL-accredited labs", detail: "Every partner laboratory holds current NABL accreditation." },
-  { label: "Sample integrity protocol", detail: "Barcoded vials, cold-chain transport and chain-of-custody logs." },
-  { label: "Radiologist-reviewed imaging", detail: "Two-reader reporting for CT, MRI and mammography." },
-  { label: "Report turnaround SLA", detail: "95% of bookings reported inside the promised window." },
+  { label: "Laboratory status", detail: "No partner laboratory or accreditation record is connected to ORVEXA." },
+  { label: "Sample handling", detail: "ORVEXA does not collect, transport or track diagnostic samples." },
+  { label: "Imaging review", detail: "No radiology order, image review or reporting workflow is connected." },
+  { label: "Report delivery", detail: "This application does not receive diagnostic reports or provide turnaround estimates." },
 ];

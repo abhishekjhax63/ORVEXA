@@ -1,12 +1,12 @@
 import {
-  BellRing,
+  AudioLines,
   Brain,
   Building2,
   CalendarClock,
   ChartLine,
   FileHeart,
   HeartHandshake,
-  Languages,
+  Image as ImageIcon,
   LockKeyhole,
   MessageSquare,
   Microscope,
@@ -20,72 +20,13 @@ import {
   Video,
 } from "lucide-react";
 
-import type { PartnershipBenefit, Testimonial, TrustMetric } from "@/types";
-
-/** DEMO DATA — marketing proof points, clearly illustrative. */
+import type { PartnershipBenefit, TrustMetric } from "@/types";
 
 export const trustMetrics: TrustMetric[] = [
-  { id: "trust-1", label: "Verified providers", value: "9,400+", detail: "Hospitals, clinics and diagnostic labs across 40 cities" },
-  { id: "trust-2", label: "Consultations delivered", value: "2.6M", detail: "Telemedicine and in-person visits coordinated on ORVEXA" },
-  { id: "trust-3", label: "Median ambulance ETA", value: "12 min", detail: "Across live dispatch cities, reviewed monthly" },
-  { id: "trust-4", label: "Records encrypted", value: "100%", detail: "AES-256 at rest with per-share access audit trails" },
-];
-
-export const testimonials: Testimonial[] = [
-  {
-    id: "t-1",
-    quote:
-      "My father's angioplasty was booked, pre-authorised and paid for before we reached the hospital. The claims desk handled paperwork I would never have managed alone.",
-    name: "Ramesh Iyer",
-    role: "Caregiver for parent",
-    city: "Chennai",
-    rating: 5,
-  },
-  {
-    id: "t-2",
-    quote:
-      "The SOS button genuinely works. An ALS ambulance reached us in 11 minutes and the hospital already had his vitals when we arrived.",
-    name: "Fatima Ansari",
-    role: "Patient",
-    city: "Hyderabad",
-    rating: 5,
-  },
-  {
-    id: "t-3",
-    quote:
-      "Chronic medication for my mother arrives every month without me remembering a thing. The refill reminders alone saved us two hospital visits.",
-    name: "Aditya Kulkarni",
-    role: "MediCare subscriber",
-    city: "Pune",
-    rating: 5,
-  },
-  {
-    id: "t-4",
-    quote:
-      "I compared four hospitals on price and waiting time in one screen, then booked a specialist whose fee was half of what I was quoted elsewhere.",
-    name: "Sneha Mehra",
-    role: "Patient",
-    city: "Delhi NCR",
-    rating: 4,
-  },
-  {
-    id: "t-5",
-    quote:
-      "Sending reports to a panel for a second opinion took two days and gave me confidence to avoid an unnecessary surgery.",
-    name: "Ganesh Prabhu",
-    role: "Patient",
-    city: "Bengaluru",
-    rating: 5,
-  },
-  {
-    id: "t-6",
-    quote:
-      "As a clinic, listing on ORVEXA filled our evening slots. Appointments, payments and records all arrive already structured.",
-    name: "Dr. Meenal Joshi",
-    role: "Provider partner",
-    city: "Ahmedabad",
-    rating: 5,
-  },
+  { id: "trust-1", label: "Provider directory", value: "Patna", detail: "Static source list: 20 hospital listings and 83 doctor records; not independently verified." },
+  { id: "trust-2", label: "Provider verification", value: "Pending", detail: "Credentials and current affiliations have not been checked by ORVEXA." },
+  { id: "trust-3", label: "Live appointment feed", value: "Not connected", detail: "No appointment availability or booking is provided by this directory." },
+  { id: "trust-4", label: "Patient stories", value: "Not published", detail: "ORVEXA does not publish fabricated or composite testimonials as customer reviews." },
 ];
 
 export const partnershipBenefits: PartnershipBenefit[] = [
@@ -134,39 +75,39 @@ export const partnershipBenefits: PartnershipBenefit[] = [
 export const aiCapabilities = [
   {
     id: "ai-triage",
-    title: "Symptom triage",
-    detail: "Converts free-text symptoms into a structured urgency band with the reasoning shown.",
+    title: "Symptom guidance",
+    detail: "The live workspace can respond to symptom descriptions when an AI provider is configured. Responses are not diagnoses.",
     icon: Brain,
   },
   {
-    id: "ai-specialist",
-    title: "Specialist matching",
-    detail: "Recommends the right department and three suitable doctors, filtered by your city and budget.",
-    icon: Stethoscope,
+    id: "ai-images",
+    title: "Medical image input",
+    detail: "Image analysis requires a vision-capable AI provider, sign-in, private storage and a configured malware scanner.",
+    icon: ImageIcon,
   },
   {
     id: "ai-reports",
-    title: "Report explainer",
-    detail: "Turns a lab report into plain-language findings and flags values outside the reference range.",
+    title: "Reports and documents",
+    detail: "Document support depends on the configured provider and upload services. The workspace reports unavailable capabilities.",
     icon: Microscope,
   },
   {
-    id: "ai-medicines",
-    title: "Medicine guidance",
-    detail: "Explains what a prescription does, common interactions and how to take it correctly.",
-    icon: Pill,
+    id: "ai-audio",
+    title: "Audio and video input",
+    detail: "Audio or video can be analyzed only when the selected provider supports that input and the upload services are available.",
+    icon: AudioLines,
   },
   {
-    id: "ai-reminders",
-    title: "Proactive reminders",
-    detail: "Learns your schedule and nudges tests, refills and follow-ups before they lapse.",
-    icon: BellRing,
+    id: "ai-uploads",
+    title: "Upload safety controls",
+    detail: "Files are checked against configured limits and scanning/storage requirements before analysis; unavailable checks fail closed.",
+    icon: ShieldCheck,
   },
   {
     id: "ai-language",
-    title: "11 Indian languages",
-    detail: "Ask in Hindi, Tamil, Telugu, Bengali, Marathi and more without switching keyboards.",
-    icon: Languages,
+    title: "Honest availability",
+    detail: "If AI or required upload services are missing, the workspace shows that clearly instead of inventing an answer.",
+    icon: LockKeyhole,
   },
 ];
 
@@ -196,26 +137,26 @@ export const aiConversation = [
 export const telemedicineFeatures = [
   {
     id: "tm-video",
-    title: "End-to-end encrypted video",
-    description: "Consultations run over encrypted WebRTC with automatic quality fallback on weak networks.",
+    title: "Video consultations",
+    description: "No video-consultation provider or clinician booking service is connected.",
     icon: Video,
   },
   {
     id: "tm-rx",
-    title: "Digital prescription",
-    description: "E-signed prescriptions reach your records and MediCare cart the moment the call ends.",
+    title: "Digital prescriptions",
+    description: "ORVEXA does not issue digital prescriptions or connect consultations to a pharmacy.",
     icon: FileHeart,
   },
   {
     id: "tm-followup",
-    title: "7-day follow-up chat",
-    description: "Ask follow-up questions inside the same consultation thread at no extra cost.",
+    title: "Consultation follow-up",
+    description: "No clinician chat or follow-up messaging service is connected.",
     icon: MessageSquare,
   },
   {
     id: "tm-family",
     title: "Family profiles",
-    description: "Consult for parents or children from your account with the right medical history attached.",
+    description: "Family profiles are not connected to a clinical consultation workflow.",
     icon: Users,
   },
 ];
@@ -223,26 +164,26 @@ export const telemedicineFeatures = [
 export const recordsFeatures = [
   {
     id: "rec-timeline",
-    title: "One clinical timeline",
-    description: "Prescriptions, lab reports, imaging and discharges arranged chronologically, newest first.",
+    title: "Patient record dashboard",
+    description: "A patient health-record dashboard is not available in this build.",
     icon: CalendarClock,
   },
   {
     id: "rec-share",
-    title: "Time-bound sharing",
-    description: "Generate a link that expires in 24 hours or 7 days, and revoke it whenever you want.",
+    title: "Record sharing",
+    description: "No record-sharing links or revocation workflow are connected.",
     icon: ShieldCheck,
   },
   {
     id: "rec-abha",
     title: "ABHA linkage",
-    description: "Link your ABHA address so records stay portable across hospitals and states.",
+    description: "ABHA integration is not configured.",
     icon: LockKeyhole,
   },
   {
     id: "rec-trends",
-    title: "Trend intelligence",
-    description: "See how HbA1c, lipids or BP move over time instead of reading isolated reports.",
+    title: "Health trends",
+    description: "No clinical record data is connected for trend analysis.",
     icon: TrendingUp,
   },
 ];
@@ -258,56 +199,56 @@ export const providerOnboarding = [
   {
     id: "onb-2",
     step: "02",
-    title: "Verification in 72 hours",
-    description: "We validate licences, accreditation and doctor credentials against council registries.",
+    title: "Credential checks (planned)",
+    description: "Provider credentials would need independent verification before any listing is marked verified.",
     icon: ShieldCheck,
   },
   {
     id: "onb-3",
     step: "03",
-    title: "Publish your slots",
-    description: "Sync your existing HIS or use the ORVEXA provider console to open appointment slots.",
+    title: "Connect availability (planned)",
+    description: "A provider integration would be required before appointment availability could be displayed.",
     icon: CalendarClock,
   },
   {
     id: "onb-4",
     step: "04",
-    title: "Start receiving patients",
-    description: "Bookings, pre-auth requests and pharmacy orders start flowing with dashboards attached.",
+    title: "Enable provider workflows (planned)",
+    description: "Bookings, claims and pharmacy requests are not currently connected to provider systems.",
     icon: Sparkles,
   },
 ];
 
 export const platformHighlights = [
-  { id: "ph-1", label: "Hospitals & clinics", value: "9,400+" },
-  { id: "ph-2", label: "Verified doctors", value: "48,000+" },
-  { id: "ph-3", label: "Partner labs", value: "1,260+" },
-  { id: "ph-4", label: "Cities covered", value: "40" },
+  { id: "ph-1", label: "Hospital listings", value: "20" },
+  { id: "ph-2", label: "Doctor records", value: "83" },
+  { id: "ph-3", label: "City in supplied list", value: "Patna" },
+  { id: "ph-4", label: "Verification", value: "Pending" },
 ];
 
 export const careJourney = [
   {
     id: "journey-1",
-    title: "Find the right care",
-    description: "Search by symptom, speciality or hospital and compare cost, distance and outcomes side by side.",
+    title: "Browse provider listings",
+    description: "Search the static Patna directory. Listings are unverified; availability, prices and outcomes are not provided.",
     icon: Stethoscope,
   },
   {
     id: "journey-2",
-    title: "Consult and decide",
-    description: "Meet in person or on video, get a digital prescription, and ask for a second opinion when it matters.",
+    title: "Contact providers directly",
+    description: "Telemedicine, digital prescriptions and second-opinion workflows are not connected to ORVEXA.",
     icon: Video,
   },
   {
     id: "journey-3",
-    title: "Get tests and medicines",
-    description: "Home sample collection and 90-minute medicine delivery, coordinated around your schedule.",
+    title: "Review sample catalogues",
+    description: "Diagnostic and pharmacy listings are illustrative; no orders, collection or delivery are available.",
     icon: Truck,
   },
   {
     id: "journey-4",
-    title: "Track, pay and follow up",
-    description: "Cashless claims, invoices and reminders in one dashboard so nothing slips after discharge.",
+    title: "Check service availability",
+    description: "Patient records, payments and insurance claims are not connected in this build.",
     icon: HeartHandshake,
   },
 ];

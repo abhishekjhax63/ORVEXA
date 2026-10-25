@@ -1,11 +1,8 @@
 import {
   BookOpen,
-  CreditCard,
   FileText,
   LifeBuoy,
-  MessageSquare,
   Microscope,
-  PackageCheck,
   PhoneCall,
   Pill,
   ShieldCheck,
@@ -13,6 +10,7 @@ import {
   UserRound,
 } from "lucide-react";
 
+import { siteConfig } from "@/lib/site";
 import type { Faq, HelpTopic, SupportChannel } from "@/types";
 
 /** DEMO DATA — support content for the help centre and contact page. */
@@ -21,83 +19,74 @@ export const helpTopics: HelpTopic[] = [
   {
     id: "getting-started",
     title: "Getting started",
-    description: "Create your ORVEXA account, add family members and link ABHA.",
+    description: "Sign-in and registration depend on the authentication and database configuration.",
     icon: BookOpen,
-    articleCount: 14,
+    articleCount: 2,
   },
   {
     id: "appointments",
     title: "Appointments & consultations",
-    description: "Booking, rescheduling, cancellations, refunds and video setup.",
+    description: "The supplied provider directory is static; appointments and video consultations are not connected.",
     icon: UserRound,
-    articleCount: 21,
+    articleCount: 3,
   },
   {
     id: "pharmacy",
     title: "MediCare pharmacy",
-    description: "Prescription upload, delivery windows, returns and cold chain items.",
+    description: "Sample product information only; prescription checks, orders and delivery are not available.",
     icon: Pill,
-    articleCount: 18,
+    articleCount: 2,
   },
   {
     id: "diagnostics",
     title: "Diagnostics & reports",
-    description: "Home collection prep, fasting rules, report access and corrections.",
+    description: "Sample package listings only; there is no connected laboratory, booking or report delivery.",
     icon: Microscope,
-    articleCount: 16,
+    articleCount: 2,
   },
   {
     id: "insurance",
     title: "Insurance & payments",
-    description: "Coverage checks, cashless approvals, invoices and reimbursement.",
+    description: "No insurer or claims workflow is connected to this project.",
     icon: ShieldCheck,
-    articleCount: 19,
+    articleCount: 2,
   },
   {
     id: "account-privacy",
     title: "Account & privacy",
-    description: "Data sharing controls, consent history, deletion and security.",
+    description: "Review the current project status; patient dashboard and health-record features are not available.",
     icon: FileText,
-    articleCount: 12,
+    articleCount: 1,
   },
 ];
 
 export const supportChannels: SupportChannel[] = [
   {
-    id: "chat",
-    title: "In-app chat",
-    description: "Fastest route for booking, order and dashboard questions.",
-    actionLabel: "Open chat",
-    href: "/contact#chat",
-    icon: MessageSquare,
-    meta: "Average first reply: 90 seconds",
-  },
-  {
     id: "call",
-    title: "Care desk phone",
-    description: "Speak to a human coordinator, available round the clock.",
-    actionLabel: "Call 1800 200 4000",
-    href: "tel:+9118002004000",
+    title: "Phone",
+    description: "Call the phone number provided for this project.",
+    actionLabel: `Call ${siteConfig.supportPhone}`,
+    href: `tel:${siteConfig.supportPhone.replace(/\s/g, "")}`,
     icon: PhoneCall,
-    meta: "24×7, toll free in India",
+    meta: "Availability and response times are not verified",
   },
   {
     id: "emergency",
     title: "Emergency line",
-    description: "Ambulance dispatch and trauma coordination.",
+    description: "Call 108 directly for an emergency; ORVEXA cannot dispatch.",
     actionLabel: "Call 108",
     href: "tel:108",
     icon: Siren,
-    meta: "Immediate dispatch",
+    meta: "External emergency service",
   },
   {
     id: "email",
-    title: "Email support",
-    description: "Documentation, claims paperwork and formal escalations.",
-    actionLabel: "Email care desk",
-    href: "mailto:care@orvexa.health",
+    title: "Email",
+    description: "Email the address provided for this project.",
+    actionLabel: "Email ORVEXA",
+    href: `mailto:${siteConfig.supportEmail}`,
     icon: LifeBuoy,
-    meta: "Reply within 8 working hours",
+    meta: "No response-time commitment is confirmed",
   },
 ];
 
@@ -107,84 +96,84 @@ export const faqs: Faq[] = [
     category: "getting-started",
     question: "How do I create an ORVEXA account?",
     answer:
-      "Create an account from the registration page using your mobile number or email. We verify with an OTP, then ask for basic details so records and appointments stay linked to the right person. You can add family members immediately after.",
+      "Use the registration page to start creating an account. Sign-up, verification and account features require the deployment's authentication and database services to be configured; do not assume they are available.",
   },
   {
     id: "faq-2",
     category: "getting-started",
     question: "Is ORVEXA available across India?",
     answer:
-      "Provider discovery, telemedicine, diagnostics and MediCare pharmacy already cover 40 Indian cities. Emergency ambulance dispatch is live in 18 cities during this phase and continues to expand.",
+      "The provider directory currently contains static, unverified Patna listings. Other services depend on deployment configuration and connected providers; the website does not claim nationwide availability or guarantee emergency dispatch.",
   },
   {
     id: "faq-3",
     category: "appointments",
     question: "Can I reschedule or cancel an appointment?",
     answer:
-      "Yes. Open the appointment in your dashboard and choose Reschedule or Cancel. Rescheduling is free up to two hours before the slot; cancellations within two hours may be subject to the provider's policy.",
+      "ORVEXA does not currently book appointments from the static provider directory. Contact a provider directly to ask about scheduling or cancellation.",
   },
   {
     id: "faq-4",
     category: "appointments",
     question: "What happens if a video consultation drops?",
     answer:
-      "The consultation stays open for 15 minutes and the doctor can restart the call. If it cannot be completed, our care desk arranges a free re-consult or a full refund automatically.",
+      "Video consultations and doctor handoff are not connected in this project. Contact a qualified provider directly for care.",
   },
   {
     id: "faq-5",
     category: "appointments",
     question: "Are the consultation fees on ORVEXA final?",
     answer:
-      "The fee shown at booking is the provider's consultation charge. Procedure, investigation and facility costs are quoted separately by the hospital before you consent to treatment.",
+      "The provider directory does not list verified consultation fees and has no booking flow. Confirm all charges with the provider before an appointment.",
   },
   {
     id: "faq-6",
     category: "pharmacy",
     question: "Do I need a prescription to order medicines?",
     answer:
-      "Schedule H and H1 medicines require a valid prescription, which you can upload as a photo or PDF. Over-the-counter products and devices do not need one. A licensed pharmacist reviews every order before dispatch.",
+      "ORVEXA's pharmacy page is a sample catalogue only. It does not accept prescriptions, sell medicines or dispatch orders. Ask a licensed pharmacist about prescription requirements.",
   },
   {
     id: "faq-7",
     category: "pharmacy",
     question: "How fast is delivery, and what about cold chain items?",
     answer:
-      "Express delivery in metro pin codes is typically 90 minutes, same-day elsewhere. Insulin and other cold-chain items travel in validated temperature-controlled packaging with a temperature log.",
+      "No delivery or cold-chain service is connected to the sample catalogue. Do not rely on its illustrative delivery estimates.",
   },
   {
     id: "faq-8",
     category: "diagnostics",
     question: "Which tests need fasting?",
     answer:
-      "Fasting blood sugar, lipid profile and most full-body panels need 10–12 hours of fasting with water permitted. Each test page lists its requirement before you confirm the booking, and the phlebotomist repeats it on the day.",
+      "The diagnostic package listings are sample data and are not medical instructions. Ask the licensed laboratory or clinician responsible for your test whether fasting is required.",
   },
   {
     id: "faq-9",
     category: "diagnostics",
     question: "How do I access my diagnostic reports?",
     answer:
-      "Reports are pushed to your ORVEXA records as soon as the lab validates them, with a notification. You can download a PDF or share a time-bound link with any doctor, including those outside ORVEXA.",
+      "ORVEXA has no connected laboratory or report-delivery integration. The patient records area is not available in this build.",
   },
   {
     id: "faq-10",
     category: "insurance",
     question: "How does the free coverage check work?",
     answer:
-      "Enter your policy number and insurer. We match it against the hospital you selected, show the approved room category, estimated out-of-pocket cost and whether cashless approval is available.",
+      "Insurance coverage checks are not connected. Confirm benefits and cashless eligibility directly with your insurer and hospital.",
   },
   {
     id: "faq-11",
     category: "insurance",
     question: "Who files the claim paperwork?",
     answer:
-      "The ORVEXA claims desk prepares and submits pre-authorisation and reimbursement packs, tracks queries from the insurer's TPA and alerts you only when a patient signature or document is required.",
+      "ORVEXA does not have a connected claims desk or submit insurance paperwork. Contact your insurer or TPA directly.",
   },
   {
     id: "faq-12",
     category: "account-privacy",
     question: "Who can see my health records?",
     answer:
-      "Only you control access. Records are encrypted at rest, and every share is a time-bound, revocable link with an audit entry in your consent history.",
+      "The patient health-record dashboard is not available in this build. Do not upload or share sensitive medical information unless a specific feature clearly confirms that it is configured and describes how it is handled.",
   },
 ];
 
@@ -199,8 +188,8 @@ export const contactTopics = [
 ];
 
 export const quickActions = [
-  { id: "track-order", label: "Track a MediCare order", icon: PackageCheck, href: "/dashboard" },
-  { id: "refund", label: "Request a refund", icon: CreditCard, href: "/contact" },
-  { id: "reports", label: "Download a report", icon: FileText, href: "/dashboard/records" },
-  { id: "records", label: "Share records with a doctor", icon: ShieldCheck, href: "/dashboard/records" },
+  { id: "providers", label: "Open provider directory", icon: UserRound, href: "/hospitals" },
+  { id: "pharmacy", label: "Browse sample pharmacy catalogue", icon: Pill, href: "/pharmacy" },
+  { id: "diagnostics", label: "Browse sample diagnostics", icon: Microscope, href: "/diagnostics" },
+  { id: "emergency", label: "Emergency information", icon: Siren, href: "/emergency" },
 ];

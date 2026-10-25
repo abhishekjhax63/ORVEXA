@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-import { mapConfig, type TravelMode } from "@/lib/maps/config";
+import { geoapifyTileUrl, mapConfig, type TravelMode } from "@/lib/maps/config";
 import type { Coordinates } from "@/lib/maps/geo";
 import type { NearbyKind } from "@/lib/validation/emergency";
 
@@ -124,17 +124,34 @@ export default function MapView({
     centerRef.current = center;
   }, [onSelectMarker, center]);
 
-  // Create the map once. `style` comes from config so a deployment can point at
-  // a light or dark Mapbox style without a code change.
+  // Create the map once, using the configured provider's basemap.
   useEffect(() => {
     const container = containerRef.current;
     if (!container || !mapConfig.accessToken) return;
 
-    mapboxgl.accessToken = mapConfig.accessToken;
+    if (mapConfig.provider === "mapbox") mapboxgl.accessToken = mapConfig.accessToken;
+
+    const geoapifyTiles = mapConfig.provider === "geoapify" ? geoapifyTileUrl() : null;
+    if (mapConfig.provider === "geoapify" && !geoapifyTiles) return;
+
+    const geoapifyStyle = {
+      version: 8 as const,
+      sources: {
+        geoapify: {
+          type: "raster" as const,
+          tiles: [geoapifyTiles as string],
+          tileSize: 256,
+        },
+      },
+      layers: [{ id: "geoapify", type: "raster" as const, source: "geoapify" }],
+    };
 
     const map = new mapboxgl.Map({
       container,
-      style: mapConfig.style ?? "mapbox://styles/mapbox/streets-v12",
+      style:
+        mapConfig.provider === "geoapify"
+          ? geoapifyStyle
+          : mapConfig.style ?? "mapbox://styles/mapbox/streets-v12",
       center: [centerRef.current.longitude, centerRef.current.latitude],
       zoom,
       // Start flat: the 2D view is what must always work.
@@ -157,6 +174,7 @@ export default function MapView({
 
     map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), "top-right");
 
+<<<<<<< HEAD
     map.on("error", (e) => {
       // Don't crash UI on tile load error
       if (e?.error) {
@@ -174,6 +192,12 @@ export default function MapView({
       resizeObserver.disconnect();
       for (const marker of markersRef.current.values()) marker.remove();
       markersRef.current.clear();
+=======
+    const markers = markersRef.current;
+    return () => {
+      for (const marker of markers.values()) marker.remove();
+      markers.clear();
+>>>>>>> 00c6be6 (Updated project features)
       map.remove();
       mapRef.current = null;
     };

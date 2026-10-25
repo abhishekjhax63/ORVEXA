@@ -4,6 +4,7 @@ import { useId, useRef, useState } from "react";
 import Link from "next/link";
 import {
   AudioLines,
+  Camera,
   CircleAlert,
   FileText,
   ImageIcon,
@@ -34,6 +35,7 @@ import {
   AI_SCOPE_STATEMENT,
   EXTRACTION_COPY,
   MALWARE_SCAN_COPY,
+  MIME_TO_UPLOAD_KIND,
   UPLOAD_KIND_HELP,
   UPLOAD_KIND_LABELS,
   UPLOAD_LIMITS,
@@ -119,6 +121,7 @@ function AssistantWorkspace({
     statement: useId(),
     language: useId(),
     file: useId(),
+    camera: useId(),
     context: useId(),
   };
 
@@ -140,6 +143,7 @@ function AssistantWorkspace({
   const [shareResult, setShareResult] = useState<{ url: string; expiresAt: string; recipientLabel: string } | null>(null);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const chunksRef = useRef<Blob[]>([]);
 
   const stored = conversationId !== null;
@@ -262,6 +266,17 @@ function AssistantWorkspace({
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
+
+    const kind = MIME_TO_UPLOAD_KIND[file.type];
+    if (!kind) {
+      setError("That file type is not supported. Choose a JPEG, PNG, or WebP image, PDF or text document, audio, or short video.");
+      return;
+    }
+    const fileLimit = Math.min(UPLOAD_LIMITS.maxFileBytes, UPLOAD_LIMITS.maxPerKindBytes[kind]);
+    if (file.size <= 0 || file.size > fileLimit) {
+      setError(`That file must be non-empty and no larger than ${formatBytes(fileLimit)}.`);
+      return;
+    }
 
     if (!conversationId) {
       setError("Attaching a file needs a stored conversation. Turn on “Store this conversation” first.");
@@ -658,7 +673,7 @@ function AssistantWorkspace({
             <CardTitle className="text-lg">Photos, reports and short videos</CardTitle>
             <CardDescription className="text-sm leading-relaxed">
               {stored
-                ? `Up to ${UPLOAD_LIMITS.maxFilesPerTurn} files per question, ${formatBytes(UPLOAD_LIMITS.maxFileBytes)} each. You can remove any of them before sending.`
+                ? `Up to ${UPLOAD_LIMITS.maxFilesPerTurn} files per question. Images are limited to ${formatBytes(UPLOAD_LIMITS.maxPerKindBytes.IMAGE)}; other file limits vary by type. Remove or replace files before sending.`
                 : "Attaching files needs a stored conversation, so storage has to be on first."}
             </CardDescription>
           </CardHeader>
@@ -666,8 +681,8 @@ function AssistantWorkspace({
             <div className="flex flex-wrap items-center gap-3">
               <Button asChild variant="outline" disabled={!stored || busy !== null || !signedIn}>
                 <label htmlFor={ids.file} className={cn(!stored && "pointer-events-none opacity-55")}>
-                  {busy === "upload" ? <LoaderCircle aria-hidden className="animate-spin" /> : <Paperclip aria-hidden />}
-                  {busy === "upload" ? "Uploading…" : "Add a file"}
+                  {busy === "upload" ? <LoaderCircle aria-hidden className="animate-spin" /> : <ImageIcon aria-hidden />}
+                  {busy === "upload" ? "Uploading…" : "Upload image or report"}
                 </label>
               </Button>
               <input
@@ -678,7 +693,28 @@ function AssistantWorkspace({
                 onChange={(event) => void chooseFile(event)}
                 disabled={!stored || busy !== null || !signedIn}
               />
-              <p className="text-xs text-muted-foreground">Each file is type-checked and scanned before it is stored.</p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => cameraInputRef.current?.click()}
+                disabled={!stored || busy !== null || !signedIn}
+              >
+                <Camera aria-hidden />
+                Take a photo
+              </Button>
+              <input
+                ref={cameraInputRef}
+                id={ids.camera}
+                type="file"
+                className="sr-only"
+                accept="image/jpeg,image/png,image/webp"
+                capture="environment"
+                onChange={(event) => void chooseFile(event)}
+                disabled={!stored || busy !== null || !signedIn}
+              />
+              <p className="text-xs text-muted-foreground">
+                Examples: a skin change, visible cut, burn, swelling, or a medical report. Review the preview and scan status before asking; image output is not a diagnosis. If scanning is not configured, the upload is clearly labeled unscanned.
+              </p>
             </div>
 
             {uploads.length > 0 ? (

@@ -44,7 +44,7 @@ export type CareService = {
  * Providers
  * ------------------------------------------------------------------ */
 
-export type HospitalType = "Multi-speciality" | "Super-speciality" | "Day-care" | "Clinic";
+export type HospitalType = string;
 
 export type VerificationStatus = "Verified" | "Verification pending" | "Verification not confirmed";
 
@@ -54,18 +54,22 @@ export type Hospital = {
   type: HospitalType;
   city: string;
   locality: string;
-  address: string;
-  phone: string;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  verificationNotes: string | null;
+  profileUrl: string | null;
   accreditations: string[];
   specialties: string[];
-  beds: number;
-  rating: number;
-  reviewCount: number;
-  distanceKm: number;
-  emergency24x7: boolean;
-  cashlessInsurance: boolean;
-  teleconsult: boolean;
+  beds: number | null;
+  rating: number | null;
+  reviewCount: number | null;
+  distanceKm: number | null;
+  emergency24x7: boolean | null;
+  cashlessInsurance: boolean | null;
+  teleconsult: boolean | null;
   /** 1 = value, 2 = mid, 3 = premium. Used only for the cost filter. */
+<<<<<<< HEAD
   priceTier: 1 | 2 | 3;
   imagePrompt?: string;
   verificationStatus?: VerificationStatus;
@@ -75,6 +79,11 @@ export type Hospital = {
   coordinates?: { latitude: number; longitude: number };
   authenticImageUrl?: string;
   imageAttribution?: string;
+=======
+  priceTier: 1 | 2 | 3 | null;
+  imagePrompt: string | null;
+  sourceUrl: string | null;
+>>>>>>> 00c6be6 (Updated project features)
 };
 
 export type Doctor = {
@@ -82,15 +91,21 @@ export type Doctor = {
   name: string;
   specialty: string;
   qualifications: string[];
-  experienceYears: number;
+  experienceYears: number | null;
+  experience: string | null;
+  schedule: string | null;
+  phone: string | null;
+  address: string | null;
+  verificationStatus: string | null;
   languages: string[];
   hospitalId: string;
   hospitalName: string;
   city: string;
-  rating: number;
-  reviewCount: number;
-  consultationFee: number;
+  rating: number | null;
+  reviewCount: number | null;
+  consultationFee: number | null;
   modes: ConsultationMode[];
+<<<<<<< HEAD
   availability: Availability;
   nextSlot: string;
   about: string;
@@ -102,6 +117,14 @@ export type Doctor = {
   medicalCouncil?: string;
   authenticImageUrl?: string;
   imageAttribution?: string;
+=======
+  availability: Availability | null;
+  nextSlot: string | null;
+  about: string | null;
+  imagePrompt: string | null;
+  sourceUrl: string | null;
+  profileUrl: string | null;
+>>>>>>> 00c6be6 (Updated project features)
 };
 
 export type Specialty = {

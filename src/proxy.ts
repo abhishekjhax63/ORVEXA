@@ -1,21 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createServerClient } from "@supabase/ssr";
 
 import { SECURITY_HEADERS, SENSITIVE_AREA_HEADERS } from "@/lib/security/headers";
 
 /**
- * Runs before every matched request to:
- *  1. refuse cross-site state changes to the administrative API,
- *  2. refresh the Supabase session cookie so Server Components see a live token,
- *  3. do an *optimistic* redirect for the patient area, and
- *  4. stamp the security headers onto any response this file produces itself.
+ * Refuses cross-site state changes to the administrative API and stamps
+ * security headers onto responses produced here.
  *
- * This is not the security boundary. Every protected page re-verifies the
- * session through the data access layer, and every administrative Route Handler
- * and Server Function re-derives the operator's permissions server-side through
- * `src/lib/platform/console.ts`. A proxy matcher can be changed by an unrelated
- * refactor and silently stop covering a path, so nothing here is allowed to be
- * the only thing standing between a request and a privileged action.
+ * Authentication in this app uses the database-backed `orvexa_session`
+ * cookie. Protected pages and handlers must use the server-side auth guards;
+ * this proxy deliberately does not trust a separate Supabase session as an
+ * authentication boundary.
  */
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
@@ -55,7 +49,7 @@ function harden(response: NextResponse, options: { sensitive?: boolean } = {}) {
   return response;
 }
 
-export async function proxy(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Cheapest check first, and it runs before anything touches the session.
@@ -69,6 +63,7 @@ export async function proxy(request: NextRequest) {
     );
   }
 
+<<<<<<< HEAD
   let response = NextResponse.next({ request });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -124,6 +119,9 @@ export async function proxy(request: NextRequest) {
   }
 
   return harden(response, { sensitive: isAdminApi(pathname) });
+=======
+  return harden(NextResponse.next({ request }), { sensitive: isAdminApi(pathname) });
+>>>>>>> 00c6be6 (Updated project features)
 }
 
 export const config = {

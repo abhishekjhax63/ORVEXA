@@ -12,6 +12,7 @@ import {
   type AiProviderCallOutcome,
   type AiResult,
   type AiTranscribeRequest,
+  type AiVisionQuestionRequest,
   type AiTranscript,
   type AiTriageDraft,
   type AiTriageRequest,
@@ -66,6 +67,8 @@ export type OpenAiProviderConfig = {
   baseUrl: string;
   /** Vision/reasoning model used for the triage draft. */
   model: string;
+  /** Explicit vision model override. */
+  visionModel?: string;
   /** Speech-to-text model. A chat model cannot be used on this endpoint. */
   transcribeModel: string;
 };
@@ -81,11 +84,13 @@ export class OpenAiProvider implements AiProvider {
   private readonly organization: string | null;
   private readonly baseUrl: string;
   private readonly transcribeModel: string;
+  private readonly visionModel: string;
 
   constructor(config: OpenAiProviderConfig) {
     const profile = providerProfile("openai");
     this.label = profile.label;
     this.model = config.model;
+    this.visionModel = config.visionModel ?? config.model;
     this.transcribeModel = config.transcribeModel;
     this.capabilities = profile.native;
     this.promptVersion = profile.promptVersion;
@@ -96,6 +101,10 @@ export class OpenAiProvider implements AiProvider {
 
   supports(capability: AiCapability): boolean {
     return this.capabilities.includes(capability);
+  }
+
+  modelFor(request: AiTriageRequest): string {
+    return request.attachments.some((attachment) => attachment.kind === "IMAGE") ? this.visionModel : this.model;
   }
 
   async triage(request: AiTriageRequest): Promise<AiProviderCallOutcome<AiTriageDraft>> {
@@ -113,7 +122,7 @@ export class OpenAiProvider implements AiProvider {
     }
 
     const body = {
-      model: this.model,
+      model: this.modelFor(request),
       instructions: buildTriageSystemPrompt({
         language: request.language,
         capabilities: [...this.capabilities],
@@ -164,6 +173,43 @@ export class OpenAiProvider implements AiProvider {
 
     const draft: AiTriageDraft = parsed.data;
     return outcome<AiTriageDraft>({ ok: true, data: draft }, startedAt, inputChars);
+  }
+
+  async visionQuestion(request: AiVisionQuestionRequest): Promise<AiProviderCallOutcome<{ text: string }>> {
+    const startedAt = Date.now();
+    const inputChars = request.question.length;
+    if (!this.supports("VISION_IMAGE")) {
+      return outcome(aiFailure<{ text: string }>("unsupported_capability"), startedAt, inputChars);
+    }
+
+    const call = await this.postJson<ResponsesResponse>(
+      "/responses",
+      {
+        model: this.visionModel,
+        instructions:
+          "You are Sakha AI, an informational healthcare assistant. Describe only visible features and state uncertainty. " +
+          "Do not diagnose, prescribe, or claim an image proves or rules out a condition. Do not infer beyond the image. " +
+          "For severe bleeding, breathing difficulty, loss of consciousness, serious burns, or other emergency warning signs, " +
+          "advise urgent medical help immediately and tell the user not to wait for an AI response. For report images, " +
+          "explain only clearly legible text and identify anything unreadable or ambiguous.",
+        input: [
+          {
+            role: "user",
+            content: [
+              { type: "input_text", text: request.question },
+              { type: "input_image", image_url: request.dataUrl },
+            ],
+          },
+        ],
+        max_output_tokens: 700,
+      },
+      REQUEST_TIMEOUT_MS,
+      request.signal,
+    );
+    if (!call.ok) return outcome(call, startedAt, inputChars);
+    const text = extractOutputText(call.data);
+    if (!text) return outcome(aiFailure<{ text: string }>("provider_error"), startedAt, inputChars);
+    return outcome({ ok: true, data: { text } }, startedAt, inputChars);
   }
 
   async transcribe(request: AiTranscribeRequest): Promise<AiProviderCallOutcome<AiTranscript>> {

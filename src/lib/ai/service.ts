@@ -25,6 +25,7 @@ const PROVIDER_FACTORIES: Record<AiProviderId, (config: AiProviderConfig) => AiP
       organization: config.organization,
       baseUrl: config.baseUrl,
       model: config.model,
+      visionModel: config.visionModel,
       transcribeModel: config.transcribeModel,
     }),
 };

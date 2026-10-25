@@ -20,14 +20,14 @@ import type { Medicine, MedicineCategory } from "@/types";
  */
 
 export const medicineCategories: MedicineCategory[] = [
-  { id: "pain-relief", name: "Pain & fever", icon: Pill, itemCount: 248 },
-  { id: "cardiac", name: "Heart & BP", icon: HeartPulse, itemCount: 316 },
-  { id: "diabetes", name: "Diabetes care", icon: Droplets, itemCount: 194 },
-  { id: "respiratory", name: "Respiratory", icon: Wind, itemCount: 172 },
-  { id: "vitamins", name: "Vitamins & supplements", icon: Sparkles, itemCount: 402 },
-  { id: "baby-care", name: "Mother & baby", icon: Baby, itemCount: 286 },
-  { id: "derma", name: "Skin & hair", icon: Eye, itemCount: 158 },
-  { id: "devices", name: "Devices & monitors", icon: Activity, itemCount: 96 },
+  { id: "pain-relief", name: "Pain & fever", icon: Pill, itemCount: 2 },
+  { id: "cardiac", name: "Heart & BP", icon: HeartPulse, itemCount: 2 },
+  { id: "diabetes", name: "Diabetes care", icon: Droplets, itemCount: 2 },
+  { id: "respiratory", name: "Respiratory", icon: Wind, itemCount: 2 },
+  { id: "vitamins", name: "Vitamins & supplements", icon: Sparkles, itemCount: 2 },
+  { id: "baby-care", name: "Mother & baby", icon: Baby, itemCount: 1 },
+  { id: "derma", name: "Skin & hair", icon: Eye, itemCount: 0 },
+  { id: "devices", name: "Devices & monitors", icon: Activity, itemCount: 1 },
 ];
 
 export const medicines: Medicine[] = [
@@ -43,7 +43,7 @@ export const medicines: Medicine[] = [
     mrp: 38,
     prescriptionRequired: false,
     stock: "in-stock",
-    deliveryEta: "90 minutes",
+    deliveryEta: "Unavailable",
     rating: 4.6,
   },
   {
@@ -58,7 +58,7 @@ export const medicines: Medicine[] = [
     mrp: 142,
     prescriptionRequired: true,
     stock: "in-stock",
-    deliveryEta: "90 minutes",
+    deliveryEta: "Unavailable",
     rating: 4.5,
   },
   {
@@ -73,7 +73,7 @@ export const medicines: Medicine[] = [
     mrp: 128,
     prescriptionRequired: true,
     stock: "in-stock",
-    deliveryEta: "Same day",
+    deliveryEta: "Unavailable",
     rating: 4.7,
   },
   {
@@ -88,7 +88,7 @@ export const medicines: Medicine[] = [
     mrp: 96,
     prescriptionRequired: true,
     stock: "low-stock",
-    deliveryEta: "Same day",
+    deliveryEta: "Unavailable",
     rating: 4.6,
   },
   {
@@ -103,7 +103,7 @@ export const medicines: Medicine[] = [
     mrp: 88,
     prescriptionRequired: true,
     stock: "in-stock",
-    deliveryEta: "90 minutes",
+    deliveryEta: "Unavailable",
     rating: 4.8,
   },
   {
@@ -118,7 +118,7 @@ export const medicines: Medicine[] = [
     mrp: 690,
     prescriptionRequired: true,
     stock: "in-stock",
-    deliveryEta: "Cold chain, same day",
+    deliveryEta: "Unavailable",
     rating: 4.7,
   },
   {
@@ -133,7 +133,7 @@ export const medicines: Medicine[] = [
     mrp: 512,
     prescriptionRequired: true,
     stock: "in-stock",
-    deliveryEta: "Same day",
+    deliveryEta: "Unavailable",
     rating: 4.6,
   },
   {
@@ -148,7 +148,7 @@ export const medicines: Medicine[] = [
     mrp: 168,
     prescriptionRequired: true,
     stock: "in-stock",
-    deliveryEta: "90 minutes",
+    deliveryEta: "Unavailable",
     rating: 4.5,
   },
   {
@@ -163,7 +163,7 @@ export const medicines: Medicine[] = [
     mrp: 110,
     prescriptionRequired: false,
     stock: "in-stock",
-    deliveryEta: "90 minutes",
+    deliveryEta: "Unavailable",
     rating: 4.7,
   },
   {
@@ -178,7 +178,7 @@ export const medicines: Medicine[] = [
     mrp: 196,
     prescriptionRequired: false,
     stock: "in-stock",
-    deliveryEta: "Same day",
+    deliveryEta: "Unavailable",
     rating: 4.4,
   },
   {
@@ -193,7 +193,7 @@ export const medicines: Medicine[] = [
     mrp: 74,
     prescriptionRequired: false,
     stock: "in-stock",
-    deliveryEta: "90 minutes",
+    deliveryEta: "Unavailable",
     rating: 4.8,
   },
   {
@@ -208,14 +208,14 @@ export const medicines: Medicine[] = [
     mrp: 2499,
     prescriptionRequired: false,
     stock: "low-stock",
-    deliveryEta: "Next day",
+    deliveryEta: "Unavailable",
     rating: 4.5,
   },
 ];
 
 export const pharmacyHighlights = [
-  { icon: Pill, title: "Licensed pharmacists", detail: "Every order is verified by a registered pharmacist before dispatch." },
-  { icon: ShieldCheck, title: "100% genuine stock", detail: "Sourced only from manufacturer-authorised distributors with batch traceability." },
-  { icon: Stethoscope, title: "Prescription upload", detail: "Snap a prescription or forward it from your doctor — review happens in minutes." },
-  { icon: Microscope, title: "Generic substitution", detail: "Same molecule alternatives shown with price difference and salt match." },
+  { icon: Pill, title: "Sample catalogue", detail: "Products, prices, ratings and stock statuses are illustrative, not live inventory." },
+  { icon: ShieldCheck, title: "No dispensing service", detail: "No pharmacy or licensed pharmacist is connected to this catalogue." },
+  { icon: Stethoscope, title: "No prescription submission", detail: "The prototype does not receive prescriptions or send them to a provider." },
+  { icon: Microscope, title: "No order fulfillment", detail: "Cart actions are local only; no order, payment or delivery is created." },
 ];

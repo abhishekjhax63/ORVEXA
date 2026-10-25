@@ -120,7 +120,7 @@ function SiteHeader() {
               <span className="absolute inline-flex size-2 animate-pulse-ring rounded-full bg-teal-300" />
               <span className="relative inline-flex size-2 rounded-full bg-teal-300" />
             </span>
-            Emergency ambulance dispatch is live in 18 cities
+            In an emergency, call {siteConfig.emergencyNumber} directly; ORVEXA cannot dispatch an ambulance
           </p>
           <div className="flex items-center gap-5">
             <a
@@ -128,7 +128,7 @@ function SiteHeader() {
               className="inline-flex items-center gap-1.5 text-white/80 transition-colors hover:text-white"
             >
               <Phone aria-hidden className="size-3.5" />
-              24×7 care desk {siteConfig.supportPhone}
+              Contact {siteConfig.supportPhone}
             </a>
             <Link href="/emergency" className="font-semibold text-teal-200 transition-colors hover:text-white">
               Emergency {siteConfig.emergencyNumber}

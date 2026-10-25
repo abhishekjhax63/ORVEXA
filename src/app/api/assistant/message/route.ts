@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/guards";
+import { consumeRateLimit, RATE_LIMITS } from "@/lib/security/rate-limit";
 
 /**
  * POST /api/assistant/message
@@ -39,9 +40,17 @@ For emergencies, always direct the user to call emergency services or use the OR
 Keep answers clear, warm, and concise. Never make up clinical facts.`;
 
 export async function POST(request: Request) {
+<<<<<<< HEAD
   // ── Authentication / Guest session ─────────────────────────────────────────
   // Sakha AI assists both registered users and new visitors navigating ORVEXA.
   const user = await getCurrentUser().catch(() => null);
+=======
+  // ── Authentication ───────────────────────────────────────────────────────
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: "Sign in to use Sakha AI." }, { status: 401 });
+  }
+>>>>>>> 00c6be6 (Updated project features)
 
   // ── Parse and validate body ──────────────────────────────────────────────
   let content: string;
@@ -65,10 +74,25 @@ export async function POST(request: Request) {
   // ── Check API key ────────────────────────────────────────────────────────
   const apiKey = process.env.BLUESMINDS_API_KEY;
   if (!apiKey) {
+<<<<<<< HEAD
     return NextResponse.json({
       reply:
         "Sakha AI is not yet configured on this deployment. Please set the BLUESMINDS_API_KEY environment variable.",
     });
+=======
+    return NextResponse.json(
+      { error: "Sakha AI is not configured on this deployment." },
+      { status: 503 },
+    );
+  }
+
+  const limit = await consumeRateLimit("aiTurn", `user:${user.id}`, RATE_LIMITS.aiTurn);
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Sakha AI is handling a lot of requests from your account. Try again shortly." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } },
+    );
+>>>>>>> 00c6be6 (Updated project features)
   }
 
   // ── Call the BluesMinds API ───────────────────────────────────────────────
@@ -103,24 +127,41 @@ export async function POST(request: Request) {
     }
     if (response.status === 429) {
       return NextResponse.json(
-        { reply: "Sakha AI is receiving many requests right now. Please try again in a moment." },
-        { status: 200 },
+        { error: "Sakha AI is receiving many requests right now. Please try again in a moment." },
+        { status: 429, headers: { "Retry-After": "30" } },
       );
     }
     if (!response.ok) {
-      const text = await response.text().catch(() => "");
-      console.error(`[SakhaAI] Provider error ${response.status}: ${text.slice(0, 200)}`);
+      console.error(`[SakhaAI] Provider returned HTTP ${response.status}`);
       return NextResponse.json(
+<<<<<<< HEAD
         { reply: "Sakha AI encountered an error from the provider. Please try again." },
         { status: 200 },
+=======
+        { error: "Sakha AI encountered an error. Please try again." },
+        { status: 502 },
+>>>>>>> 00c6be6 (Updated project features)
       );
     }
 
     // ── Parse the OpenAI-compatible response ───────────────────────────────
+<<<<<<< HEAD
     const data = await response.json();
     const choice = data?.choices?.[0];
     const rawContent: string | null = choice?.message?.content;
     const reasoningContent: string | null = choice?.message?.reasoning_content ?? choice?.message?.reasoning;
+=======
+    const data = (await response.json()) as {
+      choices?: { message?: { content?: unknown } }[];
+    };
+    const reply = data.choices?.[0]?.message?.content;
+    if (typeof reply !== "string" || !reply.trim()) {
+      return NextResponse.json(
+        { error: "Sakha AI did not return a response. Please try again." },
+        { status: 502 },
+      );
+    }
+>>>>>>> 00c6be6 (Updated project features)
 
     // Use content if available; fallback if empty
     let reply = (rawContent && rawContent.trim()) ? rawContent.trim() : "";
@@ -131,6 +172,7 @@ export async function POST(request: Request) {
       reply = "I'm here to help you navigate ORVEXA. Please ask any question about hospitals, doctors, medicine delivery, or emergency care!";
     }
 
+<<<<<<< HEAD
     // Image support: parse any images returned in the message payload or embedded in markdown
     const images: { url: string; alt?: string }[] = [];
 
@@ -156,18 +198,20 @@ export async function POST(request: Request) {
       reply,
       images: images.length > 0 ? images.map((i) => i.url) : undefined,
     });
+=======
+    return NextResponse.json({ reply: reply.trim(), images });
+>>>>>>> 00c6be6 (Updated project features)
   } catch (err) {
     if (err instanceof Error && err.name === "TimeoutError") {
       return NextResponse.json(
-        { reply: "Sakha AI took too long to respond. Please try again." },
-        { status: 200 },
+        { error: "Sakha AI took too long to respond. Please try again." },
+        { status: 504 },
       );
     }
-    // Generic network or parse error – do not leak details.
-    console.error("[SakhaAI] Unexpected error:", err instanceof Error ? err.message : String(err));
+    console.error("[SakhaAI] Provider request failed", err instanceof Error ? err.name : "unknown error");
     return NextResponse.json(
-      { reply: "Something went wrong. Please try again." },
-      { status: 200 },
+      { error: "Sakha AI could not be reached. Please try again." },
+      { status: 502 },
     );
   }
 }

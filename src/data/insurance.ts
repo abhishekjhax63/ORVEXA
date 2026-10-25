@@ -115,34 +115,30 @@ export const insurancePlans: InsurancePlan[] = [
 export const claimSteps: ClaimStep[] = [
   {
     id: "step-coverage",
-    title: "Run a coverage check",
-    description:
-      "Add your policy number and ORVEXA maps it against the hospital you chose, showing approved limits and likely out-of-pocket cost.",
-    duration: "2 minutes",
+    title: "Coverage check unavailable",
+    description: "ORVEXA is not connected to insurers or policy terms and cannot estimate coverage or costs.",
+    duration: "Not available",
     icon: Calculator,
   },
   {
     id: "step-preauth",
-    title: "Send pre-authorisation",
-    description:
-      "Our claims desk files the pre-auth with treating-doctor notes, cost estimate and policy documents on your behalf.",
-    duration: "Same day",
+    title: "Pre-authorisation unavailable",
+    description: "ORVEXA does not prepare or submit pre-authorisation requests.",
+    duration: "Not available",
     icon: FileText,
   },
   {
     id: "step-approval",
-    title: "Get hospital approval",
-    description:
-      "Track approval status in the dashboard. We chase the insurer's TPA and flag every query that needs your action.",
-    duration: "24–72 hours",
+    title: "Claim tracking unavailable",
+    description: "ORVEXA does not contact insurers or TPAs and cannot track approval status.",
+    duration: "Not available",
     icon: ShieldCheck,
   },
   {
     id: "step-reimbursement",
-    title: "Settle and reimburse",
-    description:
-      "For cashless admissions the hospital bills the insurer directly. For reimbursement, we assemble the claim pack and follow it to payout.",
-    duration: "7–15 days",
+    title: "Claims support unavailable",
+    description: "ORVEXA does not submit reimbursement claims or determine claim outcomes.",
+    duration: "Not available",
     icon: ReceiptIndianRupee,
   },
 ];
@@ -151,34 +147,34 @@ export const insuranceGuides: InsuranceGuide[] = [
   {
     id: "guide-choose-cover",
     title: "Choosing the right cover",
-    description: "A practical rule of thumb for how much sum insured a household actually needs.",
+    description: "General points to discuss with a licensed insurance adviser; no personalized recommendation is provided.",
     icon: Wallet,
     points: [
-      "Aim for at least 50% of annual household income as sum insured",
-      "Metro households should start at ₹10 lakh given private room tariffs",
-      "Prefer a plan with a low room-rent cap or none at all",
+      "Consider household needs, existing coverage and financial circumstances",
+      "Compare limits, exclusions and out-of-pocket costs in the official policy wording",
+      "Ask the insurer or a licensed adviser about suitable coverage",
     ],
   },
   {
     id: "guide-waiting-periods",
     title: "Waiting periods decoded",
-    description: "What the initial, pre-existing and specific-disease waiting periods really mean.",
+    description: "Waiting periods and exclusions vary by policy; verify them in the official documents.",
     icon: HeartHandshake,
     points: [
-      "Initial waiting period of 30 days covers accidents immediately, illness later",
-      "Pre-existing conditions are covered only after the declared waiting period",
-      "Maternity typically needs 24–36 months of continuous cover",
+      "Review the waiting-period definitions in the current policy wording",
+      "Ask the insurer how declared pre-existing conditions are treated",
+      "Confirm any maternity or condition-specific exclusions directly with the insurer",
     ],
   },
   {
     id: "guide-claim-rejection",
     title: "Avoiding claim rejections",
-    description: "The four documentation gaps that cause most rejections in India.",
+    description: "General record-keeping reminders; claim requirements depend on the insurer and policy.",
     icon: ShieldCheck,
     points: [
-      "Disclose pre-existing conditions at purchase, not at claim time",
-      "Keep discharge summary and investigation reports in one folder",
-      "Inform the insurer within 24 hours of an emergency admission",
+      "Provide accurate information when applying for cover",
+      "Keep copies of documents requested by your insurer",
+      "Contact your insurer promptly to confirm notification and submission deadlines",
     ],
   },
 ];

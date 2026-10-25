@@ -8,14 +8,14 @@ import { Section } from "@/components/layout/section";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Terms of service",
+  title: "Terms draft",
   description:
-    "The terms governing your use of ORVEXA: acceptance, why Phase 1 demo forms create no booking, our role as a facilitator rather than a provider of medical care, user obligations, prescription and pharmacy rules, payments, intellectual property, liability and Indian jurisdiction.",
+    "Draft terms for review. The legal entity, offered services and legal terms have not been verified or approved for this deployment.",
   alternates: { canonical: "/terms" },
 };
 
 /** Static by design: reading the clock during render breaks Cache Components. */
-const lastUpdated = "12 October 2026";
+const lastUpdated = "Draft; date not verified";
 
 const toc = [
   { id: "acceptance", title: "Acceptance of these terms" },
@@ -35,9 +35,9 @@ export default function TermsPage() {
   return (
     <>
       <PageHero
-        eyebrow="Terms of service"
-        title="The terms you accept when you use ORVEXA"
-        description="Written in plain language, covering what ORVEXA does, what it deliberately does not do, what we expect from you, and how disputes are handled under Indian law."
+        eyebrow="Draft terms"
+        title="Terms are not finalized"
+        description="This unapproved draft is not a binding service agreement or legal advice. The legal entity and service terms have not been verified for this deployment."
         breadcrumbs={[
           { title: "Home", href: "/" },
           { title: "Terms", href: "/terms" },
@@ -62,28 +62,25 @@ export default function TermsPage() {
 
           <div className="flex flex-col gap-10">
             <DemoNotice>
-              These terms are a Phase 1 template written for review. They must be reviewed and approved by qualified
-              Indian legal counsel before launch, and they are not legal advice. Send comments to{" "}
-              {siteConfig.supportEmail}.
+              These draft terms have not been reviewed by qualified legal counsel. The legal identity, jurisdiction,
+              service commitments and consumer-protection obligations require verification before publication. Do not
+              rely on this page as an active contract.
             </DemoNotice>
 
             <section id="acceptance" className="max-w-3xl">
               <h2 className="text-xl font-semibold sm:text-2xl">Acceptance of these terms</h2>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                These terms are an agreement between you and {siteConfig.legalName} (&ldquo;ORVEXA&rdquo;,
-                &ldquo;we&rdquo;, &ldquo;us&rdquo;) governing your use of the ORVEXA website, applications and services
-                (together, the &ldquo;platform&rdquo;). By browsing the platform, submitting a form, creating an account
-                or using a care module, you accept these terms.
+                ORVEXA is the project name used on this website. This draft does not identify a verified legal entity
+                and does not establish a binding agreement or service relationship.
               </p>
               <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-muted-foreground">
-                <li>If you do not accept these terms, please do not use the platform.</li>
+                <li>                The terms and service commitments shown below are unverified draft examples.</li>
                 <li>
                   If you use the platform for a family member or another person, you confirm you are authorised to act
                   for them and that they have been told.
                 </li>
                 <li>
-                  Provider partners accept additional terms at onboarding. Where those differ, the provider terms govern
-                  the provider relationship.
+                  Provider onboarding and provider agreements are not available through this deployment.
                 </li>
                 <li>
                   Our{" "}
@@ -98,10 +95,9 @@ export default function TermsPage() {
             <section id="phase-1-demo" className="max-w-3xl">
               <h2 className="text-xl font-semibold sm:text-2xl">Phase 1 demo forms and no booking</h2>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                This build of ORVEXA is a review release. Its request forms — appointments, ambulance requests, provider
-                applications, pharmacist questions and contact — validate your input in your browser and display a
-                confirmation state so the interface can be evaluated. They do not transmit anything to ORVEXA and they
-                do not create a booking, an order, an application or a support ticket.
+                This build is a review release. Any remaining preview forms validate input locally only; they do not
+                transmit information or create a booking, order, application, claim, or support ticket. Do not enter
+                real personal, medical, facility or policy information.
               </p>
               <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-muted-foreground">
                 <li>Do not rely on this build to arrange care, medicine, transport or a claim.</li>

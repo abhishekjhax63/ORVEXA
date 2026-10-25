@@ -306,19 +306,20 @@ function RegisterForm() {
                 className="mt-0.5"
               />
               <Label htmlFor={`${formId}-consent`} className="text-sm leading-relaxed font-normal text-muted-foreground">
-                I agree to the{" "}
+                I acknowledge that the{" "}
                 <Link href="/privacy" className="font-medium text-primary underline-offset-4 hover:underline">
-                  privacy policy
+                  privacy notice
                 </Link>{" "}
                 and{" "}
                 <Link href="/terms" className="font-medium text-primary underline-offset-4 hover:underline">
-                  terms of service
-                </Link>
-                , including how ORVEXA stores and shares my health records. Required.
+                  terms
+                </Link>{" "}
+                are unapproved drafts, and I will not submit real patient or sensitive personal data through this
+                review deployment. Required.
               </Label>
             </div>
             <p id={`${formId}-consent-help`} className="sr-only">
-              You must accept the privacy policy and terms of service to create an account.
+              You must acknowledge the draft notices before creating an account.
             </p>
           </div>
 

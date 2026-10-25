@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { CheckCircle2, Loader2, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button, type ButtonProps } from "@/components/ui/button";
@@ -36,13 +36,10 @@ type RequestDialogProps = {
   title: string;
   description: string;
   fields: RequestField[];
-  submitLabel: string;
-  successTitle: string;
-  successBody: string;
   footnote?: string;
 };
 
-type Status = "idle" | "submitting" | "success";
+type Status = "idle" | "preview";
 
 const phonePattern = /^[0-9+\s-]{10,15}$/;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -83,10 +80,8 @@ function validate(fields: RequestField[], values: Record<string, string>) {
 }
 
 /**
- * Shared request form used by every Phase 1 surface that captures an intent
- * (appointments, diagnostics, contact, provider onboarding). Validation is
- * real and runs in the browser; submission is explicitly labelled as demo
- * mode until the corresponding API is connected.
+ * Shared client-side preview for forms without a connected submission API.
+ * It validates locally but never sends or stores the entered values.
  */
 function RequestDialog({
   triggerLabel,
@@ -96,9 +91,6 @@ function RequestDialog({
   title,
   description,
   fields,
-  submitLabel,
-  successTitle,
-  successBody,
   footnote,
 }: RequestDialogProps) {
   const formId = useId();
@@ -114,6 +106,7 @@ function RequestDialog({
     if (!next) {
       setStatus("idle");
       setErrors({});
+      setValues(Object.fromEntries(fields.map((field) => [field.name, field.defaultValue ?? ""])));
     }
   }
 
@@ -127,7 +120,7 @@ function RequestDialog({
     });
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors = validate(fields, values);
     setErrors(nextErrors);
@@ -137,12 +130,8 @@ function RequestDialog({
       return;
     }
 
-    setStatus("submitting");
-    // No backend in Phase 1: this simulates the round trip so the UI states
-    // (pending, success, error) are all reviewable.
-    await new Promise((resolve) => setTimeout(resolve, 650));
-    setStatus("success");
-    toast.success(successTitle);
+    setStatus("preview");
+    toast.info("Nothing was sent. This form is an unconnected preview.");
   }
 
   return (
@@ -153,17 +142,20 @@ function RequestDialog({
         </Button>
       </DialogTrigger>
       <DialogContent>
-        {status === "success" ? (
+        {status === "preview" ? (
           <div className="flex flex-col items-center gap-4 py-4 text-center">
-            <span aria-hidden className="grid size-14 place-items-center rounded-full bg-success-soft text-success">
-              <CheckCircle2 className="size-7" />
+            <span aria-hidden className="grid size-14 place-items-center rounded-full bg-primary-soft text-primary">
+              <Info className="size-7" />
             </span>
             <div className="space-y-1.5">
-              <h2 className="text-lg font-semibold">{successTitle}</h2>
-              <p className="text-sm text-muted-foreground">{successBody}</p>
+              <h2 className="text-lg font-semibold">Nothing was sent</h2>
+              <p className="text-sm text-muted-foreground">
+                This form only validates information in your browser. No request was created, and the values were not
+                saved or transmitted.
+              </p>
             </div>
             <p className="rounded-xl border border-dashed border-warning/40 bg-warning-soft px-3 py-2 text-xs text-warning">
-              Demo mode — nothing was transmitted. Connect the booking API to make this request live.
+              This is not a booking, order, quote, claim, reminder or support submission.
             </p>
             <Button variant="outline" onClick={() => handleOpenChange(false)}>
               Close
@@ -248,15 +240,8 @@ function RequestDialog({
                 <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" variant="gradient" disabled={status === "submitting"}>
-                  {status === "submitting" ? (
-                    <>
-                      <Loader2 aria-hidden className="animate-spin" />
-                      Sending…
-                    </>
-                  ) : (
-                    submitLabel
-                  )}
+                <Button type="submit" variant="gradient">
+                  Preview only
                 </Button>
               </DialogFooter>
             </form>

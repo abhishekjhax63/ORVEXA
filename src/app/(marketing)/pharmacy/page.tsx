@@ -36,9 +36,9 @@ import { healthImage } from "@/lib/images";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "MediCare pharmacy",
+  title: "MediCare pharmacy prototype",
   description:
-    "Genuine medicines sourced from manufacturer-authorised distributors, verified by licensed pharmacists and delivered in 90 minutes across serviceable pin codes. Schedule H and H1 orders need a valid prescription.",
+    "Explore a sample medicine catalogue. Products, prices and stock are illustrative; no pharmacy, pharmacist, order, payment or delivery service is connected.",
   alternates: { canonical: "/pharmacy" },
 };
 
@@ -58,33 +58,33 @@ type JourneyStep = {
 const journeySteps: JourneyStep[] = [
   {
     icon: Upload,
-    title: "Send or forward your prescription",
+    title: "Prescription submission (not available)",
     description:
-      "Photograph a paper prescription, or forward the e-prescription your doctor issued on ORVEXA. Tell us the patient name and delivery pin code so the pharmacist can match it correctly.",
+      "The prototype has no prescription upload or pharmacy connection. Do not submit prescriptions through the demo form.",
     actionLabel: "Prescription help",
     actionHref: "/help#pharmacy",
   },
   {
     icon: ClipboardCheck,
-    title: "A licensed pharmacist verifies it",
+    title: "Prescription review (not live)",
     description:
-      "The pharmacist reads the prescriber registration number, patient name, drug, strength, dose and duration, and confirms the prescription has not been altered. If anything is unclear, we call you before packing.",
-    actionLabel: "No prescription? Consult online",
-    actionHref: "/services#telemedicine",
+      "A future pharmacy integration would need qualified staff to review prescription details. This prototype does not accept or send prescriptions.",
+    actionLabel: "Browse provider directory",
+    actionHref: "/hospitals?view=doctors",
   },
   {
     icon: Snowflake,
-    title: "Packed, with cold chain where required",
+    title: "Safe handling (not provided)",
     description:
-      "Insulin, vaccines and select biologics travel in validated 2–8°C boxes with a temperature logger. Everything else is packed with the batch number, expiry date and pharmacist name on the label.",
+      "This prototype has no pharmacy, inventory, dispensing or cold-chain provider. Do not place orders or rely on its sample delivery information.",
     actionLabel: "See storage standards",
     actionHref: "#quality",
   },
   {
     icon: Route,
-    title: "Dispatched with live tracking",
+    title: "Delivery tracking (not connected)",
     description:
-      "You get the pharmacist who approved the order, the batch details for each line and a live tracking link from the fulfilment hub to your door.",
+      "No order is created and no delivery tracking is available in this prototype.",
     actionLabel: null,
     actionHref: null,
   },
@@ -99,33 +99,28 @@ type QualityCheck = {
 const qualityChecks: QualityCheck[] = [
   {
     icon: ShieldCheck,
-    title: "Licensed pharmacy registration",
-    detail:
-      "Every MediCare fulfilment hub holds a drug licence issued under the Drugs and Cosmetics Rules. The licence number and the verifying pharmacist appear on each invoice.",
+    title: "Licensed pharmacy partner",
+    detail: "A live service would require a licensed pharmacy partner; none is connected to this prototype.",
   },
   {
     icon: Barcode,
-    title: "Expiry and batch checks",
-    detail:
-      "Stock is scanned by batch on arrival and again at packing. Anything within six months of expiry is pulled from sale rather than shipped to you.",
+    title: "Batch and expiry verification",
+    detail: "The sample catalogue has no live inventory, batch data or expiry checks.",
   },
   {
     icon: ThermometerSnowflake,
-    title: "Temperature-controlled storage",
-    detail:
-      "Insulin, vaccines and temperature-sensitive biologics are held at 2–8°C in monitored cabinets, with excursion alerts and a data logger in every cold-chain parcel.",
+    title: "Cold-chain handling",
+    detail: "No cold-chain storage, shipment or temperature logging is provided by this prototype.",
   },
   {
     icon: PackageCheck,
-    title: "Tamper-evident packaging",
-    detail:
-      "Parcels are sealed with serialised, tamper-evident tape. If the seal is broken on arrival, the pharmacist replaces the order at no cost.",
+    title: "Packaging and returns",
+    detail: "No order or shipment is created; there is no active return or replacement service.",
   },
   {
     icon: RotateCcw,
-    title: "A returns policy that is honest",
-    detail:
-      "Wrong or damaged items are replaced free of charge. Correctly dispensed medicines cannot be taken back once they leave the hub, for patient-safety reasons.",
+    title: "Order support",
+    detail: "No pharmacy order is available to support or return through ORVEXA.",
   },
 ];
 
@@ -133,9 +128,9 @@ export default function PharmacyPage() {
   return (
     <>
       <PageHero
-        eyebrow="MediCare pharmacy"
-        title="Genuine medicines, delivered to your doorstep"
-        description="MediCare sources only from manufacturer-authorised distributors with batch traceability, has a registered pharmacist verify every prescription order before dispatch, and delivers in 90 minutes across serviceable metro pin codes."
+        eyebrow="MediCare prototype"
+        title="Explore a sample medicine catalogue"
+        description="This is a browser-only catalogue preview. Product names, prices, stock levels, discounts and delivery estimates are illustrative; no pharmacy or delivery service is connected."
         breadcrumbs={[
           { title: "Home", href: "/" },
           { title: "Pharmacy", href: "/pharmacy" },
@@ -156,7 +151,7 @@ export default function PharmacyPage() {
         aside={
           <div className="rounded-[1.75rem] border border-border bg-card/85 p-6 shadow-[var(--shadow-panel)] backdrop-blur-sm">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">Delivery promise</p>
+              <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">Prototype status</p>
               <Badge variant="demo">Demo</Badge>
             </div>
             <ul className="mt-5 flex flex-col gap-4">
@@ -165,9 +160,9 @@ export default function PharmacyPage() {
                   <Clock className="size-4.5" />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold">90-minute delivery</p>
+                  <p className="text-sm font-semibold">Sample catalogue only</p>
                   <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                    Metro pin codes, for prescription orders cleared before 8 PM.
+                    No live inventory or delivery window.
                   </p>
                 </div>
               </li>
@@ -176,9 +171,9 @@ export default function PharmacyPage() {
                   <ShieldCheck className="size-4.5" />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold">Genuine or refund</p>
+                  <p className="text-sm font-semibold">No order or payment</p>
                   <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                    A counterfeit or wrongly dispensed item is replaced and refunded in full.
+                    The cart stays in this browser and checkout is disabled.
                   </p>
                 </div>
               </li>
@@ -187,9 +182,9 @@ export default function PharmacyPage() {
                   <Snowflake className="size-4.5" />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold">Cold-chain packing</p>
+                  <p className="text-sm font-semibold">No fulfillment partner</p>
                   <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                    Validated 2–8°C boxes with a temperature logger for insulin and vaccines.
+                    No pharmacist, pharmacy or cold-chain provider is connected.
                   </p>
                 </div>
               </li>
@@ -202,12 +197,17 @@ export default function PharmacyPage() {
         }
       />
 
+      <DemoNotice className="mx-auto my-8 max-w-7xl px-6">
+        Do not use this sample catalogue to make treatment or purchasing decisions. No medicine is sold or delivered
+        through this page.
+      </DemoNotice>
+
       <Section id="highlights" tone="muted" spacing="default" aria-labelledby="highlights-heading">
         <Reveal>
           <SectionHeading
-            eyebrow="Why MediCare"
-            title={<span id="highlights-heading">A pharmacy counter you never have to queue at</span>}
-            description="Four things MediCare does the same way every time, for every order, whether it is one strip of paracetamol or a month of chronic-care refills."
+            eyebrow="Prototype boundaries"
+            title={<span id="highlights-heading">What this preview includes</span>}
+            description="These sample entries demonstrate catalogue browsing only. No pharmacist, pharmacy, inventory or delivery service is connected."
           />
         </Reveal>
 
@@ -230,8 +230,8 @@ export default function PharmacyPage() {
         <Reveal>
           <SectionHeading
             eyebrow="Catalogue"
-            title={<span id="catalogue-heading">Search the MediCare inventory</span>}
-            description={`Filter ${medicines.length} sample medicines across ${medicineCategories.length} categories, sort by price or discount, and build a cart. A pharmacist approves every prescription-only line before dispatch.`}
+            title={<span id="catalogue-heading">Search sample catalogue entries</span>}
+            description={`Filter ${medicines.length} illustrative products across ${medicineCategories.length} categories and build a local demo cart. No medicine is sold or ordered.`}
           />
         </Reveal>
         <div className="mt-8">
@@ -247,8 +247,8 @@ export default function PharmacyPage() {
         <Reveal>
           <SectionHeading
             eyebrow="How it works"
-            title={<span id="how-it-works-heading">From prescription to doorstep in four steps</span>}
-            description="Each step is designed so nothing is dispensed on assumption. Where a step depends on your input, the action is one tap away."
+            title={<span id="how-it-works-heading">What a future pharmacy service would require</span>}
+            description="The workflow below is illustrative only. Prescription review, dispensing and delivery are not available from this prototype."
           />
         </Reveal>
 
@@ -275,8 +275,8 @@ export default function PharmacyPage() {
                     </Link>
                   </Button>
                 ) : (
-                  <Badge variant="neutral" className="mt-auto w-fit">
-                    Phase 2
+                  <Badge variant="demo" className="mt-auto w-fit">
+                    Not connected
                   </Badge>
                 )}
               </div>
@@ -303,8 +303,8 @@ export default function PharmacyPage() {
                 What we can and cannot dispense without a prescription
               </h2>
               <p className="mt-4 text-base leading-relaxed text-white/70 sm:text-lg">
-                Indian law is specific about prescription medicines, and MediCare follows it to the letter. Here is
-                exactly how verification works, and where we draw the line.
+                This section is general safety information, not legal or medical advice. This prototype does not sell,
+                dispense or verify any medicine or prescription.
               </p>
             </Reveal>
 
@@ -328,12 +328,10 @@ export default function PharmacyPage() {
                     <ListChecks className="size-5" />
                   </span>
                   <div>
-                    <p className="text-sm font-semibold text-white">How ORVEXA verifies your prescription</p>
+                    <p className="text-sm font-semibold text-white">What a pharmacy should verify</p>
                     <p className="mt-1.5 text-xs leading-relaxed text-white/70">
-                      A registered pharmacist checks the prescriber registration number, the patient name, the drug,
-                      strength, dose and duration, and confirms the document has not been altered or reused. If a
-                      detail is missing or illegible, the pharmacist calls you before packing — no substitute is chosen
-                      by an algorithm.
+                      A licensed pharmacist should review a prescription before dispensing. ORVEXA has no pharmacy
+                      partner connected here and does not receive prescription documents from this page.
                     </p>
                   </div>
                 </li>
@@ -342,11 +340,10 @@ export default function PharmacyPage() {
                     <TriangleAlert className="size-5" />
                   </span>
                   <div>
-                    <p className="text-sm font-semibold text-white">Restricted and habit-forming medicines</p>
+                    <p className="text-sm font-semibold text-white">Restricted medicines</p>
                     <p className="mt-1.5 text-xs leading-relaxed text-white/70">
-                      Schedule X and narcotic drugs are not sold through MediCare delivery at all. For habit-forming
-                      medicines we cap the quantity per order, require a second pharmacist to countersign, and log the
-                      dispense record — so the same prescription cannot be filled repeatedly.
+                      No medicines are sold or dispensed through this demo. Consult a licensed pharmacist or official
+                      regulatory information for current requirements.
                     </p>
                   </div>
                 </li>
@@ -361,20 +358,20 @@ export default function PharmacyPage() {
                   <Headset className="size-5" />
                 </span>
                 <div>
-                  <h3 className="text-lg font-semibold text-white">Talk to a pharmacist</h3>
+                  <h3 className="text-lg font-semibold text-white">Pharmacist support is not connected</h3>
                   <p className="mt-1.5 text-sm leading-relaxed text-white/70">
-                    Not sure whether your prescription is valid, or whether a medicine is available in your pin code?
-                    Send the question and a pharmacist will pick it up.
+                    The form below is a local interaction preview. It does not reach a pharmacist or provide
+                    prescription, stock or dosage advice.
                   </p>
                 </div>
               </div>
 
               <RequestDialog
-                triggerLabel="Talk to a pharmacist"
+                triggerLabel="Preview the support form"
                 triggerSize="lg"
                 triggerClassName="w-full"
-                title="Ask a MediCare pharmacist"
-                description="Describe what you need clarified. A registered pharmacist reviews prescription, availability and dosage questions."
+                title="Pharmacy support form preview"
+                description="This local preview does not send questions to a pharmacist or provide medical advice."
                 fields={[
                   {
                     name: "patientName",
@@ -418,22 +415,19 @@ export default function PharmacyPage() {
                     required: true,
                   },
                 ]}
-                submitLabel="Send to a pharmacist"
-                successTitle="Question ready for review"
-                successBody="A registered pharmacist would receive your question, the prescription reference and the number to call you back on."
-                footnote="Phase 1 has no pharmacist messaging backend yet. This form validates your details and shows the confirmation state, but no message reaches a pharmacist and no prescription is verified by submitting it."
+                footnote="Do not enter health information here. This prototype has no pharmacy messaging backend."
               />
 
               <p className="flex items-start gap-2 border-t border-white/10 pt-5 text-xs leading-relaxed text-white/60">
                 <PhoneCall aria-hidden className="mt-0.5 size-3.5 shrink-0 text-teal-200" />
-                For anything urgent, call the MediCare desk on{" "}
+                For general ORVEXA support, call{" "}
                 <a
                   href={`tel:${siteConfig.supportPhone.replace(/\s/g, "")}`}
                   className="font-medium text-white underline underline-offset-4"
                 >
                   {siteConfig.supportPhone}
                 </a>
-                . This is not an emergency line.
+                . This is not a pharmacy or emergency line.
               </p>
             </div>
           </Reveal>
@@ -443,9 +437,9 @@ export default function PharmacyPage() {
       <Section id="quality" spacing="default" aria-labelledby="quality-heading">
         <Reveal>
           <SectionHeading
-            eyebrow="Trust &amp; quality"
-            title={<span id="quality-heading">The checks behind every parcel</span>}
-            description="Medicine is not a normal product. These are the standards MediCare holds itself to before an order leaves the hub."
+            eyebrow="Requirements for a live service"
+            title={<span id="quality-heading">Checks a pharmacy partner would need</span>}
+            description="These are examples of operational controls to confirm before any pharmacy integration goes live; none is provided by this prototype."
           />
         </Reveal>
 
@@ -454,7 +448,7 @@ export default function PharmacyPage() {
             <div className="overflow-hidden rounded-[1.75rem] border border-border bg-muted shadow-[var(--shadow-lift)]">
               <Image
                 src={qualityImage}
-                alt="A licensed pharmacist checking medicines against a prescription in a temperature-controlled MediCare storage room"
+                alt="Illustrative pharmacy image; this is not an ORVEXA facility"
                 width={1024}
                 height={768}
                 sizes="(min-width: 1024px) 46vw, 92vw"
@@ -485,30 +479,29 @@ export default function PharmacyPage() {
         <Reveal>
           <div className="flex flex-col items-start gap-6 rounded-[1.75rem] border border-border bg-card p-6 shadow-[var(--shadow-soft)] sm:p-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
-              <h2 className="text-2xl font-semibold sm:text-3xl">Need a prescription before you can order?</h2>
+              <h2 className="text-2xl font-semibold sm:text-3xl">Looking for a real provider?</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Consult a verified doctor on ORVEXA and get a signed e-prescription you can forward straight to
-                MediCare. For questions about an existing prescription or an order, the help centre and the pharmacy
-                desk are one tap away.
+                The pharmacy prototype does not accept orders or connect to clinicians. Browse the supplied Patna
+                provider directory and verify all details directly before contacting a provider.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Button asChild variant="gradient" size="lg">
                 <Link href="/services#telemedicine">
                   <MessageCircle aria-hidden />
-                  Consult a doctor
+                  Browse provider listings
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
                 <Link href="/help#pharmacy">
                   <Headset aria-hidden />
-                  Pharmacy help
+                  Prototype FAQ
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link href="/contact#chat">
+                <Link href="/contact">
                   <MessageCircle aria-hidden />
-                  Chat with support
+                  Contact ORVEXA
                 </Link>
               </Button>
             </div>

@@ -19,8 +19,8 @@ function AiShowcaseSection() {
           <Reveal>
             <SectionHeading
               eyebrow="AI Health Assistant"
-              title="Describe how you feel. Get a clear next step."
-              description="ORVEXA's assistant turns free-text symptoms into an urgency band, a likely speciality and three suitable doctors — then shows you exactly which symptoms drove the recommendation."
+              title="Describe symptoms or add a medical image."
+              description="Open the AI workspace for symptom and image analysis when this deployment has its AI and upload services configured. It provides guidance, not a diagnosis; the transcript shown here is only a scripted preview."
             />
           </Reveal>
 
@@ -46,15 +46,15 @@ function AiShowcaseSection() {
           <Reveal className="mt-8" delay={0.05}>
             <div className="flex flex-wrap items-center gap-3">
               <Button asChild variant="gradient" size="lg">
-                <Link href="/ai-assistant">
+                <Link href="/assistant">
                   <Sparkles aria-hidden />
-                  Open the assistant
+                  Open the AI workspace
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link href="/ai-assistant#how-it-works">
+                <Link href="/ai-assistant#demo">
                   <Brain aria-hidden />
-                  How triage works
+                  View the scripted demo
                 </Link>
               </Button>
             </div>
@@ -109,7 +109,7 @@ function AiShowcaseSection() {
 
             <div className="border-t border-border px-5 py-4">
               <Link
-                href="/ai-assistant"
+                href="/assistant"
                 className="flex items-center gap-3 rounded-xl border border-input bg-muted/60 px-4 py-3 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
               >
                 <MessageSquare aria-hidden className="size-4" />

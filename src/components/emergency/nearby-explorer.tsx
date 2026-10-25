@@ -740,6 +740,10 @@ function MapPanel({
   facilityCount: number;
 }) {
   const attribution = mapAttribution();
+  const unavailableCopy =
+    mapConfig.provider === "google" && mapConfig.accessToken
+      ? "Google Maps is configured, but this interactive map currently supports Mapbox and Geoapify. The provider list remains available from ORVEXA's own records."
+      : "No supported mapping provider is configured on this deployment. The list below is unaffected — it comes from ORVEXA's own records.";
 
   return (
     <Card>
@@ -753,7 +757,7 @@ function MapPanel({
             <CardDescription>
               {mapReady
                 ? `Tiles from ${mapProviderLabel()}. Showing the map sends your viewport to the provider.`
-                : "No mapping provider is configured on this deployment. The list below is unaffected — it comes from ORVEXA's own records."}
+                : unavailableCopy}
             </CardDescription>
           </div>
           {canOffer3d ? (
@@ -766,9 +770,9 @@ function MapPanel({
       <CardContent className="space-y-3">
         {!mapReady ? (
           <p className="rounded-xl border border-dashed border-border bg-muted/40 px-4 py-6 text-sm leading-relaxed text-muted-foreground">
-            No map provider is configured, so there is nothing to draw here. Every provider that ORVEXA has on record
-            for this area is still listed on the right, with its address, phone number and whatever availability it has
-            reported. Call the emergency department directly rather than waiting for a map.
+            {unavailableCopy} Every provider that ORVEXA has on record for this area is still listed on the right, with
+            its address, phone number and whatever availability it has reported. Call the emergency department
+            directly rather than waiting for a map.
           </p>
         ) : !hasOrigin ? (
           <p className="rounded-xl border border-dashed border-border bg-muted/40 px-4 py-10 text-center text-sm leading-relaxed text-muted-foreground">

@@ -11,7 +11,7 @@ import { formatINR } from "@/lib/utils";
 
 const featuredMedicines = medicines.slice(0, 3);
 
-/** Homepage MediCare pharmacy block: catalogue entry, trust points and delivery promise. */
+/** Homepage MediCare pharmacy block: illustrative catalogue preview. */
 function PharmacyShowcaseSection() {
   return (
     <Section id="pharmacy" tone="muted" spacing="default">
@@ -20,8 +20,8 @@ function PharmacyShowcaseSection() {
           <Reveal>
             <SectionHeading
               eyebrow="MediCare pharmacy"
-              title="Prescriptions filled and delivered in 90 minutes"
-              description="Upload a prescription once and MediCare handles verification, generic substitution, cold-chain packing and monthly refills — with a licensed pharmacist approving every order."
+              title="Explore an illustrative medicine catalogue"
+              description="Product details and prices are samples. No pharmacy, pharmacist, order, payment or delivery service is connected."
             />
           </Reveal>
 
@@ -66,11 +66,11 @@ function PharmacyShowcaseSection() {
                 <Truck className="size-4.5" />
               </span>
               <div className="min-w-0">
-                <p className="text-sm font-semibold">Chronic care refill</p>
-                <p className="text-xs text-muted-foreground">Indiranagar, Bengaluru · arriving today</p>
+                <p className="text-sm font-semibold">Sample refill preview</p>
+                <p className="text-xs text-muted-foreground">Illustrative details · no live order</p>
               </div>
-              <Badge variant="success" className="ml-auto shrink-0">
-                Out for delivery
+              <Badge variant="demo" className="ml-auto shrink-0">
+                Sample
               </Badge>
             </div>
 
@@ -106,7 +106,7 @@ function PharmacyShowcaseSection() {
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-4">
               <p className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Clock aria-hidden className="size-3.5" />
-                Express window: 90 minutes in metro pin codes
+                No live delivery or order tracking
               </p>
               <Link
                 href="/pharmacy"
@@ -119,8 +119,8 @@ function PharmacyShowcaseSection() {
           </div>
 
           <DemoNotice className="mt-4">
-            Medicines, prices, discount percentages and delivery status are sample data. MediCare ordering goes live
-            with the pharmacy integration.
+            Medicines, prices, stock, discounts and delivery labels are sample values. No pharmacy integration or
+            order fulfillment is active.
           </DemoNotice>
         </Reveal>
       </div>

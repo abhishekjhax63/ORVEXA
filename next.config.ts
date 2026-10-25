@@ -5,6 +5,9 @@ import { SECURITY_HEADERS, SENSITIVE_AREA_HEADERS } from "./src/lib/security/hea
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
+  async redirects() {
+    return [{ source: "/dashboard", destination: "/dashboard/consultations", permanent: false }];
+  },
   async headers() {
     return [
       {
@@ -24,7 +27,27 @@ const nextConfig: NextConfig = {
         headers: [...SENSITIVE_AREA_HEADERS],
       },
       {
+        source: "/assistant/:path*",
+        headers: [...SENSITIVE_AREA_HEADERS],
+      },
+      {
+        source: "/emergency/:path*",
+        headers: [...SENSITIVE_AREA_HEADERS],
+      },
+      {
+        source: "/consult/:path*",
+        headers: [...SENSITIVE_AREA_HEADERS],
+      },
+      {
+        source: "/provider/telemedicine/:path*",
+        headers: [...SENSITIVE_AREA_HEADERS],
+      },
+      {
         source: "/hospital/:path*",
+        headers: [...SENSITIVE_AREA_HEADERS],
+      },
+      {
+        source: "/api/:path*",
         headers: [...SENSITIVE_AREA_HEADERS],
       },
       {

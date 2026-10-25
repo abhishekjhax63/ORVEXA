@@ -20,7 +20,7 @@ function InsuranceDiagnosticsSection() {
         <SectionHeading
           eyebrow="Insurance & diagnostics"
           title="Know the cost before you consent to care"
-          description="Run a coverage check against the hospital you chose, and book NABL-accredited tests that land in the same records vault."
+          description="These are sample flows only. ORVEXA is not currently connected to insurers, claims desks, laboratories or home-collection services."
         />
       </Reveal>
 
@@ -34,8 +34,8 @@ function InsuranceDiagnosticsSection() {
               <div>
                 <h3 className="text-xl font-semibold">Insurance &amp; cashless claims</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                  Compare plans, check whether your policy is accepted, and let our claims desk file pre-authorisation
-                  with the insurer&apos;s TPA on your behalf.
+                  Coverage checks and claims submission are not connected. The steps below are illustrative and do not
+                  contact an insurer or TPA.
                 </p>
               </div>
             </div>
@@ -73,8 +73,8 @@ function InsuranceDiagnosticsSection() {
                 </Link>
               </Button>
               <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Zap aria-hidden className="size-3.5 text-success" />
-                Cashless at 9,400+ hospitals
+                <Zap aria-hidden className="size-3.5 text-warning" />
+                Claims service not connected
               </p>
             </div>
           </article>
@@ -92,8 +92,8 @@ function InsuranceDiagnosticsSection() {
               <div>
                 <h3 className="text-xl font-semibold">Diagnostics &amp; lab tests</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                  1,200+ pathology and radiology tests with free home sample collection across 40 cities. Reports arrive
-                  in your vault, not in a PDF buried in your inbox.
+                  Package names, prices and collection details are sample data. No laboratory booking or report delivery
+                  is connected.
                 </p>
               </div>
             </div>
@@ -147,7 +147,8 @@ function InsuranceDiagnosticsSection() {
       </div>
 
       <DemoNotice className="mt-6">
-        Claim timelines, package prices and test counts are illustrative samples used to review the flow.
+        Package prices, test counts and claim timelines are illustrative samples. These controls do not submit real
+        bookings or claims.
       </DemoNotice>
     </Section>
   );

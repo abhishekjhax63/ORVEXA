@@ -29,6 +29,8 @@ export type AiProviderConfig = {
   apiKey: string;
   /** Overrides the provider's default model. */
   model: string;
+  /** Optional vision model override for requests that include images. */
+  visionModel: string;
   /**
    * Speech-to-text model. Configured separately from `model` because a chat or
    * vision model cannot be sent to the transcription endpoint — the two live on
@@ -61,7 +63,15 @@ export function getAiProviderConfig(): AiProviderConfig | undefined {
   return {
     provider,
     apiKey,
+<<<<<<< HEAD
     model: optionalEnv("OPENAI_MODEL") ?? optionalEnv("AI_PROVIDER_MODEL") ?? AI_PROVIDER_PROFILES[provider].defaultModel,
+=======
+    model: optionalEnv("AI_PROVIDER_MODEL") ?? AI_PROVIDER_PROFILES[provider].defaultModel,
+    visionModel:
+      optionalEnv("AI_PROVIDER_VISION_MODEL") ??
+      optionalEnv("AI_PROVIDER_MODEL") ??
+      AI_PROVIDER_PROFILES[provider].defaultModel,
+>>>>>>> 00c6be6 (Updated project features)
     transcribeModel: optionalEnv("AI_PROVIDER_TRANSCRIBE_MODEL") ?? DEFAULT_TRANSCRIBE_MODEL[provider],
     organization: optionalEnv("AI_PROVIDER_ORGANIZATION") ?? null,
     baseUrl: (optionalEnv("AI_PROVIDER_BASE_URL") ?? DEFAULT_BASE_URL[provider]).replace(/\/+$/, ""),

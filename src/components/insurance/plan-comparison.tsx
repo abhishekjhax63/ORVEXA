@@ -155,7 +155,7 @@ function PlanComparison() {
     });
   }
 
-  const noCashlessAtHospital = cashlessOnly && chosenHospital !== null && !chosenHospital.cashlessInsurance;
+  const noCashlessAtHospital = cashlessOnly && chosenHospital !== null && chosenHospital.cashlessInsurance === false;
 
   return (
     <div className="flex flex-col gap-8">
@@ -225,7 +225,7 @@ function PlanComparison() {
               aria-describedby="cashless-only-hint"
             />
             <Label htmlFor="cashless-only" className="text-sm">
-              Only plans with cashless at my hospital
+              Sample network data for this hospital
             </Label>
           </div>
           <p aria-live="polite" className="text-sm text-muted-foreground">
@@ -236,12 +236,8 @@ function PlanComparison() {
         <p id="cashless-only-hint" className="flex items-start gap-2 text-xs text-muted-foreground">
           <Info aria-hidden className="mt-0.5 size-3.5 shrink-0" />
           {hospitalId
-            ? `Cashless admission depends on the hospital's agreement with the insurer. ${
-                chosenHospital?.cashlessInsurance
-                  ? `${chosenHospital.name} accepts cashless insurance today.`
-                  : `${chosenHospital?.name} does not appear in the cashless network, so a claim here would be reimbursement.`
-              }`
-            : "Choose a hospital above to check whether it accepts cashless admission, then switch the filter on."}
+            ? `Cashless status for ${chosenHospital?.name} is not verified. These sample plans cannot determine eligibility.`
+            : "Choose a hospital to filter the illustrative network figures; this does not verify cashless eligibility."}
         </p>
 
         {filtersActive ? (
@@ -261,13 +257,13 @@ function PlanComparison() {
           icon={Scale}
           title={
             noCashlessAtHospital
-              ? `${chosenHospital?.name} is not in the cashless network`
+              ? `${chosenHospital?.name} is not listed in the sample network figures`
               : "No plans match those filters"
           }
           description={
             noCashlessAtHospital
-              ? "A claim at this hospital would be settled as reimbursement. Clear the cashless filter to see every plan, or pick a hospital that appears in the network."
-              : "Widen the cover amount, premium or network size. Our care desk can also shortlist plans against a specific hospital."
+              ? "This sample catalogue cannot determine whether a claim would be cashless or reimbursed. Clear the filter to review the sample plans."
+              : "Adjust the sample filters to review more illustrative plan entries."
           }
           action={
             <Button variant="gradient" onClick={reset}>
@@ -316,7 +312,7 @@ function PlanComparison() {
 
                   <dl className="grid grid-cols-2 gap-3 rounded-xl border border-border bg-card-elevated p-3.5 text-xs">
                     <div>
-                      <dt className="text-muted-foreground">Cashless hospitals</dt>
+                      <dt className="text-muted-foreground">Sample network count</dt>
                       <dd className="mt-0.5 font-semibold">
                         {plan.cashlessHospitals > 0 ? plan.cashlessHospitals.toLocaleString("en-IN") : "Not offered"}
                       </dd>
@@ -359,16 +355,13 @@ function PlanComparison() {
                       </Label>
                     </div>
                     <RequestDialog
-                      triggerLabel="Get a quote"
+                      triggerLabel="Preview quote form"
                       triggerVariant="soft"
                       triggerSize="sm"
                       title={`Get a quote — ${plan.planName}`}
-                      description={`${plan.provider} · ${plan.coverType} · ${formatINR(plan.coverAmount)} cover. Share your details and the desk returns an indicative premium with the exclusions to check.`}
+                      description={`${plan.provider} · ${plan.coverType} · ${formatINR(plan.coverAmount)} cover. This sample plan is not an offer; no insurer quote service is connected.`}
                       fields={buildQuoteFields(plan)}
-                      submitLabel="Request a quote"
-                      successTitle="Quote request ready"
-                      successBody={`An indicative premium for ${plan.planName} would be shared on your mobile number, along with the riders and exclusions to read first.`}
-                      footnote="Phase 1 has no insurer integration. This form validates your details and shows the confirmation state, but no quote request leaves your browser and no premium shown here is binding."
+                      footnote="Do not enter real personal or policy details. This browser-only preview does not query an insurer, request a quote or transmit your information."
                     />
                   </div>
                 </article>

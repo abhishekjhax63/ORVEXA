@@ -22,7 +22,7 @@ import { getCurrentUser } from "@/lib/auth/guards";
 export const metadata: Metadata = {
   title: "AI health assistant",
   description:
-    "Describe symptoms, attach a photo or a report, and get a preliminary, uncertainty-aware explanation with clear next steps. Not a diagnosis.",
+    "Open the AI workspace for symptom and image analysis when a compatible AI provider, signed-in account, private storage and required upload safeguards are configured. Not a diagnosis.",
 };
 
 export default function AssistantPage() {
@@ -31,7 +31,7 @@ export default function AssistantPage() {
       <PageHero
         eyebrow="Health intelligence"
         title="AI health assistant"
-        description="Describe what is happening in your own words, add a photo or a report if you have one, and get a structured explanation of what it might be, how urgent it looks, and what to do next."
+        description="The live workspace supports symptom text and medical-image input when its AI provider, account, private storage and upload safeguards are configured. Results are informational, may be wrong and are not a diagnosis."
         breadcrumbs={[
           { title: "Home", href: "/" },
           { title: "AI health assistant", href: "/assistant" },

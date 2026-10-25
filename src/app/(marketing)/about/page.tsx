@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Ban, Building2, CircleCheckBig, Quote, ShieldCheck, Star } from "lucide-react";
+import { ArrowRight, Ban, Building2, CircleCheckBig, Mail, MapPin, Phone, ShieldCheck } from "lucide-react";
 
 import { RequestDialog, type RequestField } from "@/components/forms/request-dialog";
 import { DemoNotice } from "@/components/layout/demo-notice";
@@ -9,14 +9,14 @@ import { PageHero } from "@/components/layout/page-hero";
 import { Section, SectionHeading } from "@/components/layout/section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";
 import { Button } from "@/components/ui/button";
-import { partnershipBenefits, providerOnboarding, testimonials, trustMetrics } from "@/data/content";
+import { partnershipBenefits, providerOnboarding, trustMetrics } from "@/data/content";
 import { healthImage } from "@/lib/images";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "About ORVEXA",
   description:
-    "ORVEXA is an Indian health platform built around one connected, patient-controlled record. Read why fragmented records, opaque pricing and insurance friction hold care back, how we work with hospitals and clinics, and how to list your facility.",
+    "About the ORVEXA healthcare project, its current service limitations, supplied Patna provider listings and planned safeguards.",
   alternates: { canonical: "/about" },
 };
 
@@ -53,19 +53,19 @@ const approach = [
     id: "connected-record",
     title: "One record, controlled by the patient",
     detail:
-      "Consultations, prescriptions, reports, discharges and invoices accumulate in a single timeline that the patient can share, and stop sharing, whenever they choose.",
+      "The product goal is to let patients collect and share their health records. A connected record service is not currently available.",
   },
   {
     id: "coordinated-care",
     title: "Modules that hand off to each other",
     detail:
-      "A consultation can open a lab order, a lab report can open a pharmacy order, and a pharmacy order can open a claim. The patient should not have to be the integration layer.",
+      "Future integrations may connect consultations, diagnostics, pharmacy and claims. These cross-service workflows are not currently connected.",
   },
   {
     id: "published-standards",
     title: "Standards published, not implied",
     detail:
-      "Verification rules, response-time targets and escalation paths are written down where patients and providers can hold us to them, including the parts we have not solved yet.",
+      "Verification rules, response-time targets and escalation paths should be published before any related service is offered.",
   },
 ];
 
@@ -75,13 +75,13 @@ const boundaries = [
     id: "not-a-hospital",
     title: "Not a hospital, clinic or pharmacy",
     detail:
-      "ORVEXA does not own or operate clinical facilities. Care is delivered by licensed, independently governed providers on our network.",
+      "ORVEXA does not own or operate clinical facilities. The supplied Patna directory is unverified and is not a confirmed provider network.",
   },
   {
     id: "not-an-insurer",
     title: "Not an insurer, broker or TPA",
     detail:
-      "Policy terms, coverage decisions and settlement outcomes rest with the insurer. We prepare, submit and track paperwork on the patient's behalf.",
+      "Policy terms and coverage decisions rest with the insurer. ORVEXA does not currently provide coverage checks or claims-submission services.",
   },
   {
     id: "not-a-clinician",
@@ -96,27 +96,27 @@ const boundaries = [
 const governancePillars = [
   {
     id: "clinical-review",
-    title: "Clinical review before release",
+    title: "Planned clinical review",
     detail:
-      "Care pathways, triage bands and patient-facing medicine guidance are checked against published clinical guidance by practising clinicians before they ship.",
+      "Clinical review by appropriately qualified professionals should be established before clinical pathways or medicine guidance are offered.",
   },
   {
     id: "verified-providers",
-    title: "Verification, then re-verification",
+    title: "Provider checks before future listings",
     detail:
-      "Registration numbers, accreditations and doctor council registrations are validated before a listing goes live, and re-checked when they are due for renewal.",
+      "Provider credentials and registrations need independent verification before any directory is described as verified.",
   },
   {
     id: "escalation-first",
-    title: "Escalation over automation",
+    title: "Escalation for clinical risk",
     detail:
-      "Where a question carries clinical risk, the product routes to a person — care desk, pharmacist or doctor — instead of answering. Automation is for logistics, not judgement.",
+      "Any future clinical workflow needs a tested escalation path; the current AI assistant is informational and is not a substitute for a clinician.",
   },
   {
     id: "protection-by-design",
-    title: "Protection by design",
+    title: "Data protection controls",
     detail:
-      "Health records are encrypted at rest, every share is time-limited and revocable, and each access is written to the patient's own consent history.",
+      "Security, privacy and consent controls must be tested and reviewed before real health-record workflows are enabled.",
   },
 ];
 
@@ -224,7 +224,7 @@ export default function AboutPage() {
       <PageHero
         eyebrow="About ORVEXA"
         title="Indian healthcare works. The records that hold it together do not."
-        description="A patient in Coimbatore may see three hospitals, two laboratories and four pharmacies in a decade, and not one of them holds the full picture. ORVEXA exists to make that picture portable, legible and controlled by the person it belongs to."
+        description="ORVEXA's product goal is to make health information easier to manage and share. A connected patient-record service and the other cross-provider workflows are not available in this build."
         breadcrumbs={[
           { title: "Home", href: "/" },
           { title: "About", href: "/about" },
@@ -238,7 +238,7 @@ export default function AboutPage() {
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link href="/contact">Talk to the care desk</Link>
+              <Link href="/contact">View contact details</Link>
             </Button>
           </>
         }
@@ -280,10 +280,9 @@ export default function AboutPage() {
         </div>
 
         <Reveal className="mt-14">
-          <h3 className="text-xl font-semibold sm:text-2xl">How ORVEXA responds</h3>
+          <h3 className="text-xl font-semibold sm:text-2xl">How ORVEXA is designed to respond</h3>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Not with another portal, but with one continuous record and modules that pass work between each other
-            instead of handing it back to the patient.
+            These are product goals, not a claim that all modules or integrations are currently available.
           </p>
         </Reveal>
 
@@ -327,9 +326,9 @@ export default function AboutPage() {
       <Section id="pillars" tone="muted" spacing="default" aria-labelledby="pillars-heading">
         <Reveal>
           <SectionHeading
-            eyebrow="Governance"
-            title={<span id="pillars-heading">Accountability behind every module</span>}
-            description="The platform measures itself on four commitments. They are written here so patients and provider partners can hold us to them."
+            eyebrow="Current status"
+            title={<span id="pillars-heading">Provider and integration status</span>}
+            description="These statements reflect the current implementation and supplied directory, not audited operating metrics."
           />
         </Reveal>
 
@@ -348,12 +347,19 @@ export default function AboutPage() {
           ))}
         </RevealGroup>
 
-        <DemoNotice className="mt-6">
-          Network sizes, consultation volumes and response metrics shown above are Phase 1 sampling figures used for
-          review. They are not audited operating results and will be replaced with verified reporting at launch.
-        </DemoNotice>
+        <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
+          These status labels are not claims of provider endorsement, medical outcome, or regulatory compliance.
+        </p>
 
-        <RevealGroup as="ul" className="mt-12 grid gap-5 md:grid-cols-2">
+        <Reveal className="mt-12">
+          <SectionHeading
+            eyebrow="Planned safeguards"
+            title="Safety principles for future service launches"
+            description="These are intended commitments, not evidence of an existing clinical review board, provider-verification operation, or independent security assessment."
+          />
+        </Reveal>
+
+        <RevealGroup as="ul" className="mt-6 grid gap-5 md:grid-cols-2">
           {governancePillars.map((pillar) => (
             <RevealItem as="li" key={pillar.id} className="h-full">
               <div className="flex h-full gap-4 rounded-2xl border border-border bg-card p-6">
@@ -384,48 +390,17 @@ export default function AboutPage() {
         <Reveal>
           <SectionHeading
             eyebrow="Patient stories"
-            title={<span id="stories-heading">What coordinated care feels like</span>}
-            description="Six journeys that show the difference between a platform and a directory: a claim settled before arrival, an ambulance that reached the door, a monthly refill nobody had to remember."
+            title={<span id="stories-heading">No verified patient stories published yet</span>}
+            description="We will publish patient or provider experiences only when they are real, attributable and shared with consent."
           />
         </Reveal>
 
-        <RevealGroup as="ul" className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {testimonials.map((testimonial) => (
-            <RevealItem as="li" key={testimonial.id} className="h-full">
-              <figure className="flex h-full flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-soft)]">
-                <Quote aria-hidden className="size-6 text-primary/40" />
-                <blockquote className="text-sm leading-relaxed text-foreground/90">{testimonial.quote}</blockquote>
-                <figcaption className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-4">
-                  <span>
-                    <span className="block text-sm font-semibold">{testimonial.name}</span>
-                    <span className="block text-xs text-muted-foreground">
-                      {testimonial.role} · {testimonial.city}
-                    </span>
-                  </span>
-                  <span className="flex items-center gap-0.5" aria-label={`${testimonial.rating} out of 5`}>
-                    {Array.from({ length: 5 }).map((_, starIndex) => (
-                      <Star
-                        key={starIndex}
-                        aria-hidden
-                        className={
-                          starIndex < testimonial.rating
-                            ? "size-3.5 fill-amber-400 text-amber-400"
-                            : "size-3.5 text-muted-foreground/40"
-                        }
-                      />
-                    ))}
-                  </span>
-                </figcaption>
-              </figure>
-            </RevealItem>
-          ))}
-        </RevealGroup>
-
-        <DemoNotice className="mt-8">
-          These stories are illustrative composites written for Phase 1 review. They do not describe named, verified
-          customers, and the outcomes in them are not guarantees. Consented, attributable stories will be published with
-          the patient&apos;s or provider&apos;s approval after launch.
-        </DemoNotice>
+        <Reveal className="mt-8">
+          <div className="rounded-2xl border border-border bg-card p-6 text-sm leading-relaxed text-muted-foreground">
+            No patient or provider testimonials are displayed because none have been independently verified and
+            approved for publication.
+          </div>
+        </Reveal>
 
         <Reveal className="mt-6">
           <p className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
@@ -444,27 +419,24 @@ export default function AboutPage() {
         <Reveal>
           <SectionHeading
             eyebrow="For providers"
-            title={<span id="providers-heading">List your facility on ORVEXA</span>}
-            description="Hospitals, clinics, diagnostic labs, pharmacies and home-care agencies all onboard through the same verification track. Nothing goes live until credentials are checked against the issuing registry."
+            title={<span id="providers-heading">Provider onboarding is not connected yet</span>}
+            description="The form below is a local demonstration only. No facility application is transmitted, stored or reviewed."
             actions={
               <RequestDialog
-                triggerLabel="Apply to list your facility"
+                triggerLabel="Preview provider onboarding form"
                 triggerVariant="gradient"
                 triggerSize="lg"
                 title="Apply to list your facility"
-                description="Share a few details about your facility. Verification usually takes about 72 hours once the licence and accreditation documents are in hand."
+                description="Enter sample facility details to preview the form. Do not submit patient or confidential information."
                 fields={facilityFields}
-                submitLabel="Submit application"
-                successTitle="Application ready to review"
-                successBody="In production, this would reach the partnerships team, who would reply with a document checklist for your facility type within two working days."
-                footnote="Phase 1 has no onboarding backend. This form validates your details and shows the confirmation state, but no application is transmitted or stored."
+                footnote="Do not enter real or confidential facility information. This browser-only preview does not transmit or store an application."
               />
             }
           />
         </Reveal>
 
         <Reveal className="mt-10">
-          <h3 className="text-sm font-semibold tracking-[0.14em] text-primary uppercase">Onboarding track</h3>
+          <h3 className="text-sm font-semibold tracking-[0.14em] text-primary uppercase">Proposed onboarding outline</h3>
         </Reveal>
 
         <RevealGroup as="ol" className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -488,10 +460,10 @@ export default function AboutPage() {
         </RevealGroup>
 
         <Reveal className="mt-12">
-          <h3 className="text-xl font-semibold sm:text-2xl">What partners get from the platform</h3>
+          <h3 className="text-xl font-semibold sm:text-2xl">Potential future provider capabilities</h3>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Listing on ORVEXA is not a directory entry. Bookings, pre-authorisation requests, pharmacy orders and
-            discharge documents flow through one console with the paperwork already structured.
+            These are roadmap ideas, not available provider services. Booking, claims, pharmacy and records integrations
+            are not currently connected.
           </p>
         </Reveal>
 
@@ -513,8 +485,8 @@ export default function AboutPage() {
         </RevealGroup>
 
         <DemoNotice className="mt-8">
-          Verification timelines, slot-fill and claim-desk outcomes described above are Phase 1 commitments in
-          progress, not measured results. Provider console access arrives with the provider APIs in Phase 2.
+          The onboarding steps and provider benefits are illustrative plans only; ORVEXA is not currently accepting or
+          processing provider applications.
         </DemoNotice>
 
         <Reveal className="mt-8">
@@ -534,9 +506,9 @@ export default function AboutPage() {
       <Section id="leadership" spacing="default" aria-labelledby="leadership-heading">
         <Reveal>
           <SectionHeading
-            eyebrow="Leadership"
-            title={<span id="leadership-heading">The roles accountable for clinical and data safety</span>}
-            description="ORVEXA publishes responsibilities now and names at launch. Each function below has a single accountable owner, not a committee."
+            eyebrow="Planned governance"
+            title={<span id="leadership-heading">Roles to establish before service launch</span>}
+            description="These are proposed responsibilities, not a statement that named clinical or data-protection officers are currently in post."
           />
         </Reveal>
 
@@ -570,6 +542,26 @@ export default function AboutPage() {
                 Create a patient account to bring your reports and prescriptions together, see what the platform
                 covers today, or ask the care desk anything you are unsure about.
               </p>
+              <address className="mt-5 flex flex-col gap-2 text-sm not-italic text-muted-foreground">
+                <a
+                  href={`tel:${siteConfig.supportPhone.replace(/\s/g, "")}`}
+                  className="inline-flex items-center gap-2 hover:text-foreground"
+                >
+                  <Phone aria-hidden className="size-4 shrink-0" />
+                  {siteConfig.supportPhone}
+                </a>
+                <a
+                  href={`mailto:${siteConfig.supportEmail}`}
+                  className="inline-flex items-center gap-2 hover:text-foreground"
+                >
+                  <Mail aria-hidden className="size-4 shrink-0" />
+                  {siteConfig.supportEmail}
+                </a>
+                <span className="inline-flex items-start gap-2">
+                  <MapPin aria-hidden className="mt-0.5 size-4 shrink-0" />
+                  {siteConfig.address}
+                </span>
+              </address>
             </div>
             <div className="flex flex-wrap gap-3">
               <Button asChild variant="gradient" size="lg">

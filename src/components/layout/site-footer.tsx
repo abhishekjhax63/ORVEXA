@@ -96,9 +96,9 @@ function SiteFooter() {
         <div className="mt-12 flex flex-col gap-6 border-t border-white/10 pt-8 text-xs text-navy-100/65 lg:flex-row lg:items-start lg:justify-between">
           <p className="max-w-3xl leading-relaxed">
             ORVEXA is a healthcare coordination platform, not a medical provider. Content here is for information
-            only and never replaces advice from a registered medical practitioner. In an emergency, call{" "}
-            {siteConfig.emergencyNumber} immediately. This Phase 1 build ships with clearly labelled demo data;
-            provider, pharmacy and insurance integrations follow in later phases.
+            only and never replaces advice from a registered medical practitioner. Some features use static or
+            illustrative data, and live services depend on operator configuration. In an emergency, call{" "}
+            {siteConfig.emergencyNumber} immediately; do not assume an ORVEXA request has reached responders.
           </p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <Link href="/privacy" className="transition-colors hover:text-white">

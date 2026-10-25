@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { getRouteUser, jsonError, jsonOk, zodFieldErrors } from "@/lib/auth/route-session";
 import { findNearbyFacilities } from "@/lib/emergency/nearby";
 import { consumeRateLimit, RATE_LIMITS } from "@/lib/security/rate-limit";
+import { logOperationalEvent } from "@/lib/security/logger";
 import { clientIpFromHeaders } from "@/lib/security/request";
 import { NEARBY_KINDS, nearbyQuerySchema } from "@/lib/validation/emergency";
 
@@ -30,29 +31,41 @@ export async function GET(request: NextRequest) {
   }
   const query = parsed.data;
 
-  const user = await getRouteUser();
-  const identity = user ? `user:${user.id}` : `ip:${clientIpFromHeaders(request.headers) ?? "unknown"}`;
-  const limit = await consumeRateLimit("geoLookup", identity, RATE_LIMITS.geoLookup);
-  if (!limit.allowed) {
-    return jsonError(429, "Too many location searches. Wait a moment and try again.", {
-      retryAfterSeconds: limit.retryAfterSeconds,
-    });
+  if (!process.env.DATABASE_URL?.trim()) {
+    return jsonError(
+      503,
+      "Nearby care search is temporarily unavailable. Configure DATABASE_URL and try again.",
+    );
   }
 
-  const hasPoint = query.latitude !== undefined && query.longitude !== undefined;
+  try {
+    const user = await getRouteUser();
+    const identity = user ? `user:${user.id}` : `ip:${clientIpFromHeaders(request.headers) ?? "unknown"}`;
+    const limit = await consumeRateLimit("geoLookup", identity, RATE_LIMITS.geoLookup);
+    if (!limit.allowed) {
+      return jsonError(429, "Too many location searches. Wait a moment and try again.", {
+        retryAfterSeconds: limit.retryAfterSeconds,
+      });
+    }
 
-  const result = await findNearbyFacilities({
-    point: hasPoint ? { latitude: query.latitude as number, longitude: query.longitude as number } : null,
-    city: query.city ?? null,
-    radiusMetres: query.radiusMetres,
-    kinds: query.kinds ?? [...NEARBY_KINDS],
-    limit: query.limit,
-  });
+    const hasPoint = query.latitude !== undefined && query.longitude !== undefined;
 
-  return jsonOk({
-    ...result,
-    // The UI states plainly that these are registered providers, not a live
-    // availability feed, whenever a facility list is rendered.
-    searchedBy: hasPoint ? "coordinates" : "place name",
-  });
+    const result = await findNearbyFacilities({
+      point: hasPoint ? { latitude: query.latitude as number, longitude: query.longitude as number } : null,
+      city: query.city ?? null,
+      radiusMetres: query.radiusMetres,
+      kinds: query.kinds ?? [...NEARBY_KINDS],
+      limit: query.limit,
+    });
+
+    return jsonOk({
+      ...result,
+      // The UI states plainly that these are registered providers, not a live
+      // availability feed, whenever a facility list is rendered.
+      searchedBy: hasPoint ? "coordinates" : "place name",
+    });
+  } catch {
+    logOperationalEvent("error", "geo.nearby.failed", "Nearby care search could not reach its data service.");
+    return jsonError(503, "Nearby care search is temporarily unavailable. Try again shortly.");
+  }
 }

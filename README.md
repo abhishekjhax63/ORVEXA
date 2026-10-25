@@ -1,37 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ORVEXA
 
-## Getting Started
+ORVEXA is a healthcare platform built with Next.js App Router, TypeScript,
+Prisma/PostgreSQL, and optional Supabase storage integrations.
 
-First, run the development server:
+## Local development
+
+Requirements: Node.js 20.9 or newer and npm.
 
 ```bash
+npm ci
+cp .env.example .env.local
+# Fill the required local values in .env.local; never commit that file.
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). To bind only to the local
+machine, use `npm run dev -- --hostname 127.0.0.1`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`DATABASE_URL`, `AUTH_SECRET`, and `CRON_SECRET` are required for the complete
+application. Database-backed flows also require a reachable PostgreSQL
+database. Supabase browser-client variables are optional and are not used for
+ORVEXA's database-backed sign-in. Review the Prisma migrations and back up the
+database before applying them with `npx prisma migrate deploy`; the app does not
+apply migrations automatically.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The `.env.example` file lists supported environment variables. Keep server
+credentials in `.env.local` without a `NEXT_PUBLIC_` prefix. Browser-visible
+Mapbox or Geoapify keys must be restricted at the provider. The floating Sakha
+AI chat uses the server-side `BLUESMINDS_*` settings; the separate assessment
+assistant uses `AI_PROVIDER_*`.
+Sakha AI image understanding uses the existing server-side `AI_PROVIDER=openai`
+configuration and `AI_PROVIDER_API_KEY`; set `AI_PROVIDER_VISION_MODEL` only
+when `AI_PROVIDER_MODEL` is not image-capable. Sakha image search uses the
+optional Brave Search API image endpoint and requires `IMAGE_SEARCH_PROVIDER=brave`
+and `IMAGE_SEARCH_API_KEY`. Keep both keys server-side. If search is not
+configured, the feature reports that status instead of returning sample results.
 
-## Learn More
+Some integrations intentionally report unavailable rather than claiming a
+message or action succeeded. In particular, email, SMS, and in-app notification
+transports are not implemented, even if their provider settings are supplied.
+The pharmacy payment sandbox does not move money, and the telemedicine sandbox
+does not place calls.
 
-To learn more about Next.js, take a look at the following resources:
+## Checks
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# ORVEXA
+```bash
+npm run lint
+npx tsc --noEmit
+npm run build
+```

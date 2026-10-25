@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Activity, HeartPulse, Hospital, Navigation, PhoneCall, Siren, TriangleAlert } from "lucide-react";
+import { Hospital, Navigation, PhoneCall, Siren, TriangleAlert } from "lucide-react";
 
 import { ContactCopy } from "@/components/emergency/contact-copy";
 import { SosLauncherFallback, SosLauncherSlot } from "@/components/emergency/sos-launcher-slot";
@@ -24,51 +24,27 @@ import { siteConfig } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Emergency SOS",
   description:
-    "Raise an ORVEXA emergency incident, share your location with nominated contacts, and find the nearest registered emergency department or ambulance operator. Dial 108 for a real emergency in India.",
+    "Emergency information only. ORVEXA cannot dispatch an ambulance or notify a hospital. Call 108 directly for an emergency in India.",
   alternates: { canonical: "/emergency" },
 };
 
 const emergencyTel = `tel:${siteConfig.emergencyNumber}`;
 const supportTel = `tel:${siteConfig.supportPhone.replace(/\s/g, "")}`;
 
-/** DEMO DATA — crew and equipment detail inferred for each ambulance class. */
-const unitDetails: Record<string, { crew: string; equipment: string[] }> = {
-  als: {
-    crew: "Emergency physician with an advanced paramedic",
-    equipment: ["Ventilator", "Defibrillator", "Cardiac monitor", "Infusion pumps", "Advanced airway kit"],
-  },
-  bls: {
-    crew: "Two trained paramedics",
-    equipment: ["Oxygen", "Immobilisation kit", "Suction unit", "Trauma dressings", "Spinal board stretcher"],
-  },
-  nicu: {
-    crew: "Neonatal nurse with paediatric intensivist support",
-    equipment: ["Transport incubator", "Neonatal ventilator", "Pulse oximeter", "Syringe pump"],
-  },
-  air: {
-    crew: "Flight paramedic with a critical care physician",
-    equipment: ["Fixed-wing or helicopter", "ICU stretcher", "Ventilator", "Cardiac monitor"],
-  },
-};
-
-const goldenHourMetrics = [
-  { label: "Median dispatch-to-scene", value: "11 min" },
-  { label: "Units on the network", value: "1,240" },
-  { label: "Cities live", value: "18" },
+const emergencyStatus = [
+  { label: "Ambulance dispatch", value: "Unavailable" },
+  { label: "Live tracking", value: "Unavailable" },
+  { label: "Hospital pre-alert", value: "Unavailable" },
 ];
 
-const goldenHourFacts = [
+const emergencyNotices = [
   {
-    icon: HeartPulse,
-    detail: "Cardiac arrest survival falls by roughly 10% for every minute without CPR.",
-  },
-  {
-    icon: Activity,
-    detail: "Clot-busting stroke treatment works best within 4.5 hours of the first symptom.",
+    icon: PhoneCall,
+    detail: "Call 108 directly. An ORVEXA incident record is not an emergency dispatch.",
   },
   {
     icon: Hospital,
-    detail: "A pre-alert before arrival removes the intake delay at the emergency department.",
+    detail: "ORVEXA cannot confirm hospital capacity or send a hospital pre-alert.",
   },
 ];
 
@@ -77,8 +53,8 @@ export default function EmergencyPage() {
     <>
       <PageHero
         eyebrow="Emergency"
-        title="Raise an emergency incident, then call if nobody accepts"
-        description="ORVEXA records the incident, asks the nearest registered emergency departments and ambulance operators for help, and shows you exactly who has acknowledged it. It cannot promise a vehicle — so every screen here keeps the India emergency numbers one tap away. If life is at risk, call 108 now."
+        title="Call 108 directly for emergency help"
+        description="ORVEXA is not an emergency service and cannot dispatch an ambulance, contact responders or pre-alert a hospital. The SOS panel may record an incident when configured, but do not wait for it to be accepted."
         breadcrumbs={[
           { title: "Home", href: "/" },
           { title: "Emergency", href: "/emergency" },
@@ -102,15 +78,14 @@ export default function EmergencyPage() {
         aside={
           <div className="rounded-[1.75rem] border border-border bg-card/85 p-6 shadow-[var(--shadow-panel)] backdrop-blur-sm">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">The golden hour</p>
+              <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">Service availability</p>
               <Badge variant="demo">Demo</Badge>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              Outcomes for cardiac arrest, stroke and major trauma change sharply inside the first sixty minutes. These
-              are the numbers a dispatcher watches on a live call.
+              No ambulance dispatch, live tracking or hospital notification service is connected to this deployment.
             </p>
             <dl className="mt-5 grid grid-cols-3 gap-3">
-              {goldenHourMetrics.map((metric) => (
+              {emergencyStatus.map((metric) => (
                 <div key={metric.label} className="rounded-xl border border-border bg-muted/40 px-3 py-2.5">
                   <dt className="text-[0.68rem] leading-tight text-muted-foreground">{metric.label}</dt>
                   <dd className="mt-1 text-lg font-semibold">{metric.value}</dd>
@@ -118,10 +93,10 @@ export default function EmergencyPage() {
               ))}
             </dl>
             <p className="mt-2 text-[0.68rem] leading-relaxed text-muted-foreground">
-              Network figures above are illustrative samples, not live coverage.
+              These statuses describe ORVEXA availability, not coverage from emergency responders.
             </p>
             <ul className="mt-5 space-y-2.5 border-t border-border pt-5 text-xs leading-relaxed text-muted-foreground">
-              {goldenHourFacts.map((fact) => (
+              {emergencyNotices.map((fact) => (
                 <li key={fact.detail} className="flex items-start gap-2">
                   <fact.icon aria-hidden className="mt-0.5 size-3.5 shrink-0 text-emergency" />
                   {fact.detail}
@@ -136,8 +111,8 @@ export default function EmergencyPage() {
         <Reveal>
           <SectionHeading
             eyebrow="SOS panel"
-            title={<span id="sos-heading">Press once to review, press again to send</span>}
-            description="The first press never sends anything — it opens the details for review. The second press records the incident and asks the nearest registered responders. Nothing is shared until you confirm, and you can cancel at any point."
+            title={<span id="sos-heading">Optional incident record — not an ambulance request</span>}
+            description="Submitting the SOS panel may record information in the configured application database. It does not contact emergency services, dispatch a vehicle, notify a hospital or guarantee that your contacts are alerted. Call 108 directly."
           />
         </Reveal>
         <Reveal className="mt-8" delay={0.05}>
@@ -146,19 +121,18 @@ export default function EmergencyPage() {
           </Suspense>
         </Reveal>
         <DemoNotice className="mt-8">
-          An automated request only leaves the platform when this deployment has a dispatch integration configured and
-          the receiving partner has confirmed it. Until then an incident is recorded for the audit trail and shown back
-          to you, and a human still has to place the call. Every number on this page dials for real, including{" "}
-          {siteConfig.emergencyNumber}.
+          This deployment is not connected to emergency dispatch. A saved incident is not sent to 108 or to an
+          ambulance provider, and database availability may affect whether it can be recorded. Call{" "}
+          {siteConfig.emergencyNumber} directly.
         </DemoNotice>
       </Section>
 
       <Section id="steps" tone="muted" spacing="default" aria-labelledby="steps-heading">
         <Reveal>
           <SectionHeading
-            eyebrow="First response"
-            title={<span id="steps-heading">What to do, in the order that saves time</span>}
-            description="Four moves that decide how much the crew can do when they reach you. Do them in this sequence, and stay on the line with the dispatcher."
+            eyebrow="General information"
+            title={<span id="steps-heading">If there is an emergency</span>}
+            description="Call emergency services directly and follow the dispatcher&apos;s instructions. The items below are general information, not clinical guidance."
           />
         </Reveal>
 
@@ -190,23 +164,22 @@ export default function EmergencyPage() {
         </RevealGroup>
 
         <DemoNotice className="mt-8">
-          The sequence above is sample editorial content awaiting clinical sign-off. Always follow the instructions of
-          the {siteConfig.emergencyNumber} dispatcher.
+          These general steps are not a substitute for emergency services or advice from a qualified clinician. Always
+          follow the instructions of the {siteConfig.emergencyNumber} dispatcher.
         </DemoNotice>
       </Section>
 
       <Section id="ambulance" spacing="default" aria-labelledby="ambulance-heading">
         <Reveal>
           <SectionHeading
-            eyebrow="Response fleet"
-            title={<span id="ambulance-heading">Choose the unit the situation needs</span>}
-            description="Four transport classes cover most medical emergencies in India. If you are unsure which one to ask for, call the ambulance line and the dispatcher will assign it for you."
+            eyebrow="Illustrative information"
+            title={<span id="ambulance-heading">Ambulance categories</span>}
+            description="These are generic examples only. ORVEXA does not list, verify, book or provide any ambulance unit. Call 108 and follow the dispatcher&apos;s instructions."
           />
         </Reveal>
 
         <RevealGroup className="mt-10 grid gap-5 md:grid-cols-2">
           {ambulanceTypes.map((unit) => {
-            const detail = unitDetails[unit.id];
             return (
               <RevealItem key={unit.id} className="h-full">
                 <article className="flex h-full flex-col rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-soft)]">
@@ -220,41 +193,18 @@ export default function EmergencyPage() {
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="text-lg font-semibold">{unit.title}</h3>
-                        {unit.recommended ? <Badge variant="emergency">Most requested</Badge> : null}
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        Typical dispatch-to-scene {unit.eta}
+                        Availability through ORVEXA: {unit.eta}
                       </p>
                     </div>
                   </div>
 
                   <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{unit.description}</p>
 
-                  <dl className="mt-5 grid gap-4 border-t border-border pt-5">
-                    <div>
-                      <dt className="text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase">Crew</dt>
-                      <dd className="mt-1.5 text-sm">{detail.crew}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase">
-                        On board
-                      </dt>
-                      <dd className="mt-2 flex flex-wrap gap-2">
-                        {detail.equipment.map((item) => (
-                          <span
-                            key={item}
-                            className="rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-muted-foreground"
-                          >
-                            {item}
-                          </span>
-                        ))}
-                      </dd>
-                    </div>
-                  </dl>
-
                   <div className="mt-auto flex flex-wrap gap-3 pt-6">
-                    <Button asChild variant={unit.recommended ? "emergency" : "outline"} size="lg">
-                      <Link href="#sos">Start an SOS request</Link>
+                    <Button asChild variant="outline" size="lg">
+                      <Link href="#sos">Open incident panel (not dispatch)</Link>
                     </Button>
                     <Button asChild variant="outline" size="lg">
                       <a href={emergencyTel}>
@@ -270,8 +220,7 @@ export default function EmergencyPage() {
         </RevealGroup>
 
         <DemoNotice className="mt-8">
-          Response times and on-board equipment lists are illustrative samples. Confirm availability with the operator
-          when you call.
+          No units, crews, equipment, availability or response times have been verified or connected to ORVEXA.
         </DemoNotice>
       </Section>
 
@@ -283,17 +232,17 @@ export default function EmergencyPage() {
         <div className="relative">
           <Reveal className="max-w-3xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold tracking-[0.14em] text-teal-200 uppercase">
-              What happens after you press
+              What this prototype does not provide
             </span>
             <h2
               id="capabilities-heading"
               className="mt-4 text-3xl font-semibold text-white sm:text-4xl lg:text-[2.6rem] lg:leading-[1.12]"
             >
-              Six systems working through the same twelve minutes
+              No live emergency response network
             </h2>
             <p className="mt-4 text-base leading-relaxed text-white/70 sm:text-lg">
-              An emergency response is a coordination problem before it is a transport problem. Each of these runs in the
-              background from the moment the call connects until the hospital has taken over.
+              The items below are not connected to this application. Do not treat the SOS panel as a substitute for
+              calling emergency services.
             </p>
           </Reveal>
 
@@ -343,8 +292,8 @@ export default function EmergencyPage() {
         <Reveal>
           <SectionHeading
             eyebrow="First aid"
-            title={<span id="checklist-heading">What to do while the ambulance is on the way</span>}
-            description="Match the situation to the list below. This is general first-response guidance for India, not a diagnosis, and it never replaces the crew or the dispatcher."
+            title={<span id="checklist-heading">General first-aid information</span>}
+            description={`Call ${siteConfig.emergencyNumber} directly and follow the dispatcher's instructions. This sample guidance is not clinical advice and does not replace emergency services.`}
           />
         </Reveal>
 
@@ -482,7 +431,7 @@ export default function EmergencyPage() {
                 <Link href="/hospitals">Find the nearest emergency-ready hospital</Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link href="/ai-assistant">Not sure if it is an emergency?</Link>
+                <Link href="/assistant">Not sure what care to seek? Open the AI workspace</Link>
               </Button>
               <Button asChild variant="outline" size="lg">
                 <a href={supportTel}>

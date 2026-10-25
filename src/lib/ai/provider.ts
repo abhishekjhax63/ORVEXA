@@ -193,6 +193,14 @@ export type AiTranscribeRequest = {
   signal?: AbortSignal;
 };
 
+export type AiVisionQuestionRequest = {
+  question: string;
+  mimeType: string;
+  /** Base64 data URL validated by the server. */
+  dataUrl: string;
+  signal?: AbortSignal;
+};
+
 export type AiTranscript = { text: string; language: string | null; durationSeconds: number | null };
 
 export type AiCallUsage = { latencyMs: number; inputChars: number };
@@ -209,8 +217,14 @@ export interface AiProvider {
 
   supports(capability: AiCapability): boolean;
 
+  /** Model selected for a turn, including a vision-specific override if needed. */
+  modelFor(request: AiTriageRequest): string;
+
   /** Produce a preliminary triage draft. */
   triage(request: AiTriageRequest): Promise<AiProviderCallOutcome<AiTriageDraft>>;
+
+  /** Answer a question about one image without turning it into a diagnosis. */
+  visionQuestion(request: AiVisionQuestionRequest): Promise<AiProviderCallOutcome<{ text: string }>>;
 
   /** Transcribe a voice note into text the user can correct before it is used. */
   transcribe(request: AiTranscribeRequest): Promise<AiProviderCallOutcome<AiTranscript>>;

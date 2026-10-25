@@ -2,10 +2,9 @@
  * Map provider configuration.
  *
  * Client-safe by design: the values here are a public map token (Mapbox public
- * tokens and Google Maps browser keys are both designed to be embedded in a
- * page) and presentation defaults. Anything that must stay secret — a Mapbox
- * secret token used for server-side geocoding or directions — is read in
- * `src/lib/env.ts` and never reaches this module.
+ * tokens and Geoapify browser keys are designed to be embedded in a page) and
+ * presentation defaults. Anything used for server-side geocoding or directions
+ * is read in `src/lib/env.ts` and never reaches this module.
  *
  * When no provider is configured the app must not pretend a map exists. Every
  * consumer checks `isMapConfigured()` and falls back to the address search and
@@ -16,9 +15,9 @@ export type MapsProvider = "mapbox" | "google" | "geoapify";
 
 export type MapConfig = {
   provider: MapsProvider | null;
-  /** Public access token. Mapbox public token or Google Maps browser API key. */
+  /** Public Mapbox style token or Geoapify tile key. */
   accessToken: string | null;
-  /** Mapbox style URL, or the Google Maps map ID. */
+  /** Mapbox style URL. */
   style: string | null;
   defaultCenter: { latitude: number; longitude: number };
   defaultZoom: number;
@@ -83,9 +82,11 @@ export const mapConfig: MapConfig = (() => {
   };
 })();
 
-/** A map is only usable when both a provider and a token are present. */
+/** An interactive map is only implemented for Mapbox and Geoapify. */
 export function isMapConfigured(config: MapConfig = mapConfig) {
-  return Boolean(config.provider && config.accessToken);
+  return Boolean(
+    config.accessToken && (config.provider === "mapbox" || config.provider === "geoapify"),
+  );
 }
 
 /** Human-readable provider name for attribution and the "not configured" state. */
@@ -113,12 +114,18 @@ export function geoapifyTileUrl(config: MapConfig = mapConfig): string | null {
  */
 export function mapAttribution(config: MapConfig = mapConfig) {
   if (!config.provider) return null;
+<<<<<<< HEAD
   if (config.provider === "geoapify") {
     return "Powered by Geoapify | © OpenStreetMap contributors";
   }
   return config.provider === "mapbox"
     ? "© Mapbox © OpenStreetMap"
     : "© Google Maps";
+=======
+  if (config.provider === "mapbox") return "© Mapbox © OpenStreetMap";
+  if (config.provider === "geoapify") return "© Geoapify © OpenStreetMap contributors";
+  return "© Google Maps";
+>>>>>>> 00c6be6 (Updated project features)
 }
 
 /** Opens the device's own maps app for turn-by-turn directions to a point. */

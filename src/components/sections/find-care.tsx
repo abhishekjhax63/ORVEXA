@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Search } from "lucide-react";
 
-import { DemoNotice } from "@/components/layout/demo-notice";
 import { Section, SectionHeading } from "@/components/layout/section";
 import { CareSearch } from "@/components/marketing/care-search";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";
@@ -9,20 +8,17 @@ import { HospitalCard } from "@/components/provider/provider-cards";
 import { Button } from "@/components/ui/button";
 import { hospitals, specialties } from "@/data/providers";
 
-const topHospitals = hospitals
-  .slice()
-  .sort((a, b) => b.rating - a.rating)
-  .slice(0, 3);
+const featuredHospitals = hospitals.slice(0, 3);
 
-/** Homepage "find care" block: provider search, speciality grid, top-rated hospitals. */
+/** Homepage "find care" block: provider search, specialties and Patna listings. */
 function FindCareSection() {
   return (
     <Section id="search" spacing="default">
       <Reveal>
         <SectionHeading
           eyebrow="Find care"
-          title="Search verified hospitals, clinics and specialists"
-          description="Filter by speciality, city, accreditation and insurance — then compare consultation fees and waiting times side by side before you book."
+          title="Search hospital and doctor listings in Patna"
+          description="Search the supplied directory by specialty and location. Listings are unverified; current availability, fees and booking must be confirmed directly with providers."
           actions={
             <Button asChild variant="outline">
               <Link href="/hospitals">
@@ -67,9 +63,9 @@ function FindCareSection() {
       <Reveal className="mt-14" delay={0.05}>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h3 className="text-xl font-semibold sm:text-2xl">Top-rated near you</h3>
+            <h3 className="text-xl font-semibold sm:text-2xl">Hospital listings</h3>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              Ranked by patient ratings, accreditation level and emergency readiness.
+              A selection from the supplied Patna directory. No ratings or ranking were provided.
             </p>
           </div>
           <Button asChild variant="link" className="px-0">
@@ -81,13 +77,13 @@ function FindCareSection() {
         </div>
 
         <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {topHospitals.map((hospital, index) => (
+          {featuredHospitals.map((hospital, index) => (
             <Reveal key={hospital.id} delay={index * 0.06}>
               <HospitalCard
                 hospital={hospital}
                 action={
                   <Button asChild variant="soft" size="sm">
-                    <Link href={`/hospitals?q=${encodeURIComponent(hospital.name)}`}>View &amp; book</Link>
+                    <Link href={`/hospitals?q=${encodeURIComponent(hospital.name)}`}>View listing</Link>
                   </Button>
                 }
               />
@@ -95,10 +91,10 @@ function FindCareSection() {
           ))}
         </div>
 
-        <DemoNotice className="mt-6">
-          Hospitals, doctors, ratings and fees shown across ORVEXA are illustrative samples for Phase 1. Live
-          provider data replaces them once the directory API is connected.
-        </DemoNotice>
+        <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
+          Source: a user-supplied Patna provider list. Hospital and doctor details are unverified; this is not a live
+          availability feed and ORVEXA does not accept appointments from these listings.
+        </p>
       </Reveal>
     </Section>
   );

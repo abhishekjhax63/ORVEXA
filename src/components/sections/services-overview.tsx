@@ -16,7 +16,7 @@ function ServicesOverviewSection() {
         <SectionHeading
           eyebrow="Services"
           title="Ten care modules, one account"
-          description="Discovery, consultation, diagnostics, pharmacy, records, insurance and emergency response — designed to hand off to each other so you never repeat your history."
+          description="Review ORVEXA's current feature availability. Provider listings and sample catalogues are available; consultations, orders, records, insurance and emergency dispatch are not connected."
           actions={
             <Button asChild variant="outline">
               <Link href="/services">

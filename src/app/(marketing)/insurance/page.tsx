@@ -28,15 +28,13 @@ import { siteConfig } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Health insurance",
   description:
-    "Compare health insurance plans side by side, check cashless eligibility at a specific hospital and follow a claim from pre-authorisation to settlement. ORVEXA is a facilitator, not an insurer.",
+    "Browse sample insurance information. ORVEXA has no connected insurer, quote, eligibility, cashless-network or claim-submission integration.",
   alternates: { canonical: "/insurance" },
 };
 
 /** Derived from the plan and provider data so the forms can never drift from it. */
 const insurers = Array.from(new Set(insurancePlans.map((plan) => plan.provider))).sort();
 const hospitalCities = Array.from(new Set(hospitals.map((hospital) => hospital.city))).sort();
-const cashlessHospitalCount = hospitals.filter((hospital) => hospital.cashlessInsurance).length;
-
 const eligibilityFactors = [
   {
     title: "Is the hospital in the insurer's network?",
@@ -52,7 +50,7 @@ const eligibilityFactors = [
   },
   {
     title: "Has pre-authorisation been approved before admission?",
-    detail: "Planned admissions need approval first; emergencies are usually reviewed within 24 to 72 hours.",
+    detail: "Approval requirements and timelines vary by insurer and policy. Confirm them directly with the insurer or TPA.",
   },
 ];
 
@@ -73,7 +71,7 @@ const claimFields: RequestField[] = [
     placeholder: "+91 98450 12093",
     required: true,
     autoComplete: "tel",
-    description: "The claims desk calls this number for any document the insurer asks for.",
+    description: "This preview does not submit or transmit claim information.",
   },
   { name: "insurer", label: "Insurer", type: "select", options: insurers, required: true },
   {
@@ -144,8 +142,8 @@ export default function InsurancePage() {
     <>
       <PageHero
         eyebrow="Insurance"
-        title="Understand your cover before the bill arrives"
-        description="Compare plans on the numbers that decide a claim, check whether a specific hospital accepts cashless admission under your policy, and follow a claim from pre-authorisation through to settlement — with the paperwork tracked in one place."
+        title="Sample insurance information"
+        description="Plan details on this page are illustrative and unverified. ORVEXA cannot sell policies, quote premiums, check cashless eligibility, submit claims or track insurer decisions."
         breadcrumbs={[
           { title: "Home", href: "/" },
           { title: "Insurance", href: "/insurance" },
@@ -170,23 +168,19 @@ export default function InsurancePage() {
               <ShieldAlert aria-hidden className="size-4 shrink-0 text-warning" />
             </div>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              ORVEXA is a health platform and claims facilitator. We are not an insurer, not a broker and not a TPA, and
-              we do not sell policies.
+              ORVEXA is not an insurer, broker or TPA. No insurer or claims integration is connected to this build.
             </p>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Every premium, network size and settlement ratio on this page is an illustrative sample for Phase 1
-              reviews. Your actual cover depends entirely on your policy wording.
+              Plan names, premiums, network sizes and settlement ratios are sample data, not verified or current offers.
             </p>
             <dl className="mt-5 grid grid-cols-2 gap-4 border-t border-border pt-5">
               <div>
-                <dt className="text-xs text-muted-foreground">Plans compared</dt>
+                <dt className="text-xs text-muted-foreground">Sample plans</dt>
                 <dd className="mt-1 text-2xl font-semibold">{insurancePlans.length}</dd>
               </div>
               <div>
-                <dt className="text-xs text-muted-foreground">Hospitals accepting cashless</dt>
-                <dd className="mt-1 text-2xl font-semibold">
-                  {cashlessHospitalCount}/{hospitals.length}
-                </dd>
+                <dt className="text-xs text-muted-foreground">Network checks</dt>
+                <dd className="mt-1 text-2xl font-semibold">Unavailable</dd>
               </div>
             </dl>
           </div>
@@ -196,9 +190,9 @@ export default function InsurancePage() {
       <Section id="plans" spacing="default" aria-labelledby="plans-heading">
         <Reveal>
           <SectionHeading
-            eyebrow="Plan comparison"
-            title={<span id="plans-heading">Line up the plans that fit your household</span>}
-            description="Filter by cover amount, premium and cashless network size, then tick up to three plans to compare cover, waiting periods and the fine print that decides most claims."
+            eyebrow="Sample catalogue"
+            title={<span id="plans-heading">Explore illustrative plan entries</span>}
+            description="Filter the sample plan data and compare the displayed fields. None of the plans, prices, network sizes or settlement figures are verified or linked to insurers."
           />
         </Reveal>
         <div className="mt-8">
@@ -213,9 +207,9 @@ export default function InsurancePage() {
       <Section id="claims" tone="muted" spacing="default" aria-labelledby="claims-heading">
         <Reveal>
           <SectionHeading
-            eyebrow="Claims desk"
-            title={<span id="claims-heading">What actually happens to a claim</span>}
-            description="Pre-authorisation, TPA queries, discharge summaries and reimbursement packs — the sequence most people only learn about during an admission."
+            eyebrow="Not connected"
+            title={<span id="claims-heading">Insurance claims are unavailable</span>}
+            description="ORVEXA does not check coverage, file pre-authorisations, assemble claim packs, contact TPAs or track claim decisions."
           />
         </Reveal>
 
@@ -255,42 +249,38 @@ export default function InsurancePage() {
                 <Wallet className="size-5" />
               </span>
               <div>
-                <h3 className="text-lg font-semibold">Start a claim with our desk</h3>
+                <h3 className="text-lg font-semibold">No claim service is connected</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                  Share the policy, hospital and treatment details once. We prepare the pre-authorisation form or the
-                  reimbursement pack, then follow the insurer and its TPA until the claim is settled.
+                  Contact your insurer, TPA or hospital directly to confirm coverage and claims requirements.
                 </p>
               </div>
               <ul className="flex flex-col gap-2.5 text-xs text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <Check aria-hidden className="mt-0.5 size-3.5 shrink-0 text-success" />
-                  Cashless admission: the hospital bills the insurer directly once approval lands.
+                  ORVEXA cannot determine whether a hospital or treatment is covered.
                 </li>
                 <li className="flex items-start gap-2">
                   <Check aria-hidden className="mt-0.5 size-3.5 shrink-0 text-success" />
-                  Reimbursement: discharge summary, investigation reports and original bills in one tracked pack.
+                  ORVEXA does not create or track reimbursement submissions.
                 </li>
                 <li className="flex items-start gap-2">
                   <Check aria-hidden className="mt-0.5 size-3.5 shrink-0 text-success" />
-                  Every query raised by the TPA is flagged back to you with the exact document needed.
+                  No policy data entered here is sent to an insurer or TPA.
                 </li>
               </ul>
               <div className="mt-auto flex flex-wrap gap-3 border-t border-border pt-5">
                 <RequestDialog
-                  triggerLabel="Start a claim"
+                  triggerLabel="Preview claim form"
                   triggerVariant="gradient"
-                  title="Start an insurance claim"
-                  description="Tell us about the policy and the treatment. The claims desk uses this to prepare the pre-authorisation form or the reimbursement pack."
+                  title="Insurance claim form preview"
+                  description="Insurance claims are not connected to ORVEXA. This sample form does not submit a claim."
                   fields={claimFields}
-                  submitLabel="Send claim details"
-                  successTitle="Claim details ready"
-                  successBody="The claims desk would match this against your policy, prepare the right form and share the document checklist within one working day."
-                  footnote="Phase 1 has no claims backend yet. This form validates your details and shows the confirmation state, but no claim information leaves your browser and nothing is filed with any insurer or TPA."
+                  footnote="Do not enter real policy or medical details. This browser-only preview does not contact an insurer, submit a claim or transmit your information."
                 />
                 <Button asChild variant="outline">
                   <a href={`tel:${siteConfig.supportPhone.replace(/\s/g, "")}`}>
                     <PhoneCall aria-hidden />
-                    Talk to the claims desk
+                    Call the provided contact number
                   </a>
                 </Button>
               </div>
@@ -302,9 +292,9 @@ export default function InsurancePage() {
       <Section id="guides" spacing="default" aria-labelledby="guides-heading">
         <Reveal>
           <SectionHeading
-            eyebrow="Guides"
-            title={<span id="guides-heading">Plain-language notes before you buy or claim</span>}
-            description="Short explainers written for Indian policies. These are general notes, not advice on your specific policy wording."
+            eyebrow="Sample information"
+            title={<span id="guides-heading">General insurance information</span>}
+            description="These notes are general and unverified. They are not financial, insurance or medical advice; confirm details with your insurer and review policy documents."
           />
         </Reveal>
 
@@ -345,17 +335,17 @@ export default function InsurancePage() {
         <div className="grid gap-10 lg:grid-cols-[1fr_0.85fr] lg:items-start">
           <Reveal>
             <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold tracking-[0.14em] text-teal-200 uppercase">
-              Cashless eligibility
+              Eligibility checks unavailable
             </span>
             <h2
               id="eligibility-heading"
               className="mt-4 text-3xl font-semibold text-white sm:text-4xl lg:text-[2.6rem] lg:leading-[1.12]"
             >
-              Check before you are admitted, not at the billing counter
+              ORVEXA cannot check policy eligibility
             </h2>
             <p className="mt-4 text-base leading-relaxed text-white/70 sm:text-lg">
-              Four conditions decide whether an admission is genuinely cashless. We can check the first one against the
-              insurer&apos;s published network today, and prepare the rest for the pre-authorisation request.
+              The sample directory and plan data are not connected to insurer networks or policy terms. Confirm all
+              coverage and approval questions directly with your insurer, TPA and hospital.
             </p>
 
             <ul className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -382,27 +372,24 @@ export default function InsurancePage() {
               >
                 <Building2 className="size-5" />
               </span>
-              <h3 className="mt-4 text-lg font-semibold">Check my eligibility</h3>
+              <h3 className="mt-4 text-lg font-semibold">Eligibility form preview</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                Send us the insurer, policy number and the hospital you plan to use. The care desk replies with the
-                network status and the documents the admission will need.
+                This browser-only preview does not check network status or return policy requirements. Do not enter real
+                policy or personal information.
               </p>
               <div className="mt-5">
                 <RequestDialog
-                  triggerLabel="Check my eligibility"
+                  triggerLabel="Preview eligibility form"
                   triggerVariant="gradient"
-                  title="Check cashless eligibility"
-                  description="Share your insurer and the hospital you plan to use. We check the published network list and list the documents the admission will need."
+                  title="Eligibility form preview"
+                  description="ORVEXA does not verify policy eligibility or hospital network status."
                   fields={eligibilityFields}
-                  submitLabel="Check my eligibility"
-                  successTitle="Eligibility request ready"
-                  successBody="The care desk would check your policy against the hospital's network list and reply with the pre-authorisation checklist."
-                  footnote="Phase 1 cannot query the insurer or its TPA directly. This form validates your details and shows the confirmation state, but no verification request is sent anywhere and no policy data leaves your browser."
+                  footnote="Do not enter real policy details. This browser-only preview does not query an insurer or transmit information."
                 />
               </div>
               <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-                For an emergency admission, do not wait for this check. Get the patient treated first, inform the insurer
-                within 24 hours, and let the desk handle the paperwork alongside.
+                For emergencies, call 108 directly and follow the dispatcher&apos;s instructions. ORVEXA cannot verify
+                coverage or handle the claim.
               </p>
             </div>
           </Reveal>
@@ -421,8 +408,8 @@ export default function InsurancePage() {
               </li>
               <li className="flex items-start gap-2.5">
                 <Check aria-hidden className="mt-1 size-4 shrink-0 text-primary" />
-                We aggregate publicly available plan information and illustrative figures so you can compare like for
-                like. Insurers change their terms without notice.
+                Plan entries and figures on this page are illustrative and are not linked to insurers or current policy
+                documents.
               </li>
               <li className="flex items-start gap-2.5">
                 <Check aria-hidden className="mt-1 size-4 shrink-0 text-primary" />
@@ -445,15 +432,15 @@ export default function InsurancePage() {
             <div className="max-w-2xl">
               <h2 className="text-2xl font-semibold sm:text-3xl">Know which hospital will treat you cashless</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Filter the hospital network for cashless insurance and 24×7 emergency cover, or ask the care desk to find
-                a facility that accepts your policy.
+                The provider directory has no verified cashless-network or emergency-hours data. Contact each hospital
+                and your insurer directly.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Button asChild variant="gradient" size="lg">
                 <Link href="/hospitals">
                   <Building2 aria-hidden />
-                  Find a cashless hospital
+                  Browse provider listings
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
@@ -464,7 +451,7 @@ export default function InsurancePage() {
               </Button>
               <Button asChild variant="ghost" size="lg">
                 <Link href="/contact">
-                  Contact the care desk
+                  View contact details
                   <ArrowRight aria-hidden />
                 </Link>
               </Button>

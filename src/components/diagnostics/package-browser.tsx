@@ -1,10 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { ArrowDownUp, Check, Home, PackageSearch, Search, X } from "lucide-react";
 
-import { RequestDialog, type RequestField } from "@/components/forms/request-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,8 +31,6 @@ const sortOptions: { value: SortKey; label: string }[] = [
   { value: "discount", label: "Highest discount" },
 ];
 
-const collectionSlots = ["6-8 AM", "8-10 AM", "10-12 PM", "4-6 PM", "6-8 PM"];
-
 const categoryNames = new Map(diagnosticCategories.map((category) => [category.id, category.name]));
 
 /** Discount is always derived from the listed price and MRP — never hard-coded. */
@@ -47,74 +43,10 @@ function reportHours(pkg: DiagnosticPackage) {
   return Number(pkg.reportTime.match(/\d+/)?.[0] ?? Number.MAX_SAFE_INTEGER);
 }
 
-function buildCollectionFields(pkg: DiagnosticPackage): RequestField[] {
-  return [
-    {
-      name: "patientName",
-      label: "Patient name",
-      placeholder: "Full name as per records",
-      required: true,
-      autoComplete: "name",
-    },
-    {
-      name: "phone",
-      label: "Mobile number",
-      type: "tel",
-      placeholder: "+91 98450 12093",
-      required: true,
-      autoComplete: "tel",
-      description: "Used only to confirm the collection slot.",
-    },
-    {
-      name: "pinCode",
-      label: "PIN code",
-      placeholder: "560103",
-      required: true,
-      description: pkg.homeCollection
-        ? "Confirms home collection is available on your street."
-        : "Lets us point you to the nearest partner centre.",
-    },
-    {
-      name: "address",
-      label: "Full address",
-      type: "textarea",
-      placeholder: "Flat, building, street and a landmark",
-      required: true,
-      description: pkg.homeCollection
-        ? "The address the phlebotomist should reach."
-        : "Used to route you to the closest collection centre.",
-    },
-    { name: "date", label: "Preferred date", type: "date", required: true },
-    {
-      name: "slot",
-      label: "Preferred slot",
-      type: "select",
-      options: collectionSlots,
-      defaultValue: collectionSlots[0],
-      required: true,
-      description: pkg.fastingRequired ? "Fasting is required, so an early slot usually works best." : undefined,
-    },
-    {
-      name: "package",
-      label: "Package",
-      type: "select",
-      options: [pkg.name],
-      defaultValue: pkg.name,
-      required: true,
-    },
-    {
-      name: "notes",
-      label: "Notes for the phlebotomist",
-      type: "textarea",
-      placeholder: "Known allergies, difficult veins or gate access",
-    },
-  ];
-}
-
 /**
  * Diagnostics package browser. Search, category chips, sorting and the
- * collection request all run client-side over the typed demo catalogue, so the
- * only change needed to go live is the data source.
+ * filters run client-side over the sample catalogue. Booking stays disabled
+ * until a real laboratory integration is configured.
  */
 function PackageBrowser() {
   const [category, setCategory] = useState<CategoryId>("all");
@@ -237,16 +169,11 @@ function PackageBrowser() {
         <EmptyState
           icon={PackageSearch}
           title="No packages match those filters"
-          description="Try a different test name, or clear the filters to see the full catalogue again. The care desk can also build a custom panel for you."
+          description="Try a different test name or clear the filters to see the sample catalogue again. No custom panel or laboratory booking service is connected."
           action={
             <Button variant="gradient" onClick={reset}>
               <X aria-hidden />
               Clear filters
-            </Button>
-          }
-          secondaryAction={
-            <Button asChild variant="outline">
-              <Link href="/help">Ask the care desk</Link>
             </Button>
           }
         />
@@ -310,26 +237,9 @@ function PackageBrowser() {
                   </div>
 
                   <div className="mt-auto flex flex-wrap items-center gap-3 border-t border-border pt-4">
-                    <RequestDialog
-                      triggerLabel={pkg.homeCollection ? "Book home collection" : "Request this package"}
-                      triggerVariant="gradient"
-                      triggerSize="sm"
-                      title={
-                        pkg.homeCollection
-                          ? `Book home collection — ${pkg.name}`
-                          : `Request ${pkg.name} at a centre`
-                      }
-                      description={
-                        pkg.homeCollection
-                          ? `${pkg.testCount} tests · ${pkg.reportTime}. Choose a slot and a certified phlebotomist is assigned to your address.`
-                          : `${pkg.testCount} tests · ${pkg.reportTime}. This panel needs a visit to a partner centre; we confirm the closest one after you submit.`
-                      }
-                      fields={buildCollectionFields(pkg)}
-                      submitLabel={pkg.homeCollection ? "Confirm collection" : "Request booking"}
-                      successTitle="Collection request ready"
-                      successBody={`A phlebotomist slot for ${pkg.name} would be held for the date and time you chose, with a confirmation on your mobile number.`}
-                      footnote="Phase 1 has no laboratory backend yet. This form validates your details and shows the confirmation state, but no request leaves your browser."
-                    />
+                    <Button variant="outline" size="sm" disabled>
+                      Booking unavailable
+                    </Button>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button variant="outline" size="sm">

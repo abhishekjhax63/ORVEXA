@@ -51,6 +51,7 @@ export const RATE_LIMITS = {
    * of one.
    */
   aiTurn: { limit: 30, windowSeconds: 60 * 60 },
+  aiImageSearch: { limit: 20, windowSeconds: 60 * 60 },
   aiTranscribe: { limit: 40, windowSeconds: 60 * 60 },
   aiUpload: { limit: 20, windowSeconds: 60 * 60 },
   aiWrite: { limit: 60, windowSeconds: 60 * 60 },

@@ -407,7 +407,7 @@ async function produceDraft(input: {
       draft: outcome.result.data,
       isDegraded: false,
       providerId: input.provider.id,
-      model: input.provider.model,
+      model: input.provider.modelFor(triageRequest),
       latencyMs: outcome.usage.latencyMs,
       inputChars: outcome.usage.inputChars,
       failureError: null,
@@ -421,7 +421,7 @@ async function produceDraft(input: {
     conversationId: input.conversationId,
     ownerUserId: input.ownerUserId,
     providerId: input.provider.id,
-    model: input.provider.model,
+    model: input.provider.modelFor(triageRequest),
     latencyMs: outcome.usage.latencyMs,
     inputChars: outcome.usage.inputChars,
   });

@@ -165,6 +165,22 @@ export async function geocodeAddress(query: string, options: GeocodeOptions = {}
     return places.length > 0 ? { ok: true, data: places } : failure<GeocodedPlace[]>("no_results");
   }
 
+  if (config.provider === "geoapify") {
+    const url = buildUrl("https://api.geoapify.com/v1/geocode/search", {
+      text: trimmed,
+      apiKey: config.secretToken,
+      limit,
+      filter: country ? `countrycode:${country.toLowerCase()}` : undefined,
+      bias: proximity ? `proximity:${proximity.longitude},${proximity.latitude}` : undefined,
+      lang: "en",
+    });
+    const result = await requestJson<GeoapifyGeocodeResponse>(url, "geoapify");
+    if (!result.ok) return result;
+    if (!Array.isArray(result.data.features)) return failure<GeocodedPlace[]>("provider_error");
+    const places = result.data.features.map(geoapifyPlace).filter((place): place is GeocodedPlace => place !== null);
+    return places.length > 0 ? { ok: true, data: places } : failure<GeocodedPlace[]>("no_results");
+  }
+
   const url = buildUrl("https://maps.googleapis.com/maps/api/geocode/json", {
     address: trimmed,
     key: config.secretToken,
@@ -208,6 +224,20 @@ export async function reverseGeocode(coordinates: Coordinates): Promise<MapResul
     const result = await requestJson<MapboxForwardResponse>(url, "mapbox");
     if (!result.ok) return result;
     const place = result.data.features?.[0] ? mapboxPlace(result.data.features[0]) : null;
+    return place ? { ok: true, data: place } : failure<GeocodedPlace>("no_results");
+  }
+
+  if (config.provider === "geoapify") {
+    const url = buildUrl("https://api.geoapify.com/v1/geocode/reverse", {
+      lat: coordinates.latitude,
+      lon: coordinates.longitude,
+      apiKey: config.secretToken,
+      lang: "en",
+    });
+    const result = await requestJson<GeoapifyGeocodeResponse>(url, "geoapify");
+    if (!result.ok) return result;
+    if (!Array.isArray(result.data.features)) return failure<GeocodedPlace>("provider_error");
+    const place = result.data.features[0] ? geoapifyPlace(result.data.features[0]) : null;
     return place ? { ok: true, data: place } : failure<GeocodedPlace>("no_results");
   }
 
@@ -258,6 +288,13 @@ const GOOGLE_MODES: Record<TravelMode, string> = {
   walking: "walking",
   cycling: "bicycling",
   transit: "transit",
+};
+
+const GEOAPIFY_MODES: Record<TravelMode, string | null> = {
+  driving: "drive",
+  walking: "walk",
+  cycling: "bicycle",
+  transit: null,
 };
 
 export async function fetchRoute(
@@ -343,32 +380,82 @@ export async function fetchRoute(
     };
   }
 
-  const url = buildUrl("https://maps.googleapis.com/maps/api/directions/json", {
-    origin: `${origin.latitude},${origin.longitude}`,
-    destination: `${destination.latitude},${destination.longitude}`,
-    mode: GOOGLE_MODES[mode],
-    key: config.secretToken,
-    language: "en",
+  if (config.provider === "google") {
+    const url = buildUrl("https://maps.googleapis.com/maps/api/directions/json", {
+      origin: `${origin.latitude},${origin.longitude}`,
+      destination: `${destination.latitude},${destination.longitude}`,
+      mode: GOOGLE_MODES[mode],
+      key: config.secretToken,
+      language: "en",
+    });
+    const result = await requestJson<GoogleDirectionsResponse>(url, "google");
+    if (!result.ok) return result;
+    if (result.data.status === "ZERO_RESULTS") return failure<RouteResult>("no_results");
+    if (result.data.status !== "OK" || !result.data.routes?.length) return failure<RouteResult>("provider_error");
+    const route = result.data.routes[0];
+    const legs = route.legs ?? [];
+    return {
+      ok: true,
+      data: {
+        provider: "google",
+        mode,
+        distanceMetres: legs.reduce((total, leg) => total + (leg.distance?.value ?? 0), 0),
+        durationSeconds: legs.reduce((total, leg) => total + (leg.duration?.value ?? 0), 0),
+        geometry: decodePolyline(route.overview_polyline?.points ?? ""),
+        steps: legs.flatMap((leg) =>
+          (leg.steps ?? []).map((step) => ({
+            instruction: stripHtml(step.html_instructions ?? "Continue"),
+            distanceMetres: step.distance?.value ?? 0,
+            durationSeconds: step.duration?.value ?? 0,
+          })),
+        ),
+      },
+    };
+  }
+
+  const providerMode = GEOAPIFY_MODES[mode];
+  if (!providerMode) return failure<RouteResult>("unsupported_mode");
+  const url = buildUrl("https://api.geoapify.com/v1/routing", {
+    waypoints: `${origin.latitude},${origin.longitude}|${destination.latitude},${destination.longitude}`,
+    mode: providerMode,
+    details: "instruction_details",
+    apiKey: config.secretToken,
+    lang: "en",
   });
-  const result = await requestJson<GoogleDirectionsResponse>(url, "google");
+  const result = await requestJson<GeoapifyRouteResponse>(url, "geoapify");
   if (!result.ok) return result;
-  if (result.data.status === "ZERO_RESULTS") return failure<RouteResult>("no_results");
-  if (result.data.status !== "OK" || !result.data.routes?.length) return failure<RouteResult>("provider_error");
-  const route = result.data.routes[0];
-  const legs = route.legs ?? [];
+  const route = result.data.features?.[0];
+  const properties = route?.properties;
+  if (
+    !route ||
+    typeof properties?.distance !== "number" ||
+    typeof properties.time !== "number" ||
+    !Array.isArray(route.geometry?.coordinates)
+  ) {
+    return failure<RouteResult>("no_results");
+  }
+
+  const geometry = route.geometry.coordinates.filter(
+    (coordinate): coordinate is [number, number] =>
+      Array.isArray(coordinate) &&
+      coordinate.length >= 2 &&
+      Number.isFinite(coordinate[0]) &&
+      Number.isFinite(coordinate[1]),
+  );
+
   return {
     ok: true,
     data: {
-      provider: "google",
+      provider: "geoapify",
       mode,
-      distanceMetres: legs.reduce((total, leg) => total + (leg.distance?.value ?? 0), 0),
-      durationSeconds: legs.reduce((total, leg) => total + (leg.duration?.value ?? 0), 0),
-      geometry: decodePolyline(route.overview_polyline?.points ?? ""),
-      steps: legs.flatMap((leg) =>
+      distanceMetres: properties.distance,
+      durationSeconds: properties.time,
+      geometry,
+      steps: (properties.legs ?? []).flatMap((leg) =>
         (leg.steps ?? []).map((step) => ({
-          instruction: stripHtml(step.html_instructions ?? "Continue"),
-          distanceMetres: step.distance?.value ?? 0,
-          durationSeconds: step.duration?.value ?? 0,
+          instruction: step.instruction?.text ?? step.instructions?.text ?? "Continue",
+          distanceMetres: typeof step.distance === "number" ? step.distance : 0,
+          durationSeconds: typeof step.time === "number" ? step.time : 0,
         })),
       ),
     },
@@ -431,6 +518,67 @@ type GoogleDirectionsResponse = {
     }[];
   }[];
 };
+
+type GeoapifyGeocodeResponse = {
+  features?: {
+    geometry?: { coordinates?: [number, number] };
+    properties?: {
+      place_id?: string;
+      name?: string;
+      formatted?: string;
+      address_line1?: string;
+      address_line2?: string;
+      city?: string;
+      state?: string;
+      lat?: number;
+      lon?: number;
+      result_type?: string;
+      rank?: { match_type?: string };
+    };
+  }[];
+};
+
+type GeoapifyRouteResponse = {
+  features?: {
+    geometry?: { coordinates?: number[][] };
+    properties?: {
+      distance?: number;
+      time?: number;
+      legs?: {
+        steps?: {
+          instruction?: { text?: string };
+          instructions?: { text?: string };
+          distance?: number;
+          time?: number;
+        }[];
+      }[];
+    };
+  }[];
+};
+
+function geoapifyPlace(feature: NonNullable<GeoapifyGeocodeResponse["features"]>[number]): GeocodedPlace | null {
+  const properties = feature.properties;
+  const latitude = properties?.lat ?? feature.geometry?.coordinates?.[1];
+  const longitude = properties?.lon ?? feature.geometry?.coordinates?.[0];
+  if (typeof latitude !== "number" || typeof longitude !== "number" || !isValidCoordinates({ latitude, longitude })) {
+    return null;
+  }
+
+  const primary = properties?.name ?? properties?.address_line1 ?? properties?.formatted ?? "Unnamed place";
+  const secondary =
+    properties?.address_line2 ??
+    [properties?.city, properties?.state].filter((value, index, values) => value && values.indexOf(value) === index).join(", ");
+
+  return {
+    id: properties?.place_id ?? `${longitude},${latitude}`,
+    label: properties?.formatted ?? primary,
+    primary,
+    secondary: secondary || null,
+    coordinates: { latitude, longitude },
+    precision: properties?.result_type ?? properties?.rank?.match_type ?? null,
+    provider: "geoapify",
+  };
+}
 
 function mapboxPlace(feature: NonNullable<MapboxForwardResponse["features"]>[number]): GeocodedPlace | null {
   const properties = feature.properties;

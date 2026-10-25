@@ -1,20 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, ExternalLink, LifeBuoy, Mail, MapPin, PhoneCall, Siren } from "lucide-react";
+import { ArrowRight, ExternalLink, Mail, MapPin, PhoneCall, Siren } from "lucide-react";
 
-import { RequestDialog, type RequestField } from "@/components/forms/request-dialog";
 import { DemoNotice } from "@/components/layout/demo-notice";
 import { PageHero } from "@/components/layout/page-hero";
 import { Section, SectionHeading } from "@/components/layout/section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";
 import { Button } from "@/components/ui/button";
-import { contactTopics, supportChannels } from "@/data/support";
+import { supportChannels } from "@/data/support";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Reach the ORVEXA care desk by phone, email or a written request. Support hours, escalation routes, the registered office address and answers to the most common questions before you write to us.",
+    "Contact ORVEXA using the phone number and email address provided for this project. Response times and walk-in availability are not verified.",
   alternates: { canonical: "/contact" },
 };
 
@@ -23,149 +22,57 @@ const emergencyTel = `tel:${siteConfig.emergencyNumber}`;
 const supportMailto = `mailto:${siteConfig.supportEmail}`;
 const mapHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(siteConfig.address)}`;
 
-/** Reasons patients and provider partners write to us, with the fastest self-serve route. */
+/** Links to the project's currently available informational pages. */
 const commonTopics = [
   {
-    id: "appointment",
-    title: "Change or cancel an appointment",
-    detail: "Rescheduling and cancellation rules, plus what happens if a video consultation drops.",
-    href: "/help",
-    label: "Appointment answers",
+    id: "directory",
+    title: "Find Patna providers",
+    detail: "Review hospital and doctor listings supplied in spreadsheets; details are pending verification.",
+    href: "/hospitals",
+    label: "Open provider directory",
+  },
+  {
+    id: "assistant",
+    title: "AI assistant",
+    detail: "Use the configured AI workspace when its required services are available.",
+    href: "/assistant",
+    label: "Open AI workspace",
   },
   {
     id: "pharmacy",
-    title: "A MediCare order is late or short",
-    detail: "Delivery windows, pin code coverage and how a missing item is replaced.",
+    title: "Sample pharmacy catalogue",
+    detail: "Browse sample product information; ORVEXA does not sell or deliver medicines.",
     href: "/pharmacy",
-    label: "Pharmacy help",
+    label: "Open sample catalogue",
   },
   {
-    id: "insurance",
-    title: "A cashless approval or claim is stuck",
-    detail: "What the claims desk needs from you, and who to escalate to when it stalls.",
-    href: "/insurance",
-    label: "Insurance and claims",
+    id: "diagnostics",
+    title: "Sample diagnostic packages",
+    detail: "Review sample package information; booking and laboratory services are not connected.",
+    href: "/diagnostics",
+    label: "Open sample packages",
   },
   {
-    id: "records",
-    title: "Share records with a doctor outside ORVEXA",
-    detail: "Create a time-bound, revocable link from your own record timeline.",
-    href: "/dashboard/records",
-    label: "Open health records",
-  },
-  {
-    id: "provider",
-    title: "List a hospital, clinic or lab",
-    detail: "Credentialing requirements, tariff bands and integration options for providers.",
-    href: "/about#providers",
-    label: "Provider onboarding",
+    id: "about",
+    title: "About ORVEXA",
+    detail: "View project information and the contact details supplied for this site.",
+    href: "/about",
+    label: "About this project",
   },
   {
     id: "emergency",
-    title: "Someone needs urgent medical help",
-    detail: "Do not wait for a reply on this page. Ambulance dispatch and trauma coordination are a separate line.",
+    title: "Someone needs emergency help",
+    detail: "Call 108 directly. ORVEXA cannot dispatch an ambulance or notify a hospital.",
     href: "/emergency",
-    label: "Emergency SOS",
-  },
-];
-
-const contactFields: RequestField[] = [
-  {
-    name: "fullName",
-    label: "Full name",
-    type: "text",
-    placeholder: "As it appears on your ORVEXA account, if you have one",
-    required: true,
-    autoComplete: "name",
-  },
-  {
-    name: "email",
-    label: "Email",
-    type: "email",
-    placeholder: "you@example.com",
-    required: true,
-    autoComplete: "email",
-  },
-  {
-    name: "phone",
-    label: "Phone",
-    type: "tel",
-    placeholder: "+91 98450 12093",
-    required: true,
-    autoComplete: "tel",
-    description: "Used only for this enquiry, and only if you ask us to call.",
-  },
-  {
-    name: "topic",
-    label: "Topic",
-    type: "select",
-    options: contactTopics.map((topic) => topic.label),
-    defaultValue: contactTopics[0].label,
-    description: "Routes your request to the team that can act on it fastest.",
-  },
-  {
-    name: "preferredMethod",
-    label: "Preferred contact method",
-    type: "select",
-    options: ["Email", "Phone call", "WhatsApp"],
-    defaultValue: "Email",
-  },
-  {
-    name: "message",
-    label: "Message",
-    type: "textarea",
-    placeholder: "Tell us what has happened, any reference or order number, and what you would like us to do.",
-    required: true,
-    description: "Please do not include clinical details you would not want stored, such as test results.",
-  },
-  {
-    name: "consent",
-    label: "Consent to be contacted",
-    type: "select",
-    options: ["Yes, I consent to ORVEXA contacting me", "No"],
-    defaultValue: "Yes, I consent to ORVEXA contacting me",
-    description: "You can withdraw consent at any time by writing to the care desk email address.",
-  },
-];
-
-const chatRequestFields: RequestField[] = [
-  {
-    name: "fullName",
-    label: "Full name",
-    type: "text",
-    placeholder: "Your name",
-    required: true,
-    autoComplete: "name",
-  },
-  {
-    name: "phone",
-    label: "Phone",
-    type: "tel",
-    placeholder: "+91 98450 12093",
-    required: true,
-    autoComplete: "tel",
-  },
-  {
-    name: "topic",
-    label: "Topic",
-    type: "select",
-    options: contactTopics.map((topic) => topic.label),
-    defaultValue: contactTopics[0].label,
-  },
-  {
-    name: "question",
-    label: "What do you need help with?",
-    type: "textarea",
-    placeholder: "A short description and any reference number",
-    required: true,
+    label: "Emergency information",
   },
 ];
 
 const offices = [
-  { id: "hours-phone", label: "Care desk phone", value: "Answered 24×7, every day of the year" },
-  { id: "hours-email", label: "Email support", value: "Acknowledged within 8 working hours" },
-  { id: "hours-chat", label: "Written requests", value: "Queued to a coordinator during 07:00–23:00 IST" },
-  { id: "hours-emergency", label: "Emergency line", value: "Immediate dispatch, no queue" },
+  { id: "phone", label: "Phone availability", value: "Not independently verified" },
+  { id: "email", label: "Email response time", value: "No response-time commitment is confirmed" },
+  { id: "walk-in", label: "Walk-in service", value: "Not confirmed; contact before visiting" },
+  { id: "emergency", label: "Emergency help", value: "Call 108 directly; ORVEXA cannot dispatch" },
 ];
 
 export default function ContactPage() {
@@ -173,8 +80,8 @@ export default function ContactPage() {
     <>
       <PageHero
         eyebrow="Contact"
-        title="Talk to someone who can actually act on it"
-        description="The ORVEXA care desk is staffed by coordinators with access to bookings, orders and claims — not a script. Choose the channel that suits you, or send a written request and we will route it to the team that owns the problem."
+        title="Contact ORVEXA"
+        description="Use the phone number or email address provided for this project. Contact availability and response times have not been independently verified. Do not use these channels for emergencies."
         breadcrumbs={[
           { title: "Home", href: "/" },
           { title: "Contact", href: "/contact" },
@@ -200,9 +107,9 @@ export default function ContactPage() {
       <Section id="chat" spacing="default" aria-labelledby="chat-heading">
         <Reveal>
           <SectionHeading
-            eyebrow="Support channels"
-            title={<span id="chat-heading">Four ways to reach the care desk</span>}
-            description="Phone and email are live channels today. Written requests and the in-app chat inbox are handled by the same coordinators, so nothing is lost between them."
+            eyebrow="Contact channels"
+            title={<span id="chat-heading">Phone and email</span>}
+            description="These links open your device&apos;s phone or email application. ORVEXA cannot confirm that a call will be answered or an email acknowledged."
           />
         </Reveal>
 
@@ -255,25 +162,7 @@ export default function ContactPage() {
                           {channel.actionLabel}
                         </a>
                       </Button>
-                    ) : (
-                      <div className="flex flex-col items-start gap-2">
-                        <RequestDialog
-                          triggerLabel="Start a request"
-                          triggerVariant="gradient"
-                          triggerSize="sm"
-                          title="Start a care desk request"
-                          description="Live chat is not switched on in this phase. A coordinator would pick this up by email or phone using the details you give here."
-                          fields={chatRequestFields}
-                          submitLabel="Send to the care desk"
-                          successTitle="Request ready for the care desk"
-                          successBody="In production, a coordinator would receive this with your account context attached and reply on your preferred channel."
-                          footnote="Phase 1 has no support backend and no live chat. This form validates your details and shows the confirmation state; nothing is transmitted."
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Live chat opens in Phase 2. Until then, requests are answered by email or phone.
-                        </p>
-                      </div>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               </RevealItem>
@@ -287,8 +176,8 @@ export default function ContactPage() {
               <Siren aria-hidden className="mt-0.5 size-4 shrink-0" />
               <span>
                 <span className="font-semibold">If this is a medical emergency</span>, skip every form on this page.
-                Call {siteConfig.emergencyNumber} now, or open Emergency SOS to dispatch the nearest advanced
-                life-support ambulance.
+                Call {siteConfig.emergencyNumber} now. ORVEXA cannot dispatch an ambulance, alert a hospital or confirm
+                that responders have been contacted.
               </span>
             </p>
             <div className="flex flex-wrap gap-3">
@@ -303,95 +192,22 @@ export default function ContactPage() {
         </Reveal>
 
         <DemoNotice className="mt-6">
-          Response-time targets shown against each channel are Phase 1 planning figures. In-app chat is not live yet;
-          phone, email and this web form are the working routes today.
+          The phone and email links use the contact details provided for this project. Contact availability has not
+          been independently verified. No in-app chat or web request form is connected.
         </DemoNotice>
       </Section>
 
       <Section id="form" spacing="default" aria-labelledby="form-heading">
         <Reveal>
-          <div className="grid gap-8 rounded-[1.75rem] border border-border bg-card p-6 shadow-[var(--shadow-panel)] sm:p-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
-            <div>
-              <SectionHeading
-                eyebrow="Written request"
-                title={<span id="form-heading">Send us the details, once</span>}
-                description="Give us the reference number and the outcome you need. A coordinator routes it to the team that owns that workflow, so you are not asked to repeat yourself on every call."
-              />
-              <ol className="mt-8 flex flex-col gap-4">
-                {[
-                  {
-                    id: "step-1",
-                    title: "Tell us what happened",
-                    detail:
-                      "Topic, reference number and a short description. The more specific the reference, the faster the lookup.",
-                  },
-                  {
-                    id: "step-2",
-                    title: "We route it to the right desk",
-                    detail:
-                      "Appointments, pharmacy, diagnostics and claims each have a named owner inside the care desk.",
-                  },
-                  {
-                    id: "step-3",
-                    title: "You get one reply thread",
-                    detail:
-                      "A single thread on your chosen channel, kept open until the problem is closed rather than re-raised.",
-                  },
-                ].map((step, index) => (
-                  <li key={step.id} className="flex gap-4">
-                    <span
-                      aria-hidden
-                      className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary-soft text-xs font-semibold text-primary"
-                    >
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold">{step.title}</p>
-                      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{step.detail}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </div>
-
-            <div className="flex flex-col justify-center gap-5 rounded-2xl border border-dashed border-border bg-muted/40 p-6">
-              <div className="flex items-center gap-3">
-                <span aria-hidden className="grid size-11 place-items-center rounded-xl bg-card text-primary">
-                  <LifeBuoy className="size-5" />
-                </span>
-                <div>
-                  <p className="text-base font-semibold">Contact form</p>
-                  <p className="text-xs text-muted-foreground">
-                    Seven fields, about two minutes. Nothing is sent until you confirm.
-                  </p>
-                </div>
-              </div>
+          <div className="flex flex-col gap-5 rounded-[1.75rem] border border-border bg-card p-6 shadow-[var(--shadow-panel)] sm:p-8">
+            <SectionHeading
+              eyebrow="Online requests"
+              title={<span id="form-heading">No contact form is connected</span>}
+              description="This site does not send or store contact-form submissions. Use the email or phone links above instead."
+            />
+            <div className="flex flex-wrap gap-3">
               <p className="text-sm leading-relaxed text-muted-foreground">
-                Prefer to write directly? Email{" "}
-                <a href={supportMailto} className="font-medium text-primary underline underline-offset-4">
-                  {siteConfig.supportEmail}
-                </a>{" "}
-                or call{" "}
-                <a href={supportTel} className="font-medium text-primary underline underline-offset-4">
-                  {siteConfig.supportPhone}
-                </a>
-                .
-              </p>
-              <RequestDialog
-                triggerLabel="Open the contact form"
-                triggerVariant="gradient"
-                triggerSize="lg"
-                title="Contact the ORVEXA care desk"
-                description="Share your details and the issue. In production this reaches the coordinator team with your account context attached."
-                fields={contactFields}
-                submitLabel="Send request"
-                successTitle="Request ready to send"
-                successBody="In production, the care desk would acknowledge this within 8 working hours on your preferred channel and open a single thread until it is resolved."
-                footnote="Phase 1 has no contact backend. This form validates your details and shows the confirmation state, but nothing is transmitted or stored. For a response today, use the phone or email links above."
-              />
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                Do not send prescriptions, reports or policy documents through this form. Share those through your
-                ORVEXA records so access stays logged and revocable.
+                Avoid sending medical records, passwords or sensitive personal information by ordinary email.
               </p>
             </div>
           </div>
@@ -401,9 +217,9 @@ export default function ContactPage() {
       <Section id="offices" tone="muted" spacing="default" aria-labelledby="offices-heading">
         <Reveal>
           <SectionHeading
-            eyebrow="Where we are"
-            title={<span id="offices-heading">Registered office and support hours</span>}
-            description="ORVEXA operates as a distributed team with a single registered address for formal correspondence, notices and grievances."
+            eyebrow="Provided location"
+            title={<span id="offices-heading">Contact location and availability</span>}
+            description="This location was supplied for project contact information. A registered office or walk-in patient service at this address has not been independently confirmed."
           />
         </Reveal>
 
@@ -414,7 +230,7 @@ export default function ContactPage() {
                 <div className="flex items-start gap-3">
                   <MapPin aria-hidden className="mt-0.5 size-4 shrink-0 text-primary" />
                   <div>
-                    <p className="font-semibold text-foreground">{siteConfig.legalName}</p>
+                    <p className="font-semibold text-foreground">ORVEXA</p>
                     <p className="mt-1 leading-relaxed text-muted-foreground">{siteConfig.address}</p>
                   </div>
                 </div>
@@ -445,16 +261,14 @@ export default function ContactPage() {
               </a>
 
               <p className="text-xs leading-relaxed text-muted-foreground">
-                Please book an appointment before visiting; the Bengaluru office is not a walk-in patient service
-                centre. Corporate registration details (CIN, GSTIN) and the named grievance officer will be published at
-                launch.
+                Do not visit without independently confirming that this address is current and accepts visitors.
               </p>
             </div>
           </Reveal>
 
           <Reveal delay={0.06}>
             <div className="flex h-full flex-col gap-5 rounded-2xl border border-border bg-card p-6">
-              <h3 className="text-base font-semibold">Support hours</h3>
+              <h3 className="text-base font-semibold">Availability information</h3>
               <dl className="flex flex-col gap-4">
                 {offices.map((item) => (
                   <div key={item.id} className="border-b border-border pb-4 last:border-none last:pb-0">
@@ -464,24 +278,25 @@ export default function ContactPage() {
                 ))}
               </dl>
               <p className="text-xs leading-relaxed text-muted-foreground">
-                Statutory holidays affect email throughput but not the 24×7 care desk phone line or ambulance dispatch.
+                Phone and email availability are not confirmed. In an emergency, call {siteConfig.emergencyNumber}
+                directly; ORVEXA does not dispatch ambulances.
               </p>
             </div>
           </Reveal>
         </div>
 
         <DemoNotice className="mt-6">
-          Support hours and reply targets are Phase 1 operating plans for review. The registered address is the
-          company&apos;s real correspondence address.
+          Contact details and the address are shown as provided for this project. They have not been independently
+          verified; no support hours, reply targets, registered-office status or walk-in services are claimed.
         </DemoNotice>
       </Section>
 
       <Section id="topics" spacing="default" aria-labelledby="topics-heading">
         <Reveal>
           <SectionHeading
-            eyebrow="Before you write"
-            title={<span id="topics-heading">Six requests we can answer instantly</span>}
-            description="Most enquiries are solved faster by the right page than by a ticket. These are the routes the care desk would send you to anyway."
+            eyebrow="Explore"
+            title={<span id="topics-heading">Available information</span>}
+            description="These links open the informational sections of the site. They do not initiate bookings, orders or support tickets."
           />
         </Reveal>
 
@@ -507,17 +322,17 @@ export default function ContactPage() {
         <Reveal>
           <div className="flex flex-col items-start gap-6 rounded-[1.75rem] border border-border bg-card p-6 shadow-[var(--shadow-soft)] sm:p-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
-              <h2 className="text-2xl font-semibold sm:text-3xl">Not sure whether to call or write?</h2>
+              <h2 className="text-2xl font-semibold sm:text-3xl">Need to contact ORVEXA?</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Call for anything time-critical — an order in transit, a slot today, a claim at a hospital counter.
-                Write for documentation, formal complaints or provider onboarding.
+                Use the provided phone or email details for general questions. Response times and support availability
+                are not guaranteed.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Button asChild variant="gradient" size="lg">
                 <a href={supportTel}>
                   <PhoneCall aria-hidden />
-                  Call the care desk
+                  Call ORVEXA
                 </a>
               </Button>
               <Button asChild variant="outline" size="lg">

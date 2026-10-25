@@ -36,9 +36,9 @@ import { aiCapabilities } from "@/data/content";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "AI Health Assistant",
+  title: "AI assistant demo",
   description:
-    "Describe how you feel and get a clear next step. The ORVEXA Health Assistant guides symptom triage, suggests an urgency band and the right speciality, then hands you off to a licensed clinician — it never diagnoses or prescribes.",
+    "Explore a scripted assistant demo or open ORVEXA's AI workspace. Live symptom and image analysis depends on deployment configuration and is not a diagnosis.",
   alternates: { canonical: "/ai-assistant" },
 };
 
@@ -46,19 +46,19 @@ const safetyPromise = [
   {
     id: "promise-1",
     title: "Not a diagnosis",
-    detail: "It suggests an urgency band and where to go. It never names a condition or tells you what to take.",
+    detail: "This demo is scripted. The live workspace can provide informational AI output, not a confirmed diagnosis or prescription.",
     icon: ShieldCheck,
   },
   {
     id: "promise-2",
-    title: "Human handoff",
-    detail: "Every path ends with a licensed clinician — a teleconsult, a clinic visit, or emergency care.",
+    title: "No live handoff",
+    detail: "This demo does not contact a clinician, create an appointment or send an emergency request.",
     icon: UserCheck,
   },
   {
     id: "promise-3",
-    title: "Data stays with you",
-    detail: "In Phase 1 nothing you type leaves your browser. Sharing with a doctor is always your choice.",
+    title: "Demo data stays in the browser",
+    detail: "The scripted demo uses local page state. The separate live workspace sends data to configured services when you submit it.",
     icon: LockKeyhole,
   },
 ];
@@ -66,48 +66,48 @@ const safetyPromise = [
 const howItWorks = [
   {
     id: "step-1",
-    title: "Describe your symptoms",
+    title: "Describe symptoms or add an image",
     detail:
-      "Write it the way you would tell a friend — in English, Hindi, Tamil or any of 11 supported languages. No medical vocabulary required.",
+      "The live workspace accepts symptom text and image uploads when its AI provider, sign-in, private storage and malware scanning are configured.",
     icon: ClipboardList,
     link: { label: "Try the guided demo", href: "#demo" },
   },
   {
     id: "step-2",
-    title: "Answer structured follow-ups",
+    title: "Review the response",
     detail:
-      "The assistant asks the same clarifying questions a triage nurse would: onset, severity, red-flag signs and existing conditions.",
+      "Configured AI responses may be incomplete or wrong. They are not a substitute for a clinician's assessment.",
     icon: ListChecks,
   },
   {
     id: "step-3",
-    title: "Get an urgency band and a route",
+    title: "Treat output as informational",
     detail:
-      "You receive one of four bands — self-care, teleconsult, clinic visit within 24 hours, or emergency — with the reasoning shown, not hidden.",
+      "Do not use an AI-generated response to rule out an emergency or decide to delay care.",
     icon: Compass,
   },
   {
     id: "step-4",
-    title: "Hand off to a real clinician",
+    title: "Contact providers directly",
     detail:
-      "The summary becomes an appointment request for the recommended speciality, so the doctor starts with your context already in front of them.",
+      "The directory is a static, unverified list. It does not create appointments or pass your conversation to a provider.",
     icon: UserCheck,
-    link: { label: "Find a specialist", href: "/hospitals?view=doctors" },
+    link: { label: "Browse the supplied directory", href: "/hospitals?view=doctors" },
   },
 ];
 
 const canDo = [
-  "Explain a symptom pattern in plain language",
-  "Suggest an urgency band and the right speciality",
-  "Point you to a hospital, a teleconsult or emergency services",
-  "Prepare a summary you can choose to share with a clinician",
+  "Show a fixed sample conversation in this browser-only demo",
+  "Accept symptoms and images in the live workspace when required services are configured",
+  "Display an AI-generated informational response when the configured provider is available",
+  "Link to the supplied Patna directory for independent follow-up",
 ];
 
 const neverDo = [
-  "Diagnose a condition or rule one out",
-  "Prescribe medicines or adjust an existing dose",
-  "Replace emergency services when you need an ambulance",
-  "Replace clinical judgement or an in-person examination",
+  "Provide a confirmed diagnosis or prescribe treatment",
+  "Book an appointment or contact a clinician for you",
+  "Verify the supplied provider records, credentials, contacts or schedules",
+  "Replace emergency services or a clinician's assessment",
 ];
 
 const faqs = [
@@ -115,37 +115,37 @@ const faqs = [
     id: "faq-1",
     question: "How accurate is the triage guidance?",
     answer:
-      "The assistant follows reviewed routing protocols to decide how urgently you should be seen and which speciality should see you. It is not a diagnosis and it cannot examine you, so treat every recommendation as a starting point that a clinician confirms.",
+      "The conversation on this page is scripted and does not assess anyone. Responses from the live workspace depend on the configured AI provider, may be wrong, and have not been presented as clinically validated guidance.",
   },
   {
     id: "faq-2",
     question: "Is my health information private?",
     answer:
-      "In Phase 1 the walkthrough runs entirely in your browser — nothing you type is transmitted or stored. In Phase 2, anything you choose to share with the assistant will be encrypted at rest, used only to generate your guidance, and handed to a clinician only with your explicit consent, which you can revoke at any time.",
+      "Text entered in this scripted demo stays in page state and is not sent to an AI model. The live workspace sends submitted data to the services configured by the operator; review the privacy policy and consent prompts before using it.",
   },
   {
     id: "faq-3",
     question: "Is the assistant a registered medical device?",
     answer:
-      "No. The ORVEXA Health Assistant is a telehealth guidance and navigation tool, not a registered medical device, and it is not a substitute for professional medical advice. Regulatory registration and clinical validation of the triage model are part of the Phase 2 roadmap.",
+      "No registration or clinical validation is claimed here. Neither the scripted demo nor AI-generated responses should replace professional medical advice.",
   },
   {
     id: "faq-4",
     question: "Does it replace a doctor?",
     answer:
-      "Never. The assistant exists to shorten the time between feeling unwell and talking to the right clinician. Every conversation is designed to end with a handoff to a licensed doctor, a teleconsult or emergency care.",
+      "No. The demo has no clinician handoff, and the live workspace does not book care. Contact a licensed clinician directly.",
   },
   {
     id: "faq-5",
     question: "What does it cost to use?",
     answer:
-      "Guidance and routing are free to use on ORVEXA. You only pay for the care you then choose — a consultation, a diagnostic test, medicines or a hospital visit — and every price is shown before you commit.",
+      "This page is a demo and does not charge for care. ORVEXA does not publish live pricing or book services through the supplied provider directory; confirm prices directly with providers.",
   },
   {
     id: "faq-6",
     question: "What happens in an emergency?",
     answer:
-      "The assistant does not try to keep you in a chat. Red-flag symptoms such as chest pain, breathlessness, stroke signs or heavy bleeding escalate immediately to emergency guidance, with a one-tap call to 108 and the Emergency SOS module.",
+      "Neither the demo nor the live AI workspace should be used for emergency triage. Call 108 or go to the nearest emergency department.",
   },
 ];
 
@@ -153,9 +153,9 @@ export default function AiAssistantPage() {
   return (
     <>
       <PageHero
-        eyebrow="AI Health Assistant"
-        title="Guided symptom triage that always ends with a clinician"
-        description="Tell the ORVEXA Health Assistant how you feel and it helps you decide where to go — self-care, a teleconsult, a clinic visit or emergency — and then hands you off to a licensed clinician. It never diagnoses and it never prescribes."
+        eyebrow="AI assistant demo"
+        title="A scripted preview and a separate AI workspace"
+        description="This page is a browser-only scripted walkthrough, not an AI assessment. Open the live workspace for symptom and image analysis when its AI provider, account, private storage and safety services are configured. AI output is not a diagnosis."
         breadcrumbs={[
           { title: "Home", href: "/" },
           { title: "AI Health Assistant", href: "/ai-assistant" },
@@ -163,24 +163,21 @@ export default function AiAssistantPage() {
         actions={
           <>
             <Button asChild variant="gradient" size="lg">
-              <a href="#demo">
+              <Link href="/assistant">
                 <Sparkles aria-hidden />
-                Try the guided demo
-              </a>
+                Open the AI workspace
+              </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <a href="#how-it-works">
-                See how it works
-                <ArrowRight aria-hidden />
-              </a>
+              <a href="#demo">View the scripted demo</a>
             </Button>
           </>
         }
         aside={
           <div className="rounded-[1.75rem] border border-border bg-card/85 p-6 shadow-[var(--shadow-panel)] backdrop-blur-sm">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">The safety promise</p>
-              <Badge variant="outline">Honest by design</Badge>
+              <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">Important limits</p>
+              <Badge variant="demo">Demo</Badge>
             </div>
             <ul className="mt-5 space-y-4">
               {safetyPromise.map((item) => (
@@ -202,9 +199,9 @@ export default function AiAssistantPage() {
       <Section id="demo" spacing="default" aria-labelledby="demo-heading">
         <Reveal>
           <SectionHeading
-            eyebrow="Guided demo"
-            title={<span id="demo-heading">Walk through a triage conversation</span>}
-            description="This is a fixed, scripted transcript, not a live model. Pick a suggested reply or type your own and press Enter to see exactly how the assistant narrows a symptom down to a next step."
+            eyebrow="Scripted demo"
+            title={<span id="demo-heading">Walk through a sample conversation</span>}
+            description="This fixed transcript does not call an AI model or assess your symptoms. Pick a suggested reply or type into the demo to see its preset sample response."
           />
         </Reveal>
 
@@ -221,22 +218,22 @@ export default function AiAssistantPage() {
               </div>
               <ul className="space-y-4 text-sm">
                 <li>
-                  <p className="font-semibold">A real conversation state</p>
+                  <p className="font-semibold">Interactive sample state</p>
                   <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                     Messages are held in local state, the transcript scrolls, the progress bar advances and Enter sends a
                     reply — all in the browser.
                   </p>
                 </li>
                 <li>
-                  <p className="font-semibold">Reasoning you can read</p>
+                  <p className="font-semibold">Preset sample reasoning</p>
                   <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                    The assistant states which symptoms drove the urgency band instead of returning a black-box answer.
+                    The sample shows which scripted inputs lead to its fixed outcome; it is not generated reasoning.
                   </p>
                 </li>
                 <li>
-                  <p className="font-semibold">A handoff, not a verdict</p>
+                  <p className="font-semibold">No live handoff</p>
                   <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                    The walkthrough ends with a speciality to book and an emergency path, never a diagnosis.
+                    The sample suggests a care route but does not contact a clinician, book care or assess emergencies.
                   </p>
                 </li>
               </ul>
@@ -249,8 +246,11 @@ export default function AiAssistantPage() {
         </div>
 
         <DemoNotice className="mt-8">
-          The transcript, suggestions and triage outcome are a scripted walkthrough for Phase 1 review. The live triage
-          model arrives in Phase 2 and will be clinically validated before release.
+          The transcript and outcome are scripted and are not a real assessment. The live workspace is available at{" "}
+          <Link href="/assistant" className="font-semibold text-primary underline">
+            /assistant
+          </Link>
+          ; its AI and image features depend on deployment configuration.
         </DemoNotice>
       </Section>
 
@@ -270,9 +270,9 @@ export default function AiAssistantPage() {
       <Section id="how-it-works" tone="muted" spacing="default" aria-labelledby="how-it-works-heading">
         <Reveal>
           <SectionHeading
-            eyebrow="How triage works"
-            title={<span id="how-it-works-heading">Four steps from symptom to specialist</span>}
-            description="Each step is transparent, and the last one always leaves the decision with a licensed clinician rather than a chatbot."
+            eyebrow="Live workspace"
+            title={<span id="how-it-works-heading">Using symptom and image analysis</span>}
+            description="The live workspace depends on configured AI and upload services. Its responses are informational, may be wrong, and do not replace a clinician."
           />
         </Reveal>
 
@@ -310,8 +310,8 @@ export default function AiAssistantPage() {
         <Reveal>
           <SectionHeading
             eyebrow="Capabilities"
-            title={<span id="capabilities-heading">What the assistant helps with</span>}
-            description="Six things the assistant is built to do — always as guidance and navigation, with the clinical decision reserved for a doctor."
+            title={<span id="capabilities-heading">What the workspace can support</span>}
+            description="Support varies by the configured provider and upload services. Unavailable features are reported rather than simulated."
           />
         </Reveal>
 
@@ -395,8 +395,8 @@ export default function AiAssistantPage() {
               <div className="max-w-xl">
                 <p className="text-sm font-semibold text-white">If this is an emergency, do not use the assistant.</p>
                 <p className="mt-1.5 text-sm leading-relaxed text-white/70">
-                  Call {siteConfig.emergencyNumber} for an ambulance or open Emergency SOS, which shares your location with
-                  your contacts and pre-alerts the receiving hospital.
+                  Call {siteConfig.emergencyNumber} or go to the nearest emergency department. Do not rely on the demo or
+                  AI workspace for emergency assistance.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -425,34 +425,34 @@ export default function AiAssistantPage() {
             <div className="rounded-[1.75rem] border border-white/10 bg-navy-950/40 p-6">
               <div className="flex items-center gap-2 text-sm font-semibold text-white">
                 <LockKeyhole aria-hidden className="size-4.5 text-teal-200" />
-                Consent and data handling in Phase 2
+                Live workspace requirements
               </div>
               <p className="mt-4 text-sm leading-relaxed text-white/70">
-                We are deliberately describing how health data will be handled rather than claiming features that do not
-                exist yet. When the assistant moves beyond a walkthrough:
+                The live workspace sends submitted information to its configured AI and storage services. Review the
+                privacy policy and consent prompts before submitting health information.
               </p>
               <ul className="mt-4 grid gap-3 sm:grid-cols-3">
                 <li className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs font-semibold text-teal-200 uppercase">Encrypted at rest</p>
+                  <p className="text-xs font-semibold text-teal-200 uppercase">AI provider</p>
                   <p className="mt-1.5 text-xs leading-relaxed text-white/65">
-                    Transcripts and summaries stored with AES-256 encryption and per-access audit trails.
+                    Text analysis requires an operator-configured provider and credentials.
                   </p>
                 </li>
                 <li className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs font-semibold text-teal-200 uppercase">Explicit consent</p>
+                  <p className="text-xs font-semibold text-teal-200 uppercase">Image uploads</p>
                   <p className="mt-1.5 text-xs leading-relaxed text-white/65">
-                    Nothing is shared with a clinician or provider until you actively choose to share it.
+                    Require a signed-in account, private storage, a compatible model and malware scanning.
                   </p>
                 </li>
                 <li className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs font-semibold text-teal-200 uppercase">Revocable</p>
+                  <p className="text-xs font-semibold text-teal-200 uppercase">No clinician handoff</p>
                   <p className="mt-1.5 text-xs leading-relaxed text-white/65">
-                    Consent and any generated share link can be withdrawn at any time, from your dashboard.
+                    The directory does not create appointments or share your conversation with providers.
                   </p>
                 </li>
               </ul>
               <p className="mt-4 text-xs leading-relaxed text-white/60">
-                In the current Phase 1 demo, nothing you type is transmitted or stored at all.
+                This scripted demo keeps typed replies in page state and does not send them to an AI model.
               </p>
             </div>
           </Reveal>
@@ -484,21 +484,21 @@ export default function AiAssistantPage() {
         <Reveal>
           <div className="flex flex-col items-start gap-6 rounded-[1.75rem] border border-border bg-card p-6 shadow-[var(--shadow-soft)] sm:p-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
-              <h2 className="text-2xl font-semibold sm:text-3xl">Turn guidance into an appointment</h2>
+              <h2 className="text-2xl font-semibold sm:text-3xl">Find provider information</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Once you know the urgency and the speciality, the next step is a verified clinician. Browse specialists,
-                start a teleconsult, or reach the care desk if you are unsure.
+                The supplied Patna directory is static and unverified. Contact providers directly to confirm current
+                details and availability; the directory does not book consultations.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Button asChild variant="gradient" size="lg">
                 <Link href="/hospitals?view=doctors">
                   <Stethoscope aria-hidden />
-                  Talk to a doctor now
+                  Browse unverified listings
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link href="/services#telemedicine">Start a teleconsultation</Link>
+                <Link href="/contact">Contact ORVEXA</Link>
               </Button>
               <Button asChild variant="ghost" size="lg">
                 <Link href="/help">
